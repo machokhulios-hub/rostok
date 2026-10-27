@@ -811,6 +811,30 @@ main#app.full{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px)}
 @media(min-width:768px) and (max-width:1199px){.tp-list{grid-row:auto}.tp-overall{grid-column:auto}}
 @media(min-width:768px) and (max-width:1500px){.tp-overall .overall-row{flex-direction:column;justify-content:center;gap:18px}.tp-overall .legend-list{width:100%;flex:0}.legend-list li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 @media(max-width:767px){.hero-scene .plant{width:205px;height:205px;bottom:0}}
+/* 4.8 — course photography and consistent editorial layout. */
+.topbar .tb-title h1,.lesson-head .h1{letter-spacing:-.035em}
+.learn-view .course-grid{gap:18px}.cc-photo{overflow:hidden;background:#14251c}.cc-photo img{object-position:center;transition:transform .3s ease}.ccard:hover .cc-photo img{transform:scale(1.025)}
+.ccard .cc-go{align-items:center}.ccard:focus-within{outline:2px solid var(--accent);outline-offset:3px}
+.lesson-view .lesson-main{box-shadow:0 8px 28px #0b291307}.lesson-view .l-lead{font-size:17px;line-height:1.8}.lesson-view .tip{padding:18px;border-radius:12px}.lesson-view .exm{border-radius:10px;padding:14px 16px}.lesson-view .code-block{border-radius:12px}.lesson-steps li button.active{background:var(--part);color:var(--part-ink);border-radius:9px}.lesson-nav .btn{border-radius:10px;min-height:44px}
+.plan-view .timeline{border:0;box-shadow:none;padding:10px 20px}.timeline .task{min-height:62px}.plan-view .quote-card{border:0;border-radius:14px;background:var(--soft)}
+.growth-view .stat-tiles{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card);gap:0}.growth-view .stat-tiles .tile{border:0;border-radius:0;background:transparent;padding:22px}.growth-view .stat-tiles .tile:not(:last-child){border-right:1px solid var(--line)}.growth-view .stat-grid .card{border:0;box-shadow:none;background:var(--card);border-radius:14px}.growth-view .stabs{gap:7px}.growth-view .stabs .chip{border-radius:9px}
+@media(min-width:768px){
+ .learn-view,.lesson-view,.plan-view,.growth-view{gap:22px}
+ .learn-view .ccard{border:1px solid var(--line);box-shadow:0 4px 18px #0b291305;border-radius:13px}
+ .learn-view .cc-photo{height:auto;aspect-ratio:1.8;width:100%}.cc-body{padding:18px}.ccard .cc-top .nm{font-size:16px}.ccard .cc-desc{font-size:12px;line-height:1.6;min-height:38px}.ccard .cc-go{display:inline-flex;font-size:12px;color:var(--accent);min-height:26px;margin-top:7px}.ccard .cc-pct{display:none}.ccard .cc-bar{margin-top:10px}.ccard .cc-bar em{font-size:11px}.ccard .cc-bar .bar{height:5px}
+ .learn-view .add-card{box-shadow:none;border:1px dashed var(--box);background:var(--soft)}
+ .lesson-grid{grid-template-columns:230px minmax(0,1fr);gap:24px}.lesson-main.card{padding:28px 30px;border:0}.lesson-steps.card{padding:10px;border:0;background:var(--soft)}.lesson-steps li{border:0}.lesson-steps li button{font-size:12px;padding:12px;min-height:48px}.lesson-head .h1{font-size:32px}.lesson-view .l-progress{width:180px}
+ .plan-view{max-width:960px}.plan-view>*{max-width:none}.plan-view .pd-nav{justify-content:center;gap:28px}.plan-view .pd-date{font-size:15px}.plan-view .timeline .task{gap:18px}.plan-view .timeline .t-label{font-size:14px}.growth-view .stat-grid{grid-template-columns:1fr;gap:18px}.growth-view .stat-grid .card{padding:24px}.growth-view .dist-row{min-height:42px}.growth-view .month-chart{height:170px}
+}
+@media(min-width:1600px){.growth-view .stat-grid{grid-template-columns:1.3fr 1fr}}
+@media(max-width:767px){
+ .learn-view{gap:15px}.learn-view .tb-title h1{font-size:27px}.learn-view .ccard{min-height:120px}.learn-view .cc-photo{width:38%;height:auto;aspect-ratio:auto}.learn-view .cc-body{padding:13px 14px;gap:7px}.ccard .cc-top .nm{font-size:14px;line-height:1.3}.ccard .cc-meta{font-size:10px}.ccard .cc-go{font-size:11px}.ccard .fav{width:28px;height:28px;min-height:28px;left:6px;top:6px}.ccard .fav svg{width:14px;height:14px}
+ .learn-view .seg{gap:8px;justify-content:space-between}.learn-view .seg .chip{flex:1;font-size:11px;padding:0 8px;min-height:38px}
+ .lesson-view .lesson-main{padding:18px}.lesson-view .l-lead{font-size:15px;line-height:1.75}.lesson-view .lesson-head .h1{font-size:26px}.lesson-view .lesson-steps{padding:6px;background:var(--soft);border:0}.lesson-view .lesson-steps li button{font-size:11px;min-height:40px}.lesson-view .exm{padding:12px}.lesson-view .tip{font-size:13px;padding:14px}
+ .plan-view .timeline{padding:0;background:transparent}.timeline .task{min-height:58px}.plan-view .pd-nav{gap:10px}.plan-view .pd-date b{font-size:14px}.growth-view .stat-tiles .tile{padding:16px 10px}.growth-view .stat-tiles .tile b{font-size:25px}.growth-view .stat-tiles .tile span{font-size:10px}.growth-view .stat-grid .card{padding:16px}.growth-view .card-h .h2{font-size:16px}.growth-view .dist-row{font-size:11px;grid-template-columns:minmax(0,1fr) minmax(60px,1fr) 32px;gap:10px}
+}
+@media(prefers-reduced-motion:reduce){.cc-photo img{transition:none}}
+
 </style>
 </head>
 <body>
@@ -818,9 +842,9 @@ main#app.full{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px)}
 <nav class="tabbar" id="tabbar" aria-label="Разделы"></nav>
 <div class="toast" id="toast" hidden></div>
 <div class="modal" id="modal" hidden></div>
-<script src="plan.js?v=4.7"></script>
-<script src="courses.js?v=4.7"></script>
-<script src="app.js?v=4.7"></script>
+<script src="plan.js?v=4.8"></script>
+<script src="courses.js?v=4.8"></script>
+<script src="app.js?v=4.8"></script>
 <script>
 if ('serviceWorker' in navigator) {
   var hadController = !!navigator.serviceWorker.controller;

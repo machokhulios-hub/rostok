@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.7';
+  var APP_VERSION = '4.8';
   var P = window.PLAN, COURSES = window.COURSES;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -285,7 +285,7 @@
     { id: 'art', name: 'Поэзия и творчество', short: 'Поэзия', desc: 'Стихи, разбор классики, чтение, музыка', courses: ['poem', 'poemlib', 'read', 'music', 'book'], cat: 'poem' }
   ];
   var DESC = { eng: 'Слова, фразы и грамматика с нуля до A1', rus: 'Правила, запятые, грамотное письмо', code: 'HTML, CSS, JavaScript и свой сайт', ai: 'Как работает Claude, запросы, агенты', poem: 'Поэма «Гонец из будущего»: счёт строф', poemlib: 'Разбор классики и собственный стиль', read: 'Книги: страницы и прогресс', music: 'Трек от идеи до релиза', book: 'Книга по сведению: разделы' };
-  var PHOTO = { rus: 'rus', eng: 'eng', code: 'code', ai: 'ai', poem: 'poem', poemlib: 'poemlib', read: 'read' };
+  var PHOTO = { rus: 'rus', eng: 'eng', code: 'code', ai: 'ai', poem: 'poem', poemlib: 'poem', read: 'rus', music: 'music', book: 'book' };
   var QUOTES = ['Рост начинается там, где заканчивается зона комфорта', 'Дисциплина сегодня — свобода завтра', 'Маленькие шаги каждый день приводят к большим результатам', 'Обрастать мясом — по чуть-чуть, но каждый день'];
   function quote(i) { return QUOTES[((i % QUOTES.length) + QUOTES.length) % QUOTES.length]; }
   function coursePct(c) {
@@ -419,7 +419,7 @@
   // ----- карточки курсов -----
   function photo(c) {
     var p = PHOTO[c.id];
-    if (p) return '<div class="cc-photo"><picture><source media="(max-width:767px)" srcset="img/' + p + '-t.jpg"><img src="img/' + p + '-w.jpg" alt="" loading="lazy" decoding="async"></picture></div>';
+    if (p) return '<div class="cc-photo"><img src="cover-' + p + '.webp" width="1536" height="1024" alt="" loading="lazy" decoding="async"></div>';
     return '<div class="cc-photo cc-art" style="--cc:var(--c-' + c.cat + ')">' + (CI[c.cat] || CI.plan) + '</div>';
   }
   function courseCard(c) {
