@@ -256,6 +256,7 @@
   var SVG0 = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
   function ic(p) { return SVG0 + p + '</svg>'; }
   var CI = {
+    video: ic('<rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3z"/>'),
     eng: ic('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>'),
     rus: ic('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20M8 7h8M8 10.5h5"/>'),
     code: ic('<path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/>'),
@@ -317,7 +318,7 @@
     { id: 'rus', name: 'Русский язык', short: 'Русский', desc: 'Правила, запятые, грамотное письмо', courses: ['rus'], cat: 'rus' },
     { id: 'eng', name: 'Английский язык', short: 'Английский', desc: 'Слова, фразы и грамматика с нуля до A1', courses: ['eng'], cat: 'eng' },
     { id: 'code', name: 'Программирование', short: 'Программирование', desc: 'HTML, CSS, JavaScript, WordPress и свой магазин', courses: ['code', 'vitrina', 'wordpress'], cat: 'code' },
-    { id: 'ai', name: 'ИИ и агенты', short: 'ИИ и агенты', desc: 'Как работает Claude, запросы, агенты', courses: ['ai'], cat: 'ai' },
+    { id: 'ai', name: 'ИИ и видео', short: 'ИИ и видео', desc: 'ИИ, запросы, агенты и генерация видеороликов', courses: ['ai', 'video'], cat: 'ai' },
     { id: 'art', name: 'Поэзия и творчество', short: 'Поэзия', desc: 'Стихи, разбор классики, чтение, музыка', courses: ['poem', 'poemlib', 'read', 'music', 'book'], cat: 'poem' }
   ];
   var DESC = { vitrina: 'Свой интернет-магазин с нуля: HTML, CSS, JavaScript, заказы', eng: 'Слова, фразы и грамматика с нуля до A1', rus: 'Правила, запятые, грамотное письмо', code: 'HTML, CSS, JavaScript и свой сайт', ai: 'Как работает Claude, запросы, агенты', poem: 'Поэма «Гонец из будущего»: счёт строф', poemlib: 'Разбор классики и собственный стиль', read: 'Книги: страницы и прогресс', music: 'Трек от идеи до релиза', book: 'Книга по сведению: разделы' };
@@ -454,7 +455,7 @@
 
   // ----- карточки курсов -----
   function photo(c) {
-    return '<div class="cc-photo cc-art" aria-hidden="true">' + (CI[c.cat] || CI.plan) + '</div>';
+    return '<div class="cc-photo cc-art" aria-hidden="true">' + (CI[c.id] || CI[c.cat] || CI.plan) + '</div>';
   }
   function courseCard(c) {
     var pct = coursePct(c), col = 'var(--c-' + c.cat + ')', fav = !!st.fav[c.id];
@@ -555,7 +556,7 @@
       '<nav class="orbit-map" aria-labelledby="home-directions"><span class="orbit-guide" aria-hidden="true"></span>' +
       node('orbit-lang', 'data-learnfilter="lang"', book, 'Языки') +
       node('orbit-code', 'data-learnfilter="code"', CI.code, 'Программи<wbr>рование') +
-      node('orbit-ai', 'data-course="ai"', chip, 'ИИ') +
+      node('orbit-ai', 'data-learnfilter="ai"', chip, 'ИИ') +
       node('orbit-music', 'data-course="music"', CI.music, 'Музыка') +
       node('orbit-art', 'data-learnfilter="art"', palette, 'Творчество') + '</nav></div>';
   }
