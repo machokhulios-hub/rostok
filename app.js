@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.13';
+  var APP_VERSION = '4.13.1';
   var P = window.PLAN, COURSES = window.COURSES;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -532,7 +532,7 @@
   }
 
   function viewToday() {
-    var d = dateOf(sel), s = stat(sel), wk = Math.floor(sel / 7), rt = rawToday(), ov = overall();
+    var d = dateOf(sel), rt = rawToday();
     var dateText = d.getDate() + ' ' + MON[d.getMonth()] + ', ' + DOWF[sel % 7].toLowerCase();
     var h = '<section class="view home-view">' + treeHome() +
       '<header class="m-head only-m"><div class="brand">' + I.leaf + '<b>ROSTOK</b></div>' + headTools(false, true) + '</header>' +
@@ -546,11 +546,6 @@
       '<div class="dirs only-d">' + DIRS.map(function (x) { return '<button class="dir" ' + (x.id === 'art' ? 'data-learnfilter="art"' : 'data-course="' + x.courses[0] + '"') + ' style="--cc:var(--c-' + x.cat + ')"><span class="dir-ic">' + CI[x.cat] + '</span><b>' + x.name + '</b><span>' + x.desc + '</span><i>' + I.arrow + '</i></button>'; }).join('') + '</div></div>' +
       '<p class="m-date only-m">' + dateText + '</p>' + '<div class="only-m">' + weekStrip() + '</div>';
     if (rt < 0) h += '<p class="muted">План начнётся ' + START.getDate() + ' ' + MON[START.getMonth()] + '.</p>';
-    h += '<div class="today-panel"><div class="tp-head"><div><h2>' + (sel === rt ? 'Сегодня' : d.getDate() + ' ' + MON[d.getMonth()]) + '</h2><p class="muted"><span class="only-d">' + dateText + '</span><span class="only-m">' + s.done + ' из ' + s.n + ' выполнено</span>' + (sel !== clamp(rt) ? ' · <button class="back" data-act="gotoday">К сегодня</button>' : '') + '</p></div><button class="link" data-tab="plan">План на день ' + I.arrow + '</button></div>' +
-      '<div class="tp-cols"><div class="tp-box tp-list">' + (s.tasks.length ? '<ul class="tasks">' + s.tasks.map(function (t) { return taskRow(t); }).join('') + '</ul>' : '<p class="muted">На этот день дел нет.</p>') + '</div>' +
-      '<div class="tp-box tp-chart only-d"><div class="tp-box-h"><h3>Прогресс за неделю</h3><button class="icon-btn plain" data-stab="activity" aria-label="Подробнее">' + I.arrow + '</button></div>' + weekDelta(wk) + weekChart(wk) + (function () { var w = weekStats(wk); return '<div class="tp-sum"><span><b>' + fmtShort(w.min) + '</b>за неделю</span><span><b>' + w.tasks + '</b>' + plural(w.tasks, 'дело', 'дела', 'дел') + '</span><span><b>' + w.lessons + '</b>' + plural(w.lessons, 'урок', 'урока', 'уроков') + '</span></div>'; })() + '</div>' +
-      '<div class="tp-box tp-overall only-d"><h3>Общий прогресс</h3><div class="overall-row">' + donut(ov.pct, 112) + '<ul class="legend-list">' + ov.list.map(function (o) { return '<li><i class="dot" style="background:var(--c-' + o.d.cat + ')"></i><span>' + o.d.short + '</span><b>' + o.pct + '%</b></li>'; }).join('') + '</ul></div></div></div>' +
-      '<button class="btn primary block m-cta only-m" data-act="resume">' + resumeLabel() + ' ' + I.arrow + '</button></div>';
     return h + rankCard() + '</section>';
   }
 
