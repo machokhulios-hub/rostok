@@ -60,5 +60,5 @@
 - [x] Validate JS syntax, CSS and offline resource presence; run full suite. Expected: no failures or missing assets.
 - [x] Independent final review against spec/plan and full diff. Fix important issues with reproducing tests.
 - [x] Reconcile current origin/main content before release; bump next free version and precache both new assets. Expected: course objects match current origin/main.
-- [ ] Commit verified release, merge/push authorized existing site and verify live assets byte-for-byte. Expected: Pages built and HTTP 200 exact content.
-- [ ] Record browser QA limit and final evidence, finish branch/worktree.
+- [x] Commit verified release, merge/push authorized existing site and verify live assets byte-for-byte. Expected: Pages built and HTTP 200 exact content.
+- [x] Record browser QA limit and final evidence, finish branch/worktree.
