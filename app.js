@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.15';
+  var APP_VERSION = '4.18';
   var P = window.PLAN, COURSES = window.COURSES;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -201,10 +201,41 @@
   var EX = null, LS = null, CARDS = null, pendingDel = null;
   var TABS = ['today','learn','plan','habits','notes','goals','growth','library','tools','settings','more'];
   try { var h0 = location.hash.slice(1); if (TABS.indexOf(h0) > 0) V.tab = h0; } catch (e) {}
-  // Тема: пусто = как в макете (телефон тёмный, компьютер светлый), 'light' или 'dark' — выбор пользователя (ключ rostok-theme).
+  // Empty preference follows device time; existing light/dark choices remain manual.
   var THEME_KEY = 'rostok-theme', theme = '';
   try { theme = localStorage.getItem(THEME_KEY) || ''; } catch (e) {}
-  function applyTheme() { if (theme) document.documentElement.setAttribute('data-theme', theme); else document.documentElement.removeAttribute('data-theme'); }
+  if (theme !== 'light' && theme !== 'dark') theme = '';
+  function homeScene() {
+    if (theme) return theme === 'dark' ? 'night' : 'day';
+    var hour = new Date().getHours();
+    return hour >= 7 && hour < 20 ? 'day' : 'night';
+  }
+  function sceneIcon(night) {
+    return ic(night ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>' : '<path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14z"/>');
+  }
+  function applyTheme() {
+    var scene = homeScene(), night = scene === 'night';
+    document.documentElement.setAttribute('data-theme', night ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-scene', scene);
+    var button = document.querySelector('[data-act="homescene"]');
+    if (button) {
+      var label = night ? 'Включить дневное оформление' : 'Включить ночное оформление';
+      button.setAttribute('aria-label', label);
+      button.title = label;
+      // Keep the button, its focus and the current learning screen intact.
+      if (button.getAttribute('data-icon') !== scene) {
+        button.innerHTML = sceneIcon(night);
+        button.setAttribute('data-icon', scene);
+      }
+    }
+    var choices = document.querySelectorAll('.theme-switch [data-theme]');
+    for (var j = 0; j < choices.length; j++) choices[j].setAttribute('aria-pressed', choices[j].getAttribute('data-theme') === theme);
+  }
+  function setTheme(value) {
+    theme = value === 'light' || value === 'dark' ? value : '';
+    try { if (theme) localStorage.setItem(THEME_KEY, theme); else localStorage.removeItem(THEME_KEY); } catch (e) {}
+    applyTheme();
+  }
   applyTheme();
   var app = document.getElementById('app');
 
@@ -513,15 +544,20 @@
   // ----- Главная -----
   // Course buttons on the approved tree, shared by phone and desktop.
   function treeHome() {
-    function node(cls, attr, icon, name, sub) {
-      return '<button class="tree-node ' + cls + '" ' + attr + '><span class="tree-orb">' + icon + '</span><b>' + name + '</b><small>' + sub + '</small></button>';
+    function node(cls, attr, icon, name) {
+      return '<button class="tree-node ' + cls + '" ' + attr + '><span class="tree-orb">' + icon + '</span><b>' + name + '</b></button>';
     }
-    return '<div class="tree-home"><nav class="tree-map" aria-label="Дерево знаний">' +
-      node('tree-lang', 'data-learnfilter="lang"', CI.eng, 'Языки', 'Русский · Английский') +
-      node('tree-code', 'data-learnfilter="code"', CI.code, 'Программирование', coursePct(course('code')) + '% пройдено') +
-      node('tree-ai', 'data-course="ai"', CI.ai, 'ИИ', coursePct(course('ai')) + '% пройдено') +
-      node('tree-music', 'data-course="music"', CI.music, 'Музыка', st.tracks.length + ' ' + plural(st.tracks.length,'трек','трека','треков')) +
-      node('tree-art', 'data-learnfilter="art"', I.note, 'Творчество', 'Стихи · Книги') + '</nav></div>';
+    var book = ic('<path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1zM12 5v15"/>');
+    var chip = ic('<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><rect x="9" y="9" width="6" height="6" rx="1"/>');
+    var palette = ic('<path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1-3.7c-1-.6-.4-2.3 1-2.3h2a4 4 0 0 0 4-4c0-4.5-4-8-9-8z"/><circle cx="7" cy="10" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/><circle cx="17" cy="11" r="1"/>');
+    return '<div class="tree-home"><div class="tree-landscape tree-day" aria-hidden="true"></div><div class="tree-landscape tree-night" aria-hidden="true"></div>' +
+      '<header class="tree-heading"><span class="tree-brand">' + I.leaf + '<span>Росток</span></span><button class="tree-theme-toggle" data-act="homescene" type="button"></button></header>' +
+      '<nav class="tree-map" aria-label="Дерево знаний">' +
+      node('tree-lang', 'data-learnfilter="lang"', book, 'Языки') +
+      node('tree-code', 'data-learnfilter="code"', CI.code, 'Программирование') +
+      node('tree-ai', 'data-course="ai"', chip, 'ИИ') +
+      node('tree-music', 'data-course="music"', CI.music, 'Музыка') +
+      node('tree-art', 'data-learnfilter="art"', palette, 'Творчество') + '</nav></div>';
   }
   function viewToday() {
     return '<section class="view home-view" aria-label="Главная">' + treeHome() + '</section>';
@@ -658,11 +694,11 @@
     return '<section class="view tools-view">' + topbar('Инструменты', 'Копия прогресса и синхронизация устройств') + '<div class="tools-grid">' + backupCard() + syncCard() + '</div></section>';
   }
   function themeSwitch() {
-    return '<div class="theme-switch" role="group" aria-label="Тема оформления">' + [['', 'Как в макете'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(function (x) { return '<button data-theme="' + x[0] + '" aria-pressed="' + (theme === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>';
+    return '<div class="theme-switch" role="group" aria-label="Тема оформления">' + [['', 'Автоматически'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(function (x) { return '<button data-theme="' + x[0] + '" aria-pressed="' + (theme === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>';
   }
   function viewSettings() {
     return '<section class="view settings-view">' + topbar('Настройки') +
-      '<div class="card theme-card"><h2 class="h2">Тема</h2><p class="small">«Как в макете»: на телефоне тёмная, на планшете и компьютере светлая.</p>' + themeSwitch() + '</div>' +
+      '<div class="card theme-card"><h2 class="h2">Тема</h2><p class="small">Автоматически: день с 07:00 до 20:00, ночь — в остальное время. Используется время устройства. Кнопка солнца или луны на главной сохраняет ручной выбор; здесь можно вернуть автоматический режим.</p>' + themeSwitch() + '</div>' +
       '<div class="card"><h2 class="h2">О приложении</h2><p class="muted">Росток ' + APP_VERSION + ' · план v' + P.version + ' · старт ' + START.getDate() + ' ' + MON[START.getMonth()] + ' ' + START.getFullYear() + ', ' + N + ' дней.</p><p class="small">Данные хранятся в этом браузере. Копия и синхронизация — в разделе «Инструменты».</p><button class="btn" data-tab="tools">' + I.tools + ' Инструменты</button></div></section>';
   }
   function viewMore() {
@@ -1371,8 +1407,7 @@
     document.body.classList.toggle('app-full', full);
     if (V.page === 'lesson' && LS) loadPoem();
     renderNav();
-    var tb = document.querySelectorAll('[data-theme]');
-    for (var j = 0; j < tb.length; j++) tb[j].setAttribute('aria-pressed', tb[j].getAttribute('data-theme') === theme);
+    applyTheme();
   }
   function go(tab, page, extra) {
     V.tab = tab; V.page = page || null; V.step = null; pendingDel = null;
@@ -1405,6 +1440,7 @@
     }
     var b = e.target.closest('button'); if (!b) return;
     var act = b.getAttribute('data-act'), v;
+    if (act === 'homescene') { setTheme(homeScene() === 'day' ? 'dark' : 'light'); return; }
     if ((v = b.getAttribute('data-tab'))) { go(v); return; }
     if ((v = b.getAttribute('data-week')) != null) { V.week = Math.max(0,Math.min(P.weeks.length-1,+v)); render(); return; }
     if ((v = b.getAttribute('data-filter'))) { V.filter = v; render(); return; }
@@ -1418,7 +1454,7 @@
     if ((v = b.getAttribute('data-copytext')) != null) { try { navigator.clipboard.writeText(v).then(function () { toast('Скопировано'); }, function () { toast('Не получилось скопировать'); }); } catch (err) { toast('Не получилось скопировать'); } return; }
     if ((v = b.getAttribute('data-delnote'))) { if (pendingDel === 'note:' + v) { delete st.notes[v]; pendingDel = null; save(); } else pendingDel = 'note:' + v; render(); return; }
     if ((v = b.getAttribute('data-sel')) != null) { sel = clamp(+v); render(); return; }
-    if ((v = b.getAttribute('data-theme')) != null) { theme = v; try { if (v) localStorage.setItem(THEME_KEY, v); else localStorage.removeItem(THEME_KEY); } catch (err) {} applyTheme(); render(); return; }
+    if ((v = b.getAttribute('data-theme')) != null) { setTheme(v); return; }
     if ((v = b.getAttribute('data-find'))) { var fd = v.split(':'), fc = course(fd[0]), fi = +fd[1]; if (fc && stepState(fc, fi) === 'open' && !fc.steps[fi].exam) startLesson(fd[0], fi); else go('learn', 'course', { course: fd[0] }); return; }
     if ((v = b.getAttribute('data-deltask'))) { var dk = keyOf(sel); st.extraTasks[dk] = (st.extraTasks[dk] || []).filter(function (x) { return x.id !== v; }); if (st.checks[dk]) delete st.checks[dk][v]; save(); render(); return; }
     if ((v = b.getAttribute('data-review-topic'))) { var topic=v.split(':'); V.tab='learn'; V.course=topic[0]; startLesson(topic[0],+topic[1]); return; }
@@ -1575,10 +1611,20 @@
 
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState !== 'visible') return;
+    applyTheme();
     if (SY.cfg && Date.now() - (SY.cfg.at || 0) > 60000) syncNow(false);
     var nt = rawToday();
     if (nt !== today) { if (sel === clamp(today)) sel = clamp(nt); today = nt; if (!V.page) render(); }
   });
+  window.addEventListener('storage', function (e) {
+    if (e.key === THEME_KEY || e.key === null) {
+      theme = e.newValue === 'light' || e.newValue === 'dark' ? e.newValue : '';
+      applyTheme();
+    }
+  });
+  window.setInterval(function () {
+    if (document.visibilityState === 'visible') applyTheme();
+  }, 60000);
 
   load();
   syLoad();

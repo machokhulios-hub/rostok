@@ -15,6 +15,100 @@ function boot(seed, backup, raw, setup, extraCourses) {
   return {w,doc:w.document,close:()=>w.close(),state:()=>JSON.parse(w.localStorage.getItem('dnevnik-state')||'{}')};
 }
 function click(b,sel){const el=b.doc.querySelector(sel);assert.ok(el,'Missing '+sel);el.click();}
+function sceneSetup(clock, preference) {
+  return w => {
+    w.Date.prototype.getHours = () => clock.hour;
+    if (preference !== undefined) w.localStorage.setItem('rostok-theme', preference);
+    const interval = w.setInterval.bind(w);
+    w.setInterval = (fn, ms, ...args) => {
+      if (ms === 60000) clock.tick = fn;
+      return interval(fn, ms, ...args);
+    };
+  };
+}
+test('Automatic scene follows device-hour boundaries without saving a manual theme', () => {
+  for (const [hour, expected] of [[6,'night'],[7,'day'],[19,'day'],[20,'night']]) {
+    const b = boot(null,null,undefined,sceneSetup({hour}));
+    try {
+      assert.equal(b.doc.documentElement.dataset.scene, expected, 'hour '+hour);
+      assert.equal(b.w.localStorage.getItem('rostok-theme'), null);
+      assert.match(b.doc.querySelector('[data-act="homescene"]').getAttribute('aria-label'), expected==='day' ? /ноч/ : /днев/);
+    } finally { b.close(); }
+  }
+});
+test('Home theme toggle persists manual choice without changing progress and can return to automatic', () => {
+  let b = boot({checks:{},lessons:{e1:'2026-10-26'}},null,undefined,sceneSetup({hour:12}));
+  try {
+    const before = b.w.localStorage.getItem('dnevnik-state');
+    const toggle = b.doc.querySelector('[data-act="homescene"]');
+    assert.ok(toggle); toggle.focus(); toggle.click();
+    assert.equal(b.doc.documentElement.dataset.scene, 'night');
+    assert.equal(b.w.localStorage.getItem('rostok-theme'), 'dark');
+    assert.equal(b.doc.activeElement, toggle);
+    assert.equal(b.w.localStorage.getItem('dnevnik-state'), before);
+    toggle.click();
+    assert.equal(b.doc.documentElement.dataset.scene, 'day');
+    assert.equal(b.w.localStorage.getItem('rostok-theme'), 'light');
+  } finally { b.close(); }
+  b = boot(null,null,undefined,sceneSetup({hour:23},'light'));
+  try {
+    assert.equal(b.doc.documentElement.dataset.scene, 'day');
+    click(b,'[data-tab="settings"]');
+    click(b,'.theme-card [data-theme=""]');
+    assert.equal(b.doc.documentElement.dataset.scene, 'night');
+    assert.equal(b.w.localStorage.getItem('rostok-theme'), null);
+    assert.equal(b.doc.querySelector('.theme-card [data-theme=""]').getAttribute('aria-pressed'), 'true');
+  } finally { b.close(); }
+});
+test('Automatic refresh crosses evening boundary without replacing a lesson or changing answers', () => {
+  const clock={hour:19}, b=boot(null,null,undefined,sceneSetup(clock));
+  try {
+    openLesson(b); answer(b,0,false);
+    const lesson=b.doc.querySelector('.lesson-view'), before=b.w.localStorage.getItem('dnevnik-state');
+    const focused=lesson.querySelector('[data-act="lnext"]'); focused.focus();
+    assert.equal(typeof clock.tick, 'function');
+    clock.hour=20; clock.tick();
+    assert.equal(b.doc.documentElement.dataset.scene,'night');
+    assert.equal(b.doc.querySelector('.lesson-view'),lesson);
+    assert.equal(b.doc.activeElement,focused);
+    assert.equal(b.w.localStorage.getItem('dnevnik-state'),before);
+    clock.hour=8;
+    b.doc.dispatchEvent(new b.w.Event('visibilitychange'));
+    assert.equal(b.doc.documentElement.dataset.scene,'day');
+    assert.equal(b.doc.querySelector('.lesson-view'),lesson);
+  } finally { b.close(); }
+});
+test('Manual scene survives clock changes and invalid stored preference falls back to automatic', () => {
+  const clock={hour:12}, b=boot(null,null,undefined,sceneSetup(clock,'dark'));
+  try {
+    assert.equal(b.doc.documentElement.dataset.scene,'night');
+    assert.equal(typeof clock.tick,'function');
+    clock.hour=8; clock.tick();
+    assert.equal(b.doc.documentElement.dataset.scene,'night');
+    b.w.localStorage.setItem('rostok-theme','light');
+    b.w.dispatchEvent(new b.w.StorageEvent('storage',{key:'rostok-theme',newValue:'light',storageArea:b.w.localStorage}));
+    assert.equal(b.doc.documentElement.dataset.scene,'day');
+  } finally { b.close(); }
+  const a=boot(null,null,undefined,sceneSetup({hour:12},'invalid'));
+  try { assert.equal(a.doc.documentElement.dataset.scene,'day'); }
+  finally { a.close(); }
+});
+test('Theme storage failure keeps the home switch usable without altering saved learning', () => {
+  const b=boot({checks:{},lessons:{e1:'2026-10-26'}},null,undefined,w=>{
+    sceneSetup({hour:12})(w);
+    const proto=w.Storage.prototype, get=proto.getItem, set=proto.setItem;
+    proto.getItem=function(k){if(k==='rostok-theme')throw Error('blocked');return get.call(this,k);};
+    proto.setItem=function(k,v){if(k==='rostok-theme')throw Error('blocked');return set.call(this,k,v);};
+  });
+  try {
+    const before=b.w.localStorage.getItem('dnevnik-state');
+    click(b,'[data-act="homescene"]');
+    assert.equal(b.doc.documentElement.dataset.scene,'night');
+    click(b,'[data-act="homescene"]');
+    assert.equal(b.doc.documentElement.dataset.scene,'day');
+    assert.equal(b.w.localStorage.getItem('dnevnik-state'),before);
+  } finally { b.close(); }
+});
 function openLesson(b,cid='eng',i=0){click(b,'[data-tab="learn"]');click(b,'[data-course="'+cid+'"]');if(i!==0)click(b,'[data-step="'+i+'"]');click(b,'[data-lopen="'+cid+':'+i+'"]');}
 function answer(b,qi,right=true){const c=b.w.COURSES.find(c=>c.id==='eng'),q=c.steps[0].ex[qi];const buttons=[...b.doc.querySelectorAll('[data-lp^="'+qi+':"]')];const choice=buttons.find(e=>right?e.textContent===q.options[0]:e.textContent!==q.options[0]);assert.ok(choice);choice.click();}
 function answerExam(b,q,correct=true){

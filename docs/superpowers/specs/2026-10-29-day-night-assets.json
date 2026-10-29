@@ -1,0 +1,10 @@
+{
+  "tool": "built-in image_gen",
+  "reference": "User-approved day/night versions of realistic tree concept 1",
+  "prompt": "Edit target: the attached approved «Росток» mobile UI mockup. Create a CLEAN BACKGROUND ASSET for implementation. Remove EVERY UI element: logo, all words, all five circular glass course icons and their text pills, sun/moon button, and the entire bottom navigation bar including every icon and text. Inpaint those regions seamlessly with the same natural scene. Preserve the exact same tree silhouette, all main trunk and branch shapes, overall canopy layout, camera, framing, distant mountains and lake, rocks and roots. Do not recompose or move the tree. Preserve the original time-of-day lighting and colors. Output ONLY the unobstructed natural landscape, no text, no icons, no interface, no circular artifacts, no buttons, no symbols, no decorative lights. Preserve the portrait aspect ratio 941:1672, full original scene with ground naturally extended to the very bottom where the navigation was. This is the real background over which HTML buttons will be placed, so all UI must be fully gone.",
+  "files": [
+    "tree-day.webp",
+    "tree-night.webp"
+  ],
+  "encoding": "WebP quality 88, original 941×1672 composition"
+}
