@@ -15,6 +15,54 @@ function boot(seed, backup, raw, setup, extraCourses) {
   return {w,doc:w.document,close:()=>w.close(),state:()=>JSON.parse(w.localStorage.getItem('dnevnik-state')||'{}')};
 }
 function click(b,sel){const el=b.doc.querySelector(sel);assert.ok(el,'Missing '+sel);el.click();}
+test('Inner appearance is scoped away from home across navigation and learning screens',()=>{
+ const b=boot();try{
+  const home=b.doc.querySelector('.home-view').outerHTML;
+  assert.equal(b.doc.body.classList.contains('sections-ui'),false);
+  for(const tab of ['learn','plan','habits','notes','goals','growth','library','tools','settings','more']){
+   click(b,'[data-tab="'+tab+'"]');
+   assert.ok(b.doc.body.classList.contains('sections-ui'),tab);
+  }
+  openLesson(b);assert.ok(b.doc.body.classList.contains('sections-ui'));
+  click(b,'[data-tab="today"]');
+  assert.equal(b.doc.body.classList.contains('sections-ui'),false);
+  assert.equal(b.doc.querySelector('.home-view').outerHTML,home);
+ }finally{b.close();}
+});
+test('Catalog search finds course names and goals and keeps favourite controls usable',()=>{
+ const b=boot();try{
+  click(b,'[data-tab="learn"]');
+  const input=b.doc.querySelector('#course-query');assert.ok(input);
+  input.value='витрина';input.dispatchEvent(new b.w.Event('input',{bubbles:true}));
+  const shown=[...b.doc.querySelectorAll('.ccard')].filter(e=>!e.hidden&&!e.classList.contains('add-card'));
+  assert.equal(shown.length,1);assert.ok(shown[0].querySelector('[data-course="vitrina"]'));
+  shown[0].querySelector('[data-fav]').click();
+  assert.ok(b.state().fav.vitrina);
+  assert.equal(b.doc.querySelector('#course-query').value,'витрина');
+  const missing=b.doc.querySelector('#course-query');missing.value='нет-такого-курса';missing.dispatchEvent(new b.w.Event('input',{bubbles:true}));
+  assert.equal(b.doc.querySelector('#catalog-empty').hidden,false);
+  const again=b.doc.querySelector('#course-query');again.value='';again.dispatchEvent(new b.w.Event('input',{bubbles:true}));
+  assert.ok([...b.doc.querySelectorAll('.ccard')].filter(e=>!e.hidden).length>3);
+  assert.equal(b.doc.querySelector('#catalog-empty').hidden,true);
+  click(b,'[data-course="vitrina"]');assert.match(b.doc.body.textContent,/Своя витрина/);
+ }finally{b.close();}
+});
+test('Lesson note rail isolates notes, escapes user content and updates immediately after saving',()=>{
+ const b=boot({checks:{},notes:{
+  one:{t:'Моя заметка',x:'<img src=x onerror=alert(1)>',ref:'eng:0',d:'2026-10-29',at:2},
+  other:{t:'Другая',x:'Не этот урок',ref:'eng:1',d:'2026-10-29',at:1}
+ }});try{
+  openLesson(b);
+  const rail=b.doc.querySelector('.lesson-notes');assert.ok(rail);
+  assert.match(rail.textContent,/<img src=x onerror=alert\(1\)>/);
+  assert.equal(rail.querySelector('img'),null);assert.doesNotMatch(rail.textContent,/Не этот урок/);
+  click(b,'.lesson-notes [data-act="lessonnote"]');
+  b.doc.querySelector('#lnote-text').value='Важное правило';
+  click(b,'[data-act="savelnote"]');
+  assert.match(b.doc.querySelector('.lesson-notes').textContent,/Важное правило/);
+  assert.ok(Object.values(b.state().notes).some(n=>n.ref==='eng:0'&&n.x==='Важное правило'));
+ }finally{b.close();}
+});
 function sceneSetup(clock, preference) {
   return w => {
     w.Date.prototype.getHours = () => clock.hour;

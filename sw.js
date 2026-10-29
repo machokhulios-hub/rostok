@@ -1,6 +1,6 @@
 // Офлайн-кеш. При обновлении приложения меняется номер версии.
-var C = 'rostok-v4-19';
-var F = ['./', 'index.html', 'app.js?v=4.19', 'plan.js?v=4.19', 'courses.js?v=4.19', 'vitrina/index.html', 'vitrina/review.html', 'tree-mobile.css?v=4.19', 'tree-day.webp', 'tree-night.webp', 'tree-reference.jpg', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'img/hero.jpg', 'growth-landscape.png', 'cover-rus.webp', 'cover-eng.webp', 'cover-code.webp', 'cover-ai.webp', 'cover-poem.webp', 'cover-music.webp', 'cover-book.webp'];
+var C = 'rostok-v4-21';
+var F = ['./', 'index.html', 'app.js?v=4.21', 'plan.js?v=4.21', 'courses.js?v=4.21', 'vitrina/index.html', 'vitrina/review.html', 'tree-mobile.css?v=4.21', 'sections.css?v=4.21', 'tree-day.webp', 'tree-night.webp', 'tree-reference.jpg', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'img/hero.jpg', 'growth-landscape.png', 'cover-rus.webp', 'cover-eng.webp', 'cover-code.webp', 'cover-ai.webp', 'cover-poem.webp', 'cover-music.webp', 'cover-book.webp'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(C).then(function (c) { return c.addAll(F); })); self.skipWaiting(); });
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (k) { return Promise.all(k.filter(function (x) { return x.indexOf('rostok-') === 0 && x !== C; }).map(function (x) { return caches.delete(x); })); }));
