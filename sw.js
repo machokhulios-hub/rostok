@@ -1,6 +1,6 @@
 // Офлайн-кеш. При обновлении приложения меняется номер версии.
-var C = 'rostok-v4-34';
-var F = ['./', 'index.html', 'app.js?v=4.34', 'plan.js?v=4.34', 'courses.js?v=4.34', 'vitrina/index.html', 'vitrina/review.html', 'wordpress/guide.html', 'video/guide.html', 'video/tools.json', 'tree-mobile.css?v=4.34', 'sections.css?v=4.34', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'img/hero.jpg', 'growth-landscape.png', 'cover-rus.webp', 'cover-eng.webp', 'cover-code.webp', 'cover-ai.webp', 'cover-poem.webp', 'cover-music.webp', 'cover-book.webp'];
+var C = 'rostok-v4-35';
+var F = ['./', 'index.html', 'app.js?v=4.35', 'journey.js?v=4.35', 'journey.css?v=4.35', 'plan.js?v=4.35', 'courses.js?v=4.35', 'vitrina/index.html', 'vitrina/review.html', 'wordpress/guide.html', 'video/guide.html', 'video/tools.json', 'tree-mobile.css?v=4.35', 'sections.css?v=4.35', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'img/hero.jpg', 'growth-landscape.png', 'cover-rus.webp', 'cover-eng.webp', 'cover-code.webp', 'cover-ai.webp', 'cover-poem.webp', 'cover-music.webp', 'cover-book.webp'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(C).then(function (c) { return c.addAll(F); })); self.skipWaiting(); });
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (k) { return Promise.all(k.filter(function (x) { return x.indexOf('rostok-') === 0 && x !== C; }).map(function (x) { return caches.delete(x); })); }));

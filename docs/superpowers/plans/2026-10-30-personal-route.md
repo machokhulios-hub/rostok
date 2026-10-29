@@ -1,6 +1,6 @@
 # Personal route implementation plan
 
-> **For agentic workers:** Use superpowers:executing-plans inline, with one independent final review. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Use superpowers:executing-plans inline, with one independent final review. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Deliver the accepted personal learning workflow, practical evidence, manageable plans and scheduled revision in Rostok.
 
@@ -32,11 +32,11 @@
 
 **Interfaces:** `window.RostokJourney` / CommonJS module with presets, createRoute(input,date,id), nextStep(state,courses,route), buildDay(state,courses,date,mode), recordReview(state,key,correct,date), dueReviews(state,courses,date), mastery(state,lessonId), validate(state), saveWork(state,routeId,stage,text,url,date), acceptWork(state,routeId,stage,checks,date). State fields per spec.
 
-- [ ] Write tests for budgets, prerequisite exams, snapshot stability, review date intervals/same-day answers, invalid state and links, work version/reset/criteria.
-- [ ] Run `node --test journey.test.cjs`; Expected: feature assertions fail against missing module.
-- [ ] Implement the pure module, preserving existing state fields and validating optional new data.
-- [ ] Run `node --test journey.test.cjs`; Expected: all tests pass.
-- [ ] Commit domain implementation and tests.
+- [x] Write tests for budgets, prerequisite exams, snapshot stability, review date intervals/same-day answers, invalid state and links, work version/reset/criteria.
+- [x] Run `node --test journey.test.cjs`; Expected: feature assertions fail against missing module.
+- [x] Implement the pure module, preserving existing state fields and validating optional new data.
+- [x] Run `node --test journey.test.cjs`; Expected: all tests pass.
+- [x] Commit domain implementation and tests.
 
 ### Task 2: Complete user workflow in the app
 
@@ -44,12 +44,12 @@
 
 **Interfaces:** consumes Task 1 module; existing `save`, `render`, `startLesson`, `nextInCourse`, `tasksFor`, `validState`, `finishLesson`, `viewCards`, `exportFile`. Existing state remains authoritative.
 
-- [ ] Write behavioral integration tests: create/restore route and today's budget; complete a work and revise it; due review persists; main resumes work; actual minutes and transfer; original-date rollover; invalid import; Vitrina links open selected lesson. Update intentional old home-only expectation to include focus card.
-- [ ] Run `node --test app.test.cjs`; Expected: new feature assertions fail.
-- [ ] Add goal setup/stages, focus home card, budgeted daily snapshot and carry action, honest mastery and review status, word schedules and work self-check/copy actions.
-- [ ] Add optional-state validation, date window expansion, new script/CSS assets, safe deep links and file share with download fallback. All 59 Vitrina entries route into the real course.
-- [ ] Run `npm test`; Expected: entire suite passes, old progress unchanged.
-- [ ] Commit UI and behavior.
+- [x] Write behavioral integration tests: create/restore route and today's budget; complete a work and revise it; due review persists; main resumes work; actual minutes and transfer; original-date rollover; invalid import; Vitrina links open selected lesson. Update intentional old home-only expectation to include focus card.
+- [x] Run `node --test app.test.cjs`; Expected: new feature assertions fail.
+- [x] Add goal setup/stages, focus home card, budgeted daily snapshot and carry action, honest mastery and review status, word schedules and work self-check/copy actions.
+- [x] Add optional-state validation, date window expansion, new script/CSS assets, safe deep links and file share with download fallback. All 59 Vitrina entries route into the real course.
+- [x] Run `npm test`; Expected: entire suite passes, old progress unchanged.
+- [x] Commit UI and behavior.
 
 ### Task 3: Review, release and publish
 
@@ -57,8 +57,8 @@
 
 **Interfaces:** consumes completed domain and app, existing Pages deployment.
 
-- [ ] Validate JS syntax, CSS and offline resource presence; run full suite. Expected: no failures or missing assets.
-- [ ] Independent final review against spec/plan and full diff. Fix important issues with reproducing tests.
-- [ ] Reconcile current origin/main content before release; bump next free version and precache both new assets. Expected: course objects match current origin/main.
+- [x] Validate JS syntax, CSS and offline resource presence; run full suite. Expected: no failures or missing assets.
+- [x] Independent final review against spec/plan and full diff. Fix important issues with reproducing tests.
+- [x] Reconcile current origin/main content before release; bump next free version and precache both new assets. Expected: course objects match current origin/main.
 - [ ] Commit verified release, merge/push authorized existing site and verify live assets byte-for-byte. Expected: Pages built and HTTP 200 exact content.
 - [ ] Record browser QA limit and final evidence, finish branch/worktree.

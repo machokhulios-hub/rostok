@@ -52,3 +52,9 @@ test('Overdue words precede new words and future words stay out of the session',
 test('Unknown prototype names in imported route kinds are rejected without throwing',()=>{
  const s=state();for(const kind of ['constructor','__proto__','toString']){s.journeys.goal1.kind=kind;assert.equal(J.validate(s),false);}
 });
+test('Malformed local draft references are rejected without crashing backup validation',()=>{
+ const s=state();for(const d of [{routeId:'__proto__',stage:0},{routeId:'goal1',stage:'constructor'}]){s.workDrafts={x:{text:'',url:'',checks:[],...d}};assert.equal(J.validate(s),false);}
+});
+test('A completed long legacy task remains valid even when it exceeds a new daily budget',()=>{
+ const s=state();s.dayPlans['2026-10-30']={routeId:'goal1',budget:45,items:[{id:'u-legacy',kind:'legacy',routeId:'goal1',t:'Длинная практика',cat:'plan',min:450}]};s.checks['2026-10-30']={'u-legacy':1};s.dayPlans['2026-10-30']=J.buildDay(s,courses,'2026-10-30','free');assert.equal(s.dayPlans['2026-10-30'].items[0].min,450);assert.equal(J.validate(s),true);
+});
