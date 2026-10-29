@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.36';
+  var APP_VERSION = '4.37';
   var P = window.PLAN, COURSES = window.COURSES, J = window.RostokJourney;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -47,10 +47,11 @@
   // ---------- хранение ----------
   var KEY = 'dnevnik-state', BACKUP_KEY = 'dnevnik-state-backup';
   var storageProblem = '', storageReadOnly = false, recoveryNotice = '';
-  var st = {};
+  var st = {}, localBase = null, localBaseRaw = null;
   function fixState() {
     ['modes', 'checks', 'lessons', 'exams', 'counters', 'books', 'reflect', 'extraTasks', 'practice', 'notes', 'fav', 'journeys', 'dayPlans', 'reviews', 'actualMinutes', 'workDrafts'].forEach(function (k) { if (!st[k] || typeof st[k] !== 'object' || Array.isArray(st[k])) st[k] = {}; });
     ['booksAdded', 'tracks'].forEach(function (k) { if (!Array.isArray(st[k])) st[k] = []; });
+    Object.keys(st.dayPlans).forEach(function(k){var ids=(st.extraTasks[k] || []).map(function(t){return t.id;});st.dayPlans[k].items=st.dayPlans[k].items.filter(function(t){return t.kind!=='legacy' || ids.indexOf(t.id)<0;});});
   }
   function plain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
   function safeTree(o,depth) {
@@ -73,7 +74,7 @@
       Object.keys(o.fav || {}).every(function(k) {return o.fav[k]===1 || o.fav[k]===0 || typeof o.fav[k]==='boolean';}) &&
       ['booksAdded','tracks'].every(function (k) { return o[k] == null || Array.isArray(o[k]); }) &&
       (o.tracks || []).every(function(t) {return plain(t) && typeof t.name === 'string' && Number.isInteger(t.stage) && t.stage >= 0 && t.stage <= 5;}) &&
-      (o.booksAdded || []).every(function(b) {return plain(b) && typeof b.id === 'string' && typeof b.t === 'string';}) &&
+      (o.booksAdded || []).every(function(b) {return plain(b) && typeof b.id === 'string' && ['__proto__','constructor','prototype'].indexOf(b.id)<0 && b.id.indexOf('\u001f')<0 && typeof b.t === 'string';}) &&
       Object.keys(o.reflect || {}).every(function(k) {return plain(o.reflect[k]) && Object.keys(o.reflect[k]).every(function(f) {return typeof o.reflect[k][f] === 'string';});}) &&
       Object.keys(o.counters || {}).every(function(k) {return plain(o.counters[k]);}) &&
       Object.keys(o.books || {}).every(function(k) {return plain(o.books[k]);}) &&
@@ -96,14 +97,18 @@
       }
     } catch (e) { storageProblem = 'Хранилище недоступно. Изменения не сохранены: сохрани копию в файл.'; }
     fixState();
+    localBase=JSON.parse(JSON.stringify(st));
+    try{localBaseRaw=localStorage.getItem(KEY);}catch(e){}
   }
-  function persist() {
+  function persist(replace) {
     if (storageReadOnly) return false;
     try {
-      var before = localStorage.getItem(KEY), next = JSON.stringify(st);
+      var before = localStorage.getItem(KEY), stored = before ? readState(before) : null;
+      if(!replace && stored && localBase && before!==localBaseRaw){st=mergeStored(st,stored,localBase);fixState();}
+      var next = JSON.stringify(st);
       if (before && before !== next && readState(before)) localStorage.setItem(BACKUP_KEY, before);
-      localStorage.setItem(KEY, next); storageProblem = ''; return true;
-    } catch (e) { storageProblem = 'Изменения не сохранены. Память браузера недоступна или заполнена. Сохрани прогресс в файл.'; return false; }
+      localStorage.setItem(KEY, next);localBase=JSON.parse(next);localBaseRaw=next; storageProblem = ''; return true;
+    } catch (e) { storageProblem = e.message==='tracks-conflict'?'Список треков изменён в двух вкладках. Сохрани копию и обнови страницу для объединения.':'Изменения не сохранены. Память браузера недоступна или заполнена. Сохрани прогресс в файл.'; return false; }
   }
   function save() { if (!persist()) toast('Не получилось сохранить'); schedSync(); }
 
@@ -745,7 +750,7 @@
     if(act==='savejourney'){
       try{var input={kind:document.getElementById('journey-kind').value,title:document.getElementById('journey-title').value,deadline:document.getElementById('journey-deadline').value,budget:+document.getElementById('journey-budget').value,course:document.getElementById('journey-course').value};
         var keep=V.editJourney && r && r.kind===input.kind && (input.kind!=='course' || r.courses[0]===input.course),id=keep?r.id:'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),nr=J.createRoute(input,today,id);
-        var legacy=st.dayPlans[today]?null:tasksFor(clamp(rawToday())).filter(function(t){return isDone(clamp(rawToday()),t.id);}).map(function(t){return Object.assign({},t,{kind:'legacy',routeId:id,cat:t.cat || 'plan',t:taskLabel(t)});});
+        var legacy=st.dayPlans[today]?null:tasksFor(clamp(rawToday())).filter(function(t){return isDone(clamp(rawToday()),t.id) && !(st.extraTasks[today] || []).some(function(x){return x.id===t.id;});}).map(function(t){return Object.assign({},t,{kind:'legacy',routeId:id,cat:t.cat || 'plan',t:taskLabel(t)});});
         if(legacy && legacy.length)st.dayPlans[today]={routeId:id,budget:nr.budget,items:legacy};
         if(keep){nr.start=r.start;nr.works=r.works;}st.journeys[id]=nr;st.activeJourney=id;V.journeySetup=false;V.workRoute=null;V.workStage=null;prepareDay(clamp(rawToday()),true);save();render();toast('Маршрут сохранён');
       }catch(e){toast(e.message);}return true;
@@ -852,8 +857,8 @@
       allBooks().forEach(function (b) {
         h += '<div class="item"><div class="spread"><b style="font-weight:600">' + esc(b.t) + '</b>' + (bookDone(b) ? '<span class="pill" style="color:var(--done)">прочитана</span>' : '') + '</div>' +
           bar(b.pages ? b.page / b.pages : 0, col) +
-          '<div class="inl"><label for="pg-' + b.id + '">Страница</label><input type="number" inputmode="numeric" min="0" id="pg-' + b.id + '" data-book="' + b.id + '" data-f="page" value="' + (b.page || '') + '">' +
-          '<label for="pp-' + b.id + '">из</label><input type="number" inputmode="numeric" min="0" id="pp-' + b.id + '" data-book="' + b.id + '" data-f="pages" value="' + (b.pages || '') + '" placeholder="?"></div>' +
+          '<div class="inl"><label for="pg-' + esc(b.id) + '">Страница</label><input type="number" inputmode="numeric" min="0" id="pg-' + esc(b.id) + '" data-book="' + esc(b.id) + '" data-f="page" value="' + (b.page || '') + '">' +
+          '<label for="pp-' + esc(b.id) + '">из</label><input type="number" inputmode="numeric" min="0" id="pp-' + esc(b.id) + '" data-book="' + esc(b.id) + '" data-f="pages" value="' + (b.pages || '') + '" placeholder="?"></div>' +
           (b.added ? delBtn('book:' + b.id, 'Убрать книгу') : '') + '</div>';
       });
       h += '</div><div class="card" style="display:flex;flex-direction:column;gap:8px"><label class="lab" for="new-book">Добавить книгу<input id="new-book" placeholder="Название и автор"></label><button class="btn" data-act="addbook">Добавить</button></div>';
@@ -872,7 +877,7 @@
     return h + '</section>';
   }
   function delBtn(key, label) {
-    return pendingDel === key ? '<button class="del warn" data-del="' + key + '">Нажми ещё раз, чтобы удалить</button>' : '<button class="del" data-del="' + key + '">' + label + '</button>';
+    return pendingDel === key ? '<button class="del warn" data-del="' + esc(key) + '">Нажми ещё раз, чтобы удалить</button>' : '<button class="del" data-del="' + esc(key) + '">' + label + '</button>';
   }
 
   function coursePath(c, col) {
@@ -1281,6 +1286,7 @@
 
   // ----- Карточки слов -----
   function viewCards() {
+    if(!CARDS.list.length)return '<section class="view"><div class="card flash"><h1 class="h1">Все слова на сегодня повторены</h1><p class="muted">Новые карточки появятся по расписанию. Можно продолжить обучение.</p></div><button class="btn primary block" data-act="endcards">К английскому</button></section>';
     var q = CARDS.list[CARDS.i];
     var h = '<section class="view"><div class="spread"><button class="back" data-act="endcards">‹ Английский</button><span class="small">' + (CARDS.i + 1) + ' из ' + CARDS.list.length + '</span></div>';
     if (CARDS.done) {
@@ -1380,11 +1386,10 @@
   function syLoad() { try { var r = localStorage.getItem(SK); SY.cfg = r ? JSON.parse(r) : null; } catch (e) { SY.cfg = null; } }
   function sySave() { try { localStorage.setItem(SK, JSON.stringify(SY.cfg)); } catch (e) {} }
   function flat(x) {
-    var c = {}, o = {}, tm = {}, bm = {};
+    var c = {}, o = {}, bm = {};
     Object.keys(x).forEach(function (k) { if (['tracks','booksAdded','session','lastStudy','backupAt','workDrafts'].indexOf(k)<0) c[k] = x[k]; });
-    (x.tracks || []).forEach(function (t) { if (t && t.name != null) tm[t.name] = t.stage; });
     (x.booksAdded || []).forEach(function (b) { if (b && b.id != null) bm[b.id] = b.t; });
-    c.tracksM = tm; c.booksAddedM = bm;
+    c.tracks = x.tracks || []; c.booksAddedM = bm;
     function rec(p, v) {
       var parts=p.split(SEP);
       // Keep one work version, review schedule or daily snapshot coherent across devices.
@@ -1403,9 +1408,20 @@
       cur[a[a.length - 1]] = JSON.parse(o[p]);
     });
     Object.keys(x.journeys || {}).forEach(function(id){var r=x.journeys[id];if(plain(r) && !Object.prototype.hasOwnProperty.call(r,'works'))r.works={};});
-    var tm = x.tracksM || {}; x.tracks = Object.keys(tm).map(function (n) { return { name: n, stage: num(tm[n]) }; }); delete x.tracksM;
+    var tm = x.tracksM || {}; if(!Array.isArray(x.tracks))x.tracks = Object.keys(tm).map(function (n) { return { name: n, stage: num(tm[n]) }; }); delete x.tracksM;
     var bm = x.booksAddedM || {}; x.booksAdded = Object.keys(bm).map(function (i) { return { id: i, t: bm[i] }; }); delete x.booksAddedM;
     return x;
+  }
+  function flatLocal(x) {
+    var out=flat(x);['session','lastStudy','backupAt'].forEach(function(k){if(x[k]!=null)out[k]=JSON.stringify(x[k]);});
+    Object.keys(x.workDrafts || {}).forEach(function(k){out['workDrafts'+SEP+k]=JSON.stringify(x.workDrafts[k]);});
+    return out;
+  }
+  function mergeStored(local,remote,base) {
+    var candidate=unflat(merge3(flatLocal(local),flatLocal(remote),flatLocal(base)));
+    if(!Object.prototype.hasOwnProperty.call(candidate,'checks'))candidate.checks={};
+    if(!validState(candidate))throw Error('Local state conflict');
+    return candidate;
   }
   function same(a, b) { var ka = Object.keys(a); if (ka.length !== Object.keys(b).length) return false; return ka.every(function (k) { return a[k] === b[k]; }); }
   // Если один пункт изменён на обоих устройствах: число — большее, текст — длиннее, иначе большее по алфавиту (одинаково на обоих устройствах).
@@ -1416,12 +1432,22 @@
     if (typeof a === 'string' && typeof b === 'string' && a.length !== b.length) return a.length > b.length ? l : r;
     return l >= r ? l : r;
   }
+  function mergeTracks(local, remote, base) {
+    var l=JSON.stringify(local),r=JSON.stringify(remote),b=JSON.stringify(base);
+    if(l===r || r===b)return local;
+    if(l===b)return remote;
+    function appended(list){return list.length>=base.length && base.every(function(t,i){return JSON.stringify(t)===JSON.stringify(list[i]);});}
+    if(appended(local) && appended(remote))return base.concat(remote.slice(base.length),local.slice(base.length));
+    if(local.length===base.length && remote.length===base.length && base.every(function(t,i){return local[i].name===t.name && remote[i].name===t.name;}))return base.map(function(t,i){var ls=local[i].stage,rs=remote[i].stage,stage=ls===t.stage?rs:rs===t.stage?ls:Math.max(ls,rs);return Object.assign({},remote[i],local[i],{stage:stage});});
+    throw Error('tracks-conflict');
+  }
   // Три стороны: здесь (L), в Gist (R) и «как было при прошлой синхронизации» (B). Так удаление отметки не воскресает.
   function merge3(L, R, B) {
     var m = {}, keys = Object.keys(L);
     Object.keys(R).forEach(function (k) { if (!(k in L)) keys.push(k); });
     keys.forEach(function (k) {
       var l = L[k], r = R[k], b = B[k], v;
+      if(k==='tracks' && l!=null && r!=null){var baseTracks=b==null?unflat(B).tracks:JSON.parse(b);m[k]=JSON.stringify(mergeTracks(JSON.parse(l),JSON.parse(r),baseTracks || []));return;}
       if (l === r) v = l; else if (l === b) v = r; else if (r === b) v = l; else if (l === undefined) v = r; else if (r === undefined) v = l; else v = pick(l, r);
       if (v !== undefined) m[k] = v;
     });
@@ -1454,13 +1480,14 @@
     });
   }
   function pushGist(id, state) {
-    var shared={};Object.keys(state).forEach(function(k){if(['session','lastStudy','backupAt'].indexOf(k)<0)shared[k]=state[k];});
+    var shared={};Object.keys(state).forEach(function(k){if(['session','lastStudy','backupAt','workDrafts'].indexOf(k)<0)shared[k]=state[k];});
     var files = {}; files[GFILE] = { content: JSON.stringify({ app: 'rostok-sync', v: 1, saved: new Date().toISOString(), state: shared }) };
     return id ? gh('PATCH', '/gists/' + id, { files: files }).then(function () { return id; })
               : gh('POST', '/gists', { description: 'Росток: прогресс (синхронизация)', public: false, files: files }).then(function (g) { return g.id; });
   }
   function syErr(e) {
     var m = e && e.message;
+    if(m==='tracks-conflict')return 'Список треков изменён на двух устройствах. Локальный прогресс сохранён; сделай копию перед объединением.';
     if (m === 'auth') return 'Токен не подошёл. Создай новый и подключи заново.';
     if (m === 'limit') return 'GitHub просит подождать. Попробуй позже.';
     if (m === 'http404') return 'Gist не найден. Нажми «Синхронизировать» ещё раз.';
@@ -1490,7 +1517,7 @@
           if(!persist()) {st=previousState;throw new Error('local');}
         }
         SY.cfg.base = M;
-        var pr = (!remote || !same(M, R)) ? pushGist(gid, st) : Promise.resolve(gid);
+        var pr = (!remote || !same(M, R) || Object.prototype.hasOwnProperty.call(remote,'workDrafts')) ? pushGist(gid, st) : Promise.resolve(gid);
         return pr.then(function (id) { SY.cfg.gistId = id; SY.cfg.at = Date.now(); sySave(); });
       })
       .then(function () { SY.busy = false; if (manual) toast('Синхронизировано'); var ae = document.activeElement; if ((manual || changedLocal) && !(ae && /^(INPUT|TEXTAREA)$/.test(ae.tagName))) render(); })
@@ -1555,7 +1582,7 @@
   function go(tab, page, extra) {
     V.tab = tab; V.page = page || null; V.step = null; pendingDel = null;
     if (extra) for (var k in extra) V[k] = extra[k];
-    try { history.replaceState(null, '', tab === 'today' ? location.pathname + location.search : '#' + tab); } catch (e) {}
+    try { var url=new URL(location.href);url.searchParams.delete('course');url.searchParams.delete('lesson');url.hash=tab==='today'?'':tab;history.replaceState(null,'',url.pathname+url.search+url.hash); } catch (e) {}
     render(); window.scrollTo(0, 0);
   }
 
@@ -1743,7 +1770,7 @@
           var previous = st, locked = storageReadOnly;
           if (locked) localStorage.setItem('dnevnik-state-damaged',localStorage.getItem(KEY)||'');
           storageReadOnly = false; st = o.state; fixState();
-          if (!persist()) { st = previous; storageReadOnly = locked; render(); toast('Не удалось записать копию. Старый прогресс сохранён.'); return; }
+          if (!persist(true)) { st = previous; storageReadOnly = locked; render(); toast('Не удалось записать копию. Старый прогресс сохранён.'); return; }
           LS = null; EX = null; V.page = null; recoveryNotice=''; schedSync(); render(); toast('Прогресс восстановлен из файла');
         }
         catch (err) { toast('Это не файл копии Ростка'); }
@@ -1779,6 +1806,9 @@
     if (nt !== today) { if (sel === clamp(today)) sel = clamp(nt); today = nt; if (!V.page) render(); }
   });
   window.addEventListener('storage', function (e) {
+    if(e.key===KEY && e.newValue && !storageReadOnly){
+      try{var raw=localStorage.getItem(KEY),incoming=readState(raw);if(incoming){st=mergeStored(st,incoming,localBase || {checks:{}});fixState();localBase=JSON.parse(JSON.stringify(incoming));localBaseRaw=raw;var active=document.activeElement,note=document.getElementById('note-text');if(!V.page && !(active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) && !app.querySelector('.journey-form') && !(note && note.value))render();}}catch(err){storageProblem='Изменения из другой вкладки не объединены. Сохрани копию и обнови страницу.';updateStorageAlert();}
+    }
     if (e.key === THEME_KEY || e.key === null) {
       theme = e.newValue === 'light' || e.newValue === 'dark' ? e.newValue : '';
       applyTheme();
