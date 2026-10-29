@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.21';
+  var APP_VERSION = '4.22';
   var P = window.PLAN, COURSES = window.COURSES;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -543,25 +543,27 @@
   }
 
   // ----- Главная -----
-  // Course buttons on the approved tree, shared by phone and desktop.
-  function treeHome() {
+  // Five existing destinations on the approved circular map.
+  function orbitHome() {
     function node(cls, attr, icon, name) {
-      return '<button class="tree-node ' + cls + '" ' + attr + '><span class="tree-orb">' + icon + '</span><b>' + name + '</b></button>';
+      return '<button class="orbit-node ' + cls + '" type="button" ' + attr + '><span class="orbit-disc" aria-hidden="true">' + icon + '</span><b>' + name + '</b></button>';
     }
     var book = ic('<path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1zM12 5v15"/>');
     var chip = ic('<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><rect x="9" y="9" width="6" height="6" rx="1"/>');
     var palette = ic('<path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1-3.7c-1-.6-.4-2.3 1-2.3h2a4 4 0 0 0 4-4c0-4.5-4-8-9-8z"/><circle cx="7" cy="10" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/><circle cx="17" cy="11" r="1"/>');
-    return '<div class="tree-home"><div class="tree-landscape tree-day" aria-hidden="true"></div><div class="tree-landscape tree-night" aria-hidden="true"></div>' +
-      '<header class="tree-heading"><span class="tree-brand">' + I.leaf + '<span>Росток</span></span><button class="tree-theme-toggle" data-act="homescene" type="button"></button></header>' +
-      '<nav class="tree-map" aria-label="Дерево знаний">' +
-      node('tree-lang', 'data-learnfilter="lang"', book, 'Языки') +
-      node('tree-code', 'data-learnfilter="code"', CI.code, 'Программирование') +
-      node('tree-ai', 'data-course="ai"', chip, 'ИИ') +
-      node('tree-music', 'data-course="music"', CI.music, 'Музыка') +
-      node('tree-art', 'data-learnfilter="art"', palette, 'Творчество') + '</nav></div>';
+    var compass = ic('<circle cx="12" cy="12" r="7"/><path d="M12 1v2M12 21v2M1 12h2M21 12h2"/><path d="m12 7 1.5 3.5L17 12l-3.5 1.5L12 17l-1.5-3.5L7 12l3.5-1.5z"/>');
+    return '<div class="orbit-home">' +
+      '<header class="home-heading"><span class="home-brand">' + I.leaf + '<span>Росток</span></span><button class="home-theme-toggle" data-act="homescene" type="button"></button></header>' +
+      '<h1 class="home-prompt" id="home-directions">Выберите направление</h1>' +
+      '<nav class="orbit-map" aria-labelledby="home-directions"><span class="orbit-guide" aria-hidden="true"></span><span class="orbit-compass" aria-hidden="true">' + compass + '</span>' +
+      node('orbit-lang', 'data-learnfilter="lang"', book, 'Языки') +
+      node('orbit-code', 'data-learnfilter="code"', CI.code, 'Программирование') +
+      node('orbit-ai', 'data-course="ai"', chip, 'ИИ') +
+      node('orbit-music', 'data-course="music"', CI.music, 'Музыка') +
+      node('orbit-art', 'data-learnfilter="art"', palette, 'Творчество') + '</nav></div>';
   }
   function viewToday() {
-    return '<section class="view home-view" aria-label="Главная">' + treeHome() + '</section>';
+    return '<section class="view home-view" aria-label="Главная">' + orbitHome() + '</section>';
   }
 
   // ----- Обучение -----
