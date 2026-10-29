@@ -347,7 +347,8 @@ body.sections-ui.sections-dark{
 @media(max-width:359px){.sections-ui .growth-view .stat-tiles{gap:6px}.sections-ui .growth-view .stat-tiles .tile{padding:16px 8px}}
 
 /* Approved Paper / Graphite: editorial rows and quiet reading surfaces. */
-.sections-ui .prose-examples .exm .ex{white-space:pre-line;line-height:1.75}
+.sections-ui .prose-examples .exm .ex{white-space:pre-line;line-height:1.75;overflow-wrap:anywhere}
+.sections-ui .prose-examples .tip p{min-width:0;overflow-wrap:anywhere}
 .sections-ui .card,.sections-ui .tile{border-radius:12px}
 .sections-ui .course-grid{gap:0}
 .sections-ui .course-grid .ccard{min-height:124px;padding:20px 0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;overflow:visible;align-items:center}
