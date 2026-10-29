@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.25';
+  var APP_VERSION = '4.26';
   var P = window.PLAN, COURSES = window.COURSES;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -217,7 +217,7 @@
     var scene = homeScene(), night = scene === 'night';
     document.documentElement.setAttribute('data-theme', night ? 'dark' : 'light');
     document.documentElement.setAttribute('data-scene', scene);
-    document.body.classList.toggle('sections-dark', theme === 'dark');
+    document.body.classList.toggle('sections-dark', night);
     var button = document.querySelector('[data-act="homescene"]');
     if (button) {
       var label = night ? 'Включить дневное оформление' : 'Включить ночное оформление';
@@ -454,9 +454,7 @@
 
   // ----- карточки курсов -----
   function photo(c) {
-    var p = PHOTO[c.id] || PHOTO[c.cat];
-    if (p) return '<div class="cc-photo"><img src="cover-' + p + '.webp" width="1536" height="1024" alt="" loading="lazy" decoding="async"></div>';
-    return '<div class="cc-photo cc-art" style="--cc:var(--c-' + c.cat + ')">' + (CI[c.cat] || CI.plan) + '</div>';
+    return '<div class="cc-photo cc-art" aria-hidden="true">' + (CI[c.cat] || CI.plan) + '</div>';
   }
   function courseCard(c) {
     var pct = coursePct(c), col = 'var(--c-' + c.cat + ')', fav = !!st.fav[c.id];
@@ -586,7 +584,7 @@
       if (query && norm(c.name + ' ' + (c.goal || '') + ' ' + (DESC[c.id] || '')).indexOf(query) < 0) card = card.replace('<article', '<article hidden');
       h += card;
     });
-    if (!list.length) h += '<p class="muted empty-note">' + (stt === 'fav' ? 'Отмечай направления звёздочкой на фото — они появятся здесь.' : 'Здесь пока пусто.') + '</p>';
+    if (!list.length) h += '<p class="muted empty-note">' + (stt === 'fav' ? 'Отмечай направления звёздочкой — они появятся здесь.' : 'Здесь пока пусто.') + '</p>';
     h += '<a class="ccard add-card only-d" href="' + CLAUDE_URL + '" target="_blank" rel="noopener" data-copy="' + esc('Хочу добавить в приложение «Росток» новое направление обучения: [опиши тему]. Подготовь уроки в формате courses.js: теория (правило, примеры, совет) и 5 вопросов к каждому уроку, экзамены после блоков. Id существующих уроков не меняй.') + '"><span class="add-plus">' + I.plus + '</span><b>Добавить курс</b><span class="small">Есть идея для нового направления? Задание скопируется для Claude.</span></a>';
     return h + '</div><p id="catalog-empty" class="muted"' + (list.some(function(c){return !query || norm(c.name + ' ' + (c.goal || '') + ' ' + (DESC[c.id] || '')).indexOf(query) >= 0;}) ? ' hidden' : '') + '>Курсы не найдены. Попробуй другое название или фильтр.</p></section>';
   }
@@ -706,7 +704,7 @@
   }
   function viewSettings() {
     return '<section class="view settings-view">' + topbar('Настройки') +
-      '<div class="card theme-card"><h2 class="h2">Тема</h2><p class="small">На главной автоматически: день с 07:00 до 20:00, ночь — в остальное время, по часам устройства. Внутренние разделы в авто-режиме светлые. Кнопка солнца или луны на главной сохраняет ручной выбор; здесь можно вернуть автоматический режим.</p>' + themeSwitch() + '</div>' +
+      '<div class="card theme-card"><h2 class="h2">Тема</h2><p class="small">Во всём приложении автоматически: «Бумага» с 07:00 до 20:00, «Графит» — в остальное время, по часам устройства. Кнопка солнца или луны на главной сохраняет ручной выбор; здесь можно вернуть автоматический режим.</p>' + themeSwitch() + '</div>' +
       '<div class="card"><h2 class="h2">О приложении</h2><p class="muted">Росток ' + APP_VERSION + ' · план v' + P.version + ' · старт ' + START.getDate() + ' ' + MON[START.getMonth()] + ' ' + START.getFullYear() + ', ' + N + ' дней.</p><p class="small">Данные хранятся в этом браузере. Копия и синхронизация — в разделе «Инструменты».</p><button class="btn" data-tab="tools">' + I.tools + ' Инструменты</button></div></section>';
   }
   function viewMore() {

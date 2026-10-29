@@ -79,6 +79,7 @@ test('Automatic scene follows device-hour boundaries without saving a manual the
     const b = boot(null,null,undefined,sceneSetup({hour}));
     try {
       assert.equal(b.doc.documentElement.dataset.scene, expected, 'hour '+hour);
+      assert.equal(b.doc.body.classList.contains('sections-dark'),expected==='night');
       assert.equal(b.w.localStorage.getItem('rostok-theme'), null);
       assert.match(b.doc.querySelector('[data-act="homescene"]').getAttribute('aria-label'), expected==='day' ? /ноч/ : /днев/);
     } finally { b.close(); }
@@ -117,12 +118,14 @@ test('Automatic refresh crosses evening boundary without replacing a lesson or c
     assert.equal(typeof clock.tick, 'function');
     clock.hour=20; clock.tick();
     assert.equal(b.doc.documentElement.dataset.scene,'night');
+    assert.ok(b.doc.body.classList.contains('sections-dark'));
     assert.equal(b.doc.querySelector('.lesson-view'),lesson);
     assert.equal(b.doc.activeElement,focused);
     assert.equal(b.w.localStorage.getItem('dnevnik-state'),before);
     clock.hour=8;
     b.doc.dispatchEvent(new b.w.Event('visibilitychange'));
     assert.equal(b.doc.documentElement.dataset.scene,'day');
+    assert.equal(b.doc.body.classList.contains('sections-dark'),false);
     assert.equal(b.doc.querySelector('.lesson-view'),lesson);
   } finally { b.close(); }
 });
