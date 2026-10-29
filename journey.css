@@ -1,0 +1,38 @@
+/* Personal learning workflow: shared paper/graphite palette and touch targets. */
+.home-focus{display:grid;gap:14px;margin:0 0 32px;padding:24px;border:1px solid var(--home-line);border-radius:22px;background:var(--home-disc);color:var(--home-ink);overflow-wrap:anywhere}
+.home-focus h2{margin:0;font:650 clamp(22px,5cqw,28px)/1.2 'Onest',system-ui,sans-serif;letter-spacing:-.025em;color:var(--home-ink)}
+.home-focus p{margin:0;font-size:15px;line-height:1.55;color:var(--home-muted)}
+.home-focus .eyebrow{color:var(--home-muted)}
+.home-focus .btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;max-width:100%;white-space:normal;border:1px solid var(--home-line);border-radius:12px;padding:10px 14px;background:var(--home-disc);color:var(--home-ink);font:500 14px/1.4 'Onest',system-ui,sans-serif;box-shadow:none}
+.home-focus .btn.primary{background:var(--home-accent);border-color:var(--home-accent);color:var(--home-bg)}
+.home-focus .btn:disabled{opacity:.5;cursor:default}
+.home-focus .btns,.focus-review{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.focus-review{padding-top:14px;border-top:1px solid var(--home-line);font-size:14px}
+.focus-review>span{flex-basis:100%}
+.review-queue{font-size:14px}
+.review-queue summary{min-height:44px;padding-block:12px;cursor:pointer}
+.review-queue .link{display:block;min-height:44px;width:100%;text-align:left;color:var(--home-ink);overflow-wrap:anywhere}
+.home-focus button:focus-visible,.journey-form :is(input,select,button):focus-visible,.work-editor :is(input,textarea,button):focus-visible{outline:3px solid var(--accent,var(--home-accent));outline-offset:3px}
+.sections-ui :is(.journey-form,.journey-route,.work-editor,.journey-day,.actual-time){display:grid;gap:16px;min-width:0;overflow-wrap:anywhere}
+.sections-ui :is(.journey-form,.journey-route,.work-editor,.journey-day,.actual-time) :is(h2,h3,p){margin:0}
+.sections-ui :is(.journey-form,.work-editor,.actual-time) .lab{display:grid;gap:8px;min-width:0;align-items:start;color:var(--ink);font-size:14px}
+.sections-ui :is(.journey-form,.work-editor,.actual-time) :is(input:not([type=checkbox]),select,textarea){width:100%;min-width:0;max-width:100%;box-sizing:border-box;min-height:46px;border:1px solid var(--box);border-radius:10px;padding:11px 12px;background:var(--bg);color:var(--ink);font:inherit}
+.sections-ui .work-editor textarea{resize:vertical;line-height:1.6}
+.sections-ui .journey-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.sections-ui .journey-stages{display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--line);padding-top:16px}
+.sections-ui .journey-stages .btn{flex:1 1 160px;text-align:left;justify-content:flex-start;padding-inline:14px}
+.sections-ui .journey-stages .btn[aria-pressed=true]{background:var(--soft);border-color:var(--accent)}
+.sections-ui .work-checks{display:grid;gap:8px}
+.sections-ui .work-checks label{display:flex;align-items:flex-start;gap:10px;min-height:44px;padding:10px 0;font-size:14px;line-height:1.55;cursor:pointer}
+.sections-ui .work-checks input{appearance:auto;width:22px;height:22px;flex:none;margin:0;accent-color:var(--accent)}
+.sections-ui .work-accepted{color:var(--done);font-weight:600}
+.sections-ui :is(.work-history,.journey-history,.journey-legacy) summary{min-height:44px;padding-block:12px;cursor:pointer}
+.sections-ui .work-history article{padding:16px 0;border-top:1px solid var(--line);font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.sections-ui .work-history article p{margin:8px 0;line-height:1.6}
+.sections-ui .journey-history .btn{margin-top:8px}
+.sections-ui .journey-legacy{margin-top:12px}
+.sections-ui .mastery-summary{display:flex;flex-wrap:wrap;gap:10px 20px;font-size:14px}
+.sections-ui .mastery-summary p{flex-basis:100%;margin:0}
+.sections-ui .actual-time input{max-width:180px}
+.sections-ui .journey-day .btn{font-size:13px;padding-inline:12px}
+@media(max-width:420px){.home-focus{padding:18px;margin-bottom:26px}.home-focus .btns>.btn{flex:1 1 130px}.sections-ui .journey-fields{grid-template-columns:1fr}.sections-ui .work-editor .btns>.btn{flex:1 1 150px}}

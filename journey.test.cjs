@@ -45,3 +45,10 @@ test('Validation allows legacy state and rejects malformed nested new fields',()
  for(const change of [{reviews:{x:{due:'tomorrow'}}},{journeys:[]},{dayPlans:{today:{items:'oops'}}},{actualMinutes:{'2026-10-30':-1}},{activeJourney:'missing'}])assert.equal(J.validate({...s,...change}),false);
  J.saveWork(s,'goal1',0,'Работа','','2026-10-30');s.journeys.goal1.works[0].url='javascript:alert(1)';assert.equal(J.validate(s),false);
 });
+test('Overdue words precede new words and future words stay out of the session',()=>{
+ const s=state();s.reviews={'word:cat':{due:'2026-10-28',last:'2026-10-27',level:0,correct:false},'word:bird':{due:'2026-11-01',last:'2026-10-29',level:1,correct:true}};
+ assert.deepEqual(J.selectWords(s,[['dog','д','собака'],['cat','к','кот'],['bird','б','птица']],'2026-10-30',10).map(w=>w[0]),['cat','dog']);
+});
+test('Unknown prototype names in imported route kinds are rejected without throwing',()=>{
+ const s=state();for(const kind of ['constructor','__proto__','toString']){s.journeys.goal1.kind=kind;assert.equal(J.validate(s),false);}
+});

@@ -494,7 +494,8 @@ function renderLesson(n){
   const L=BY_N[n]; if(!L){location.hash="programma";return;}
   const prev=BY_N[n-1], next=BY_N[n+1];
   const pager=`<div class="pager">${prev?`<a class="prev" href="#urok-${prev.n}">Урок ${prev.n}</a>`:`<a class="prev" href="#programma">Программа</a>`}${next?`<a class="next" href="#urok-${next.n}">Урок ${next.n}: ${esc(next.title)}</a>`:""}</div>`;
-  const body = n===1 ? lesson1() : `<div class="stub">Этот урок ещё пишется. Сейчас готов урок 1, остальные появятся после того, как ты посмотришь макет и скажешь «ставь».</div>`;
+  const appLink = `../?course=vitrina&lesson=${n}#learn`;
+  const body = `<div class="note"><p>Все 59 уроков доступны в приложении «Росток»: теория, практика, экзамены и общий прогресс.</p><a class="btn" href="${appLink}">Открыть урок ${n} в Ростке</a></div>` + (n===1 ? lesson1() : '');
   const isDone=done.has(n);
   $("#view").innerHTML = `<div class="col">
   <div class="lhead">

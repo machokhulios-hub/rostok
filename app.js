@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   var APP_VERSION = '4.34';
-  var P = window.PLAN, COURSES = window.COURSES;
+  var P = window.PLAN, COURSES = window.COURSES, J = window.RostokJourney;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
   var MON = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
@@ -27,6 +27,13 @@
   function dateOf(i) { var d = new Date(START); d.setDate(d.getDate() + i); return d; }
   function keyOf(i) { return isoOf(dateOf(i)); }
   function rawToday() { var t = new Date(); return Math.round((new Date(t.getFullYear(), t.getMonth(), t.getDate()) - START) / 864e5); }
+  var baseWeeks = P.weeks.slice();
+  function extendPlan() {
+    var need = rawToday() + 29;
+    while (P.weeks.length * 7 < need) P.weeks.push(Object.assign({}, baseWeeks[P.weeks.length % baseWeeks.length]));
+    N = P.weeks.length * 7;
+  }
+  extendPlan();
   function clamp(i) { return Math.max(0, Math.min(N - 1, i)); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function plural(n, a, b, c) { var m = n % 10, h = n % 100; return (m === 1 && h !== 11) ? a : (m >= 2 && m <= 4 && (h < 12 || h > 14)) ? b : c; }
@@ -42,7 +49,7 @@
   var storageProblem = '', storageReadOnly = false, recoveryNotice = '';
   var st = {};
   function fixState() {
-    ['modes', 'checks', 'lessons', 'exams', 'counters', 'books', 'reflect', 'extraTasks', 'practice', 'notes', 'fav'].forEach(function (k) { if (!st[k] || typeof st[k] !== 'object' || Array.isArray(st[k])) st[k] = {}; });
+    ['modes', 'checks', 'lessons', 'exams', 'counters', 'books', 'reflect', 'extraTasks', 'practice', 'notes', 'fav', 'journeys', 'dayPlans', 'reviews', 'actualMinutes'].forEach(function (k) { if (!st[k] || typeof st[k] !== 'object' || Array.isArray(st[k])) st[k] = {}; });
     ['booksAdded', 'tracks'].forEach(function (k) { if (!Array.isArray(st[k])) st[k] = []; });
   }
   function plain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
@@ -60,7 +67,7 @@
       (e.by==null || plain(e.by) && Object.keys(e.by).every(function(k){var b=e.by[k];return Array.isArray(b) && b.length===2 && validCount(b[0]) && validCount(b[1]) && b[1]>0 && b[0]<=b[1];}));
   }
   function validState(o) {
-    if (!plain(o) || !plain(o.checks) || !safeTree(o,0)) return false;
+    if (!plain(o) || !plain(o.checks) || !safeTree(o,0) || !J.validate(o)) return false;
     return ['modes','lessons','exams','counters','books','reflect','extraTasks','practice','notes','fav'].every(function (k) { return o[k] == null || plain(o[k]); }) &&
       Object.keys(o.notes || {}).every(function(k) {var n=o.notes[k];return plain(n) && typeof n.x==='string' && (n.t==null || typeof n.t==='string') && (n.d==null || typeof n.d==='string') && (n.ref==null || typeof n.ref==='string') && (n.at==null || Number.isFinite(n.at));}) &&
       Object.keys(o.fav || {}).every(function(k) {return o.fav[k]===1 || o.fav[k]===0 || typeof o.fav[k]==='boolean';}) &&
@@ -151,6 +158,9 @@
   }
   function tasksFor(i) {
     var w = P.weeks[Math.floor(i / 7)] || {}, k = keyOf(i);
+    if (st.dayPlans[k]) return st.dayPlans[k].items.concat(st.extraTasks[k] || []);
+    var route = J.current(st);
+    if (route && k >= route.start) return st.extraTasks[k] || [];
     var list = (P.templates[modeOf(i)] || []).map(function (t) { return { id: t.id, cat: t.cat, t: t.t, min: t.min, n: fill(t.n, w) }; });
     return list.concat(P.extra[k] || [], st.extraTasks[k] || []);
   }
@@ -380,6 +390,7 @@
   // ----- строки дел -----
   var SHORT = { eng: 'Английский', rus: 'Русский', code: 'Программирование', ai: 'ИИ', poem: 'Стихи', read: 'Чтение', music: 'Музыка', book: 'Книга', plan: 'Итоги недели' };
   function taskLabel(x) {
+    if (x.kind) return x.t;
     if (x.id.indexOf('u-') === 0 || x.id.indexOf('rep-') === 0) return x.t;
     var c = course(x.cat), sub = '';
     if (c && c.type === 'path') { var ni = nextIdx(c); sub = ni >= 0 ? c.steps[ni].t : 'повторение'; }
@@ -391,7 +402,7 @@
     var on = isDone(sel, x.id), c = course(x.cat), own = x.id.indexOf('u-') === 0, label = esc(taskLabel(x));
     return '<li class="task' + (on ? ' done' : '') + '">' + (time != null ? '<span class="t-time">' + time + '</span>' : '') +
       '<button class="chk" data-task="' + esc(x.id) + '" aria-pressed="' + on + '" aria-label="' + (on ? 'Снять отметку: ' : 'Отметить: ') + esc(x.t) + '">' + I.check + '</button>' +
-      (c ? '<button class="t-label" data-course="' + c.id + '" title="' + esc(x.n || x.t) + '">' + label + '</button>' : '<span class="t-label" title="' + esc(x.n || x.t) + '">' + label + '</span>') +
+      (x.kind ? '<button class="t-label" data-journey-task="' + esc(x.id) + '">' + label + '</button>' : c ? '<button class="t-label" data-course="' + c.id + '" title="' + esc(x.n || x.t) + '">' + label + '</button>' : '<span class="t-label" title="' + esc(x.n || x.t) + '">' + label + '</span>') +
       '<span class="t-min">' + x.min + ' мин</span>' + (own && time != null ? '<button class="icon-btn del-task" data-deltask="' + esc(x.id) + '" aria-label="Удалить дело">' + I.x + '</button>' : '') + '</li>';
   }
   function weekStrip() {
@@ -552,7 +563,7 @@
     var palette = ic('<path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1-3.7c-1-.6-.4-2.3 1-2.3h2a4 4 0 0 0 4-4c0-4.5-4-8-9-8z"/><circle cx="7" cy="10" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/><circle cx="17" cy="11" r="1"/>');
     return '<div class="orbit-home">' +
       '<header class="home-heading"><span class="home-brand">' + I.leaf + '<span>Росток</span></span><button class="home-theme-toggle" data-act="homescene" type="button"></button></header>' +
-      '<h1 class="home-prompt" id="home-directions">Выберите направление</h1>' +
+      homeFocus() + '<h1 class="home-prompt" id="home-directions">Выберите направление</h1>' +
       '<nav class="orbit-map" aria-labelledby="home-directions"><span class="orbit-guide" aria-hidden="true"></span>' +
       node('orbit-lang', 'data-learnfilter="lang"', book, 'Языки') +
       node('orbit-code', 'data-learnfilter="code"', CI.code, 'Программи<wbr>рование') +
@@ -597,11 +608,11 @@
     var h = '<section class="view plan-view">' + topbar('План дня', s.done + ' из ' + s.n + ' выполнено · ' + fmtShort(s.doneMin) + ' из ' + fmtShort(s.totalMin)) +
       '<div class="pd-nav"><button class="nav" data-act="prev" aria-label="Предыдущий день"' + (sel === 0 ? ' disabled' : '') + '>' + I.back + '</button><div class="pd-date"><b>' + d.getDate() + ' ' + MON[d.getMonth()] + ', ' + d.getFullYear() + '</b><span class="small">' + DOWF[sel % 7] + ' · неделя ' + (wk + 1) + ' · день ' + (sel + 1) + ' из ' + N + (sel !== clamp(rt) ? ' · <button class="back" data-act="gotoday">К сегодня</button>' : '') + '</span></div><button class="nav" data-act="next" aria-label="Следующий день"' + (sel === N - 1 ? ' disabled' : '') + '>' + I.arrow + '</button></div>' +
       '<div class="pd-mode"><span class="small">Тип дня</span><div class="modes" role="group" aria-label="Тип дня">' + MODES.map(function (x) { return '<button data-mode="' + x[0] + '" aria-pressed="' + (modeOf(sel) === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div></div>' +
-      '<div class="card timeline">' + (s.tasks.length ? '<ul class="tasks timeline-list">' + s.tasks.map(function (t) { var tm = shift ? '—' : hm(t0); t0 += t.min; return taskRow(t, tm); }).join('') + '</ul>' : '<p class="muted">На этот день дел нет.</p>') +
+      dayBudget() + '<div class="card timeline">' + (s.tasks.length ? '<ul class="tasks timeline-list">' + s.tasks.map(function (t) { var tm = shift ? '—' : hm(t0); t0 += t.min; return taskRow(t, tm); }).join('') + '</ul>' : '<p class="muted">На этот день дел нет.</p>') +
       '<p class="small t-note">' + (shift ? 'День смены: время не расписано, делай по возможности.' : 'Время — ориентир: дела идут подряд с 9:00 по длительности.') + '</p>' +
       '<details class="add-task"><summary>' + I.plus + ' Добавить задачу</summary><div class="add-form"><input id="new-task" placeholder="Что сделать" maxlength="80" aria-label="Название дела"><input id="new-task-min" type="number" inputmode="numeric" min="1" max="600" value="15" aria-label="Минут"><button class="btn primary" data-act="addtask">Добавить</button></div></details></div>' +
       '<div class="quote-card"><span>' + I.leaf + '</span><p>«' + quote(sel + 1) + '»</p></div>';
-    return h + '</section>';
+    return h + actualTime() + '</section>';
   }
 
   // ----- Привычки: ежедневные дела плана -----
@@ -657,6 +668,107 @@
     save();
   }
 
+  // ---------- личный маршрут, работы и посильный день ----------
+  function prepareDay(i, rebuild) {
+    var k=keyOf(i),r=J.current(st);
+    if(!r || k<r.start || (!rebuild && st.dayPlans[k]))return;
+    st.dayPlans[k]=J.buildDay(st,COURSES,k,modeOf(i));save();
+  }
+  function completeJourneyTasks(sid,routeId,stage) {
+    var k=isoOf(new Date()),p=st.dayPlans[k];if(!p)return;
+    p.items.forEach(function(t){var c=t.cid && course(t.cid),q=c && c.steps && c.steps[t.step];if(sid && q && q.id===sid || routeId && t.kind==='work' && t.routeId===routeId && t.stage===stage){st.checks[k]=st.checks[k] || {};st.checks[k][t.id]=1;}});
+  }
+  function openJourneyTask(t) {
+    if(t.kind==='work'){go('goals',null,{workStage:t.stage,workRoute:t.routeId,journeySetup:false});return;}
+    var c=course(t.cid),s=c && c.steps && c.steps[t.step];if(!s){toast('Открой актуальную программу курса');return;}
+    V.tab='learn';V.course=c.id;
+    if(s.exam){if(stepState(c,t.step)==='open' || stepState(c,t.step)==='done')startExam(c.id,t.step);else go('learn','course',{course:c.id,step:t.step});}
+    else if(stepState(c,t.step)!=='locked')startLesson(c.id,t.step);
+    else go('learn','course',{course:c.id,step:t.step});
+  }
+  function journeyNext() {
+    var r=J.current(st);if(!r){go('goals',null,{journeySetup:true});return;}
+    var day=clamp(rawToday());prepareDay(day,false);var t=tasksFor(day).find(function(t){return t.kind && !isDone(day,t.id);});
+    if(t){openJourneyTask(t);return;}
+    var n=J.nextStep(st,COURSES,r),si=J.nextStage(r);
+    if(n)openJourneyTask({kind:n.step.exam?'exam':'lesson',cid:n.course.id,step:n.index});
+    else go('goals',null,{workStage:si<0?0:si,workRoute:r.id,journeySetup:false});
+  }
+  function homeFocus() {
+    var r=J.current(st),due=J.dueReviews(st,COURSES,isoOf(new Date())),words=J.selectWords(st,learnedWords(),isoOf(new Date()),1000),canResume=!!st.session || !!st.lastStudy;
+    var h='<section class="home-focus" aria-label="Следующий шаг"><span class="eyebrow">Твой следующий шаг</span>';
+    if(r){var n=J.nextStep(st,COURSES,r),si=J.nextStage(r),pending=tasksFor(clamp(rawToday())).find(function(t){return t.kind && !isDone(clamp(rawToday()),t.id);});h+='<h2>'+esc(r.title)+'</h2><p>'+esc(pending?pending.t:n?n.step.t:si>=0?J.presets[r.kind].stages[si].title:'Маршрут завершён. Можно выбрать новую цель.')+'</p><div class="btns"><button class="btn primary" data-act="journeynext">Продолжить маршрут</button><button class="btn" data-tab="plan">Сегодня</button><button class="btn" data-tab="goals">Работы и этапы</button></div>';}
+    else h+='<h2>От цели к готовой работе</h2><p>Выбери результат и время на день. Росток соберёт ближайшие шаги.</p><button class="btn primary" data-act="journeysetup">Выбрать цель</button>';
+    if(canResume)h+='<button class="btn" data-act="resume">'+(st.session?'Продолжить незаконченный урок':'Продолжить обучение')+'</button>';
+    h+='<div class="focus-review"><span>К повторению: <b data-review-count>'+due.length+'</b> '+plural(due.length,'тема','темы','тем')+'</span><button class="btn" data-act="reviewdue"'+(!due.length?' disabled':'')+'>Повторить темы</button>'+(words.length?'<button class="btn" data-act="cards">Слова: '+words.length+'</button>':'')+'</div>';
+    if(due.length)h+='<details class="review-queue"><summary>Что стоит повторить</summary>'+due.slice(0,20).map(function(d){return '<button class="link" data-review-topic="'+d.cid+':'+d.index+'">'+esc(course(d.cid).name+': '+d.title)+'</button>';}).join('')+'</details>';
+    return h+'</section>';
+  }
+  function journeyForm(r) {
+    var today=isoOf(new Date()),kind=r?r.kind:V.newJourneyKind || 'shop-wp';
+    return '<section class="card journey-form"><h2 class="h2">'+(r?'Настроить маршрут':'Выбрать результат')+'</h2><label class="lab" for="journey-kind">Направление<select id="journey-kind">'+Object.keys(J.presets).map(function(k){return '<option value="'+k+'"'+(kind===k?' selected':'')+'>'+esc(J.presets[k].name)+'</option>';}).join('')+'</select></label><label class="lab" for="journey-course">Курс для своего учебного результата<select id="journey-course">'+COURSES.filter(function(c){return c.type==='path';}).map(function(c){return '<option value="'+c.id+'"'+(r && r.courses[0]===c.id?' selected':'')+'>'+esc(c.name)+'</option>';}).join('')+'</select><small>Используется при выборе «Свой учебный результат».</small></label><label class="lab" for="journey-title">Что хочу получить<input id="journey-title" maxlength="120" placeholder="Например, учебный магазин кроссовок" value="'+esc(r?r.title:'')+'"></label><div class="journey-fields"><label class="lab" for="journey-deadline">Плановая дата<input id="journey-deadline" type="date" min="'+today+'" value="'+(r?r.deadline:J.addDays(today,30))+'"></label><label class="lab" for="journey-budget">Минут в обычный день<input id="journey-budget" type="number" min="15" max="240" step="5" value="'+(r?r.budget:45)+'"></label></div><p class="small">В смену — до 20 минут, в лёгкий день — до 30. При смене цели прежние работы сохранятся.</p><div class="btns"><button class="btn primary" data-act="savejourney">Сохранить маршрут</button>'+(J.current(st)?'<button class="btn" data-act="canceljourney">Отмена</button>':'')+'</div></section>';
+  }
+  function journeyView() {
+    var r=V.workRoute && st.journeys[V.workRoute] || J.current(st),h='';
+    if(V.journeySetup || !r)h+=journeyForm(V.editJourney?J.current(st):null);
+    if(!r)return h;
+    var p=J.presets[r.kind],done=p.stages.filter(function(x,i){return r.works[i] && r.works[i].accepted;}).length,si=Number.isInteger(V.workStage) && p.stages[V.workStage]?V.workStage:J.nextStage(r);
+    if(si<0)si=p.stages.length-1;
+    h+='<section class="card journey-route"><span class="eyebrow">'+esc(p.name)+(r.id!==st.activeJourney?' · история':'')+'</span><h2>'+esc(r.title)+'</h2><p>'+r.budget+' мин в обычный день · плановая дата '+esc(r.deadline)+(r.deadline<isoOf(new Date())?' · срок прошёл, можно перенести его в настройках':'')+'</p>'+bar(done/p.stages.length,'var(--accent)')+'<p>'+done+' из '+p.stages.length+' этапов: применено в работе. Самопроверка по критериям.</p><div class="btns"><button class="btn primary" data-act="journeynext">Следующий шаг</button><button class="btn" data-act="journeyedit">Время и срок</button><button class="btn" data-act="journeysetup">Новая цель</button></div><div class="journey-stages">'+p.stages.map(function(stage,i){return '<button class="btn" data-work-stage="'+i+'" data-work-route="'+r.id+'" aria-pressed="'+(si===i)+'">'+(r.works[i] && r.works[i].accepted?'✓ ':String(i+1)+'. ')+esc(stage.title)+'</button>';}).join('')+'</div></section>';
+    h+=workEditor(r,si);
+    var others=Object.keys(st.journeys).filter(function(id){return id!==r.id;});
+    if(others.length)h+='<details class="card journey-history"><summary>Другие цели и сохранённые работы ('+others.length+')</summary>'+others.map(function(id){return '<button class="btn block" data-activate-journey="'+id+'">'+esc(st.journeys[id].title)+'</button>';}).join('')+'</details>';
+    return h;
+  }
+  function workEditor(r,si) {
+    var stage=J.presets[r.kind].stages[si],w=r.works[si] || {text:'',url:'',checks:[],versions:[]};
+    return '<section class="card work-editor" data-route="'+r.id+'" data-stage="'+si+'"><span class="eyebrow">Практическая работа · этап '+(si+1)+'</span><h2>'+esc(stage.title)+'</h2><label class="lab" for="work-text">Результат и замечания<textarea id="work-text" maxlength="10000" rows="5" placeholder="Что сделал, где лежит файл, как проверил и что исправить">'+esc(w.text)+'</textarea></label><label class="lab" for="work-url">Ссылка на работу, если есть<input id="work-url" type="url" maxlength="2000" placeholder="https://…" value="'+esc(w.url)+'"></label><button class="btn" data-act="savework">Сохранить версию</button><h3>Самопроверка</h3><p class="small">Сохрани результат, затем проверь каждый пункт. Росток хранит твою оценку; сам файл он не анализирует.</p><div class="work-checks">'+stage.checks.map(function(label,i){return '<label><input class="work-criterion" type="checkbox"'+(w.checks[i]?' checked':'')+'> <span>'+esc(label)+'</span></label>';}).join('')+'</div><div class="btns"><button class="btn primary" data-act="acceptwork">Подтвердить самопроверку</button><button class="btn" data-act="workprompt">Запрос для проверки с ИИ</button></div>'+(w.accepted?'<p class="work-accepted" role="status">✓ Самопроверка пройдена '+w.accepted+'</p>':'')+'<details class="work-history"><summary>Версии работы ('+w.versions.length+')</summary>'+w.versions.slice().reverse().map(function(v,i){return '<article><b>Версия '+(w.versions.length-i)+' · '+esc(v.at)+'</b><p>'+esc(v.text)+'</p>'+(v.url?'<a class="lnk" target="_blank" rel="noopener noreferrer" href="'+esc(v.url)+'">Открыть работу</a>':'')+'</article>';}).join('')+'</details></section>';
+  }
+  function dayBudget() {
+    var p=st.dayPlans[keyOf(sel)];if(!p)return '<div class="card"><p>План по прежним шаблонам. Для посильного расписания выбери личный маршрут.</p><button class="btn" data-act="journeysetup">Настроить свой день</button></div>';
+    var total=stat(sel).totalMin;
+    return '<div class="card journey-day"><b>Бюджет дня: '+p.budget+' мин</b><p>Задачи: '+total+' мин'+(total>p.budget?' · свои или уже выполненные дела превышают бюджет; оставь главное.':'. Остальное можно продолжить завтра.')+'</p><div class="btns"><button class="btn" data-act="replanday">Обновить оставшиеся задачи</button><button class="btn" data-act="carrytasks">Перенести свои дела со вчера</button><button class="btn" data-act="journeyedit">Изменить время</button></div><p class="small">Указаны плановые минуты. Завершённые дела сохраняются при обновлении плана.</p></div>';
+  }
+  function actualTime() {return '<section class="card actual-time"><h2 class="h2">Фактически занимался</h2><p class="small">Укажи время по своим часам. Оно учитывается отдельно от минут плана.</p><label class="lab" for="actual-minutes">Минут за выбранный день<input id="actual-minutes" type="number" min="0" max="1440" value="'+(st.actualMinutes[keyOf(sel)] || 0)+'"></label><button class="btn" data-act="saveactual">Сохранить время</button></section>';}
+  function workContext() {var el=app.querySelector('.work-editor');return el?{route:st.journeys[el.getAttribute('data-route')],stage:+el.getAttribute('data-stage')}:null;}
+  function journeyAction(act) {
+    var today=isoOf(new Date()),r=J.current(st),x;
+    if(['journeysetup','musicjourney','journeyedit'].indexOf(act)>=0){go('goals',null,{journeySetup:true,editJourney:act==='journeyedit',newJourneyKind:act==='musicjourney'?'music':null,workRoute:null,workStage:null});return true;}
+    if(act==='canceljourney'){V.journeySetup=false;render();return true;}
+    if(act==='savejourney'){
+      try{var input={kind:document.getElementById('journey-kind').value,title:document.getElementById('journey-title').value,deadline:document.getElementById('journey-deadline').value,budget:+document.getElementById('journey-budget').value,course:document.getElementById('journey-course').value};
+        var keep=V.editJourney && r && r.kind===input.kind && (input.kind!=='course' || r.courses[0]===input.course),id=keep?r.id:'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),nr=J.createRoute(input,today,id);
+        if(keep){nr.start=r.start;nr.works=r.works;}st.journeys[id]=nr;st.activeJourney=id;V.journeySetup=false;V.workRoute=null;V.workStage=null;prepareDay(clamp(rawToday()),true);save();render();toast('Маршрут сохранён');
+      }catch(e){toast(e.message);}return true;
+    }
+    if(act==='journeynext'){journeyNext();return true;}
+    if(act==='reviewdue'){var due=J.dueReviews(st,COURSES,today);if(due.length)openJourneyTask({kind:'review',cid:due[0].cid,step:due[0].index});else toast('На сегодня повторений нет');return true;}
+    if(act==='replanday'){prepareDay(sel,true);render();return true;}
+    if(act==='saveactual'){var n=+document.getElementById('actual-minutes').value;if(!Number.isInteger(n)||n<0||n>1440){toast('Введи минуты от 0 до 1440');return true;}st.actualMinutes[keyOf(sel)]=n;save();render();toast('Фактическое время сохранено');return true;}
+    if(act==='carrytasks'){
+      var k=keyOf(sel),before=keyOf(sel-1),list=st.extraTasks[before] || [];st.extraTasks[k]=st.extraTasks[k] || [];
+      list.filter(function(t){return t.id.indexOf('u-')===0 && !(st.checks[before] && st.checks[before][t.id]);}).forEach(function(t){var id=t.id;if(!st.extraTasks[k].some(function(v){return v.id===id;}))st.extraTasks[k].push(Object.assign({},t,{id:id}));});prepareDay(sel,true);save();render();toast('Незавершённые свои дела перенесены');return true;
+    }
+    if(['savework','acceptwork','workprompt'].indexOf(act)>=0){
+      x=workContext();if(!x)return true;
+      try{
+        var body=document.getElementById('work-text').value,url=document.getElementById('work-url').value;
+        if(act==='savework'){J.saveWork(st,x.route.id,x.stage,body,url,today);save();render();toast('Версия сохранена');}
+        else if(act==='acceptwork'){
+          var old=x.route.works[x.stage];if(!old || old.text!==body.trim() || old.url!==url.trim())throw Error('Сначала сохрани текущую версию работы.');
+          J.acceptWork(st,x.route.id,x.stage,Array.from(document.querySelectorAll('.work-criterion')).map(function(e){return e.checked;}),today);completeJourneyTasks(null,x.route.id,x.stage);V.workStage=J.nextStage(x.route);save();render();toast('Самопроверка сохранена');
+        }else{var criteria=J.presets[x.route.kind].stages[x.stage].checks;showCopyModal('Проверь мою работу по каждому критерию. Если ссылка или файл недоступны, скажи об этом и не выдумывай результат. Укажи ошибки, что исправить и как проверить исправление.\nЦель: '+x.route.title+'\nЭтап: '+J.presets[x.route.kind].stages[x.stage].title+'\nКритерии:\n'+criteria.map(function(c){return '- '+c;}).join('\n')+'\nРабота: '+body+'\nСсылка: '+url);}
+      }catch(e){toast(e.message);}return true;
+    }
+    if(act==='transferprogress'){transferProgress();return true;}
+    return false;
+  }
+  async function transferProgress() {
+    try{var payload=JSON.stringify({app:'dnevnik',v:APP_VERSION,saved:new Date().toISOString(),state:st},null,1),file=new File([payload],'rostok-'+isoOf(new Date())+'.json',{type:'application/json'});
+      if(navigator.canShare && navigator.share && navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Прогресс Ростка'});st.backupAt=isoOf(new Date());save();render();toast('Файл передан системному меню');}else exportFile();
+    }catch(e){if(e.name!=='AbortError'){exportFile();}}
+  }
+
   // ----- Цели -----
   function viewGoals() {
     var rt = rawToday(), passed = Math.max(0, Math.min(N, rt + 1)), cnt = 0;
@@ -668,10 +780,10 @@
       else if (c.type === 'books') { var bs = allBooks(); goals.push({ t: 'Прочитать книги из списка', v: bs.filter(bookDone).length, n: bs.length, unit: 'книг', sub: '', col: 'var(--c-' + c.cat + ')', course: c.id }); }
       else if (c.type === 'stages') { var rel = st.tracks.filter(function (x) { return x.stage >= 5; }).length; goals.push({ t: 'Выпустить треки', v: rel, n: st.tracks.length, unit: 'треков', sub: st.tracks.length ? '' : 'Добавь трек на странице «Музыка»', col: 'var(--c-' + c.cat + ')', course: c.id }); }
     });
-    return '<section class="view goals-view">' + topbar('Цели', 'Собраны из твоего плана и курсов') + '<div class="goals-grid">' + goals.map(function (g) {
+    return '<section class="view goals-view">' + topbar('Цели', 'От обучения к готовой работе') + journeyView() + '<details class="journey-legacy"><summary>Прогресс по прежнему плану и всем курсам</summary><div class="goals-grid">' + goals.map(function (g) {
       var p = g.n ? Math.min(1, g.v / g.n) : 0;
       return '<button class="card goal" ' + (g.course ? 'data-course="' + g.course + '"' : 'data-tab="' + g.tab + '"') + ' style="--cc:' + g.col + '"><span class="spread"><b>' + esc(g.t) + '</b><em>' + Math.round(p * 100) + '%</em></span>' + bar(p, g.col) + '<span class="small">' + g.v + (g.n ? ' из ' + g.n : '') + ' ' + g.unit + (g.sub ? ' · ' + esc(g.sub) : '') + '</span></button>';
-    }).join('') + '</div></section>';
+    }).join('') + '</div></details></section>';
   }
 
   // ----- Библиотека -----
@@ -698,7 +810,7 @@
       '<label class="btn" for="importFile">Восстановить из файла</label><input type="file" id="importFile" accept=".json,application/json"></div></div>';
   }
   function viewTools() {
-    return '<section class="view tools-view">' + topbar('Инструменты', 'Копия прогресса и синхронизация устройств') + '<div class="tools-grid">' + backupCard() + syncCard() + '</div></section>';
+    return '<section class="view tools-view">' + topbar('Инструменты', 'Копия прогресса и синхронизация устройств') + '<div class="tools-grid"><div class="card"><h2 class="h2">Перенести на другое устройство</h2><p>Отправь файл через системное меню, AirDrop или сохрани его. На другом устройстве открой «Росток» → Инструменты → Восстановить из файла.</p><button class="btn primary" data-act="transferprogress">Отправить файл прогресса</button><p class="small">Это разовый перенос. Для постоянного обмена используй синхронизацию ниже. Токен GitHub в файл не входит.</p></div>' + backupCard() + syncCard() + '</div></section>';
   }
   function themeSwitch() {
     return '<div class="theme-switch" role="group" aria-label="Тема оформления">' + [['', 'Автоматически'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(function (x) { return '<button data-theme="' + x[0] + '" aria-pressed="' + (theme === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>';
@@ -737,6 +849,7 @@
       });
       h += '</div><div class="card" style="display:flex;flex-direction:column;gap:8px"><label class="lab" for="new-book">Добавить книгу<input id="new-book" placeholder="Название и автор"></label><button class="btn" data-act="addbook">Добавить</button></div>';
     } else if (c.type === 'stages') {
+      h += '<div class="card"><h2 class="h2">Трек с практикой и проверкой</h2><p>Сохраняй версии, экспорты и замечания на каждом этапе — от идеи до выпуска.</p><button class="btn primary" data-act="musicjourney">Создать маршрут трека</button></div>';
       h += '<div class="card">';
       if (!st.tracks.length) h += '<p class="muted">Пока нет треков. Добавь первый ниже.</p>';
       st.tracks.forEach(function (t, ti) {
@@ -758,6 +871,8 @@
     var h = '<div class="row course-intro" style="gap:14px"><div class="course-cover">' + photo(c) + '</div><div class="title"><h1 class="h1">' + esc(c.name) + '</h1><div class="muted">' + esc(c.goal) + '</div>' + bar(ps.les ? ps.lesDone / ps.les : 0, 'var(--accent)') + '<span class="small">' + esc(courseMeta(c)) + '</span></div>' +
       (c.level ? '<div class="lvl" style="background:' + col + '"><b>' + c.level + '</b><span>цель ' + c.target + '</span></div>' : '') + '</div>';
     if (c.resources && c.resources.length) h += '<div class="card course-resources"><h2 class="h2">Материалы курса</h2>' + c.resources.map(function (r) { return '<a class="btn block" href="' + esc(r.href) + '">' + esc(r.label) + '</a>'; }).join('') + (c.id === 'vitrina' ? '<p class="small">Отметки и черновик редактора хранятся отдельно; ответы и завершение урока сохраняет «Росток».</p>' : '') + '</div>';
+    var tested = c.steps.filter(function(s){return !s.exam && J.mastery(st,s.id)==='checked';}).length;
+    h += '<div class="card mastery-summary"><b>Пройдено: ' + ps.lesDone + '</b><b>Проверено тестом: ' + tested + '</b><p class="small">Проверено — минимум 80% в самостоятельной попытке и все ошибки разобраны. Применение отмечается отдельно в практических работах маршрута.</p></div>';
     if (si >= 0) h += stepHero(c, si);
     else h += '<div class="hero"><div class="tl">Все уроки и экзамены пройдены</div><div class="pl">Новые материалы появятся в следующих обновлениях.</div></div>';
     h += '<div class="card" style="padding:4px 0"><ul class="path">';
@@ -769,7 +884,7 @@
         stx = x === 'done' ? 'сдан ' + e.best + '/' + e.n : x === 'open' ? (s.q.length ? 'открыт' : 'скоро') : e ? 'лучший ' + e.best + '/' + e.n : '';
       } else {
         ic = '<span class="ic' + (x === 'done' ? ' ok' : cur ? ' now' : '') + '">' + (x === 'done' ? I.check : x === 'locked' ? I.lock : lessonNo(c, i)) + '</span>';
-        stx = x === 'done' ? 'пройден' : i === ni ? 'сейчас' : '';
+        stx = x === 'done' ? (J.mastery(st,s.id)==='checked' ? 'пройден · проверено тестом' : 'пройден') : i === ni ? 'сейчас' : '';
       }
       h += '<li><button class="step' + (cur ? ' cur' : '') + (x === 'locked' ? ' locked' : '') + '" data-step="' + i + '">' + ic + '<span class="tx">' + esc(s.exam ? s.t : s.t) + '</span><span class="st' + (i === ni && x !== 'done' ? ' now' : '') + '">' + stx + '</span></button></li>';
     });
@@ -1032,12 +1147,14 @@
     }
     var earned = !st.lessons[s.id];
     if (earned) st.lessons[s.id] = isoOf(new Date());
+    J.recordReview(st,'lesson:'+s.id,okN/n>=.8 && !wrong.length,isoOf(new Date()));
+    completeJourneyTasks(s.id);
     V.completed = {cid:c.id,i:LS.i,ok:okN,n:n,earned:earned};
     delete st.session; save(); LS = null; V.page = 'completed'; V.step = null; render(); window.scrollTo(0, 0);
   }
   function viewCompleted() {
     var r = V.completed, c = course(r.cid), ni = nextIdx(c), next = ni >= 0 ? c.steps[ni] : null;
-    return '<section class="view completion-view"><div class="completion-mark">✓</div><span class="eyebrow">Ещё один шаг вперёд</span><h1 class="h1">Урок завершён</h1><p class="muted">' + esc(c.steps[r.i].t) + '</p><div class="card"><strong class="completion-score">' + r.ok + '/' + r.n + '</strong><p>в первой попытке' + (r.earned ? ' · +20 очков' : '') + '</p></div>' +
+    return '<section class="view completion-view"><div class="completion-mark">✓</div><span class="eyebrow">Ещё один шаг вперёд</span><h1 class="h1">Урок завершён</h1><p class="muted">' + esc(c.steps[r.i].t) + '</p><div class="card"><strong class="completion-score">' + r.ok + '/' + r.n + '</strong><p>в первой попытке' + (r.earned ? ' · +20 очков' : '') + '</p><p>' + (J.mastery(st,c.steps[r.i].id)==='checked'?'Проверено тестом.':'Материал пройден. Для отметки «Проверено тестом» нужна новая самостоятельная попытка от 80%.') + ' Повторение: ' + esc(st.reviews['lesson:'+c.steps[r.i].id].due) + '.</p><button class="btn" data-tab="goals">К практической работе</button></div>' +
       (next && stepState(c,ni) === 'open' ? '<div class="next-preview"><span class="eyebrow">Дальше по пути</span><h2>' + esc(next.t) + '</h2><button class="btn primary block" data-act="nextlesson">' + (next.exam ? 'Перейти к экзамену' : 'Следующий урок') + ' →</button></div>' : '<p class="muted">Этот блок завершён. Посмотри другие направления.</p>') + '<button class="btn block" data-course="' + c.id + '">К программе курса</button><button class="back" data-tab="today">На сегодня хватит</button></section>';
   }
 
@@ -1091,7 +1208,7 @@
       }
     });
     e.weak = weak;
-    st.exams[s.id] = e; save();
+    st.exams[s.id] = e; completeJourneyTasks(s.id); Object.keys(by).forEach(function(id){J.recordReview(st,'lesson:'+id,by[id][0]/by[id][1]>=.8,isoOf(new Date()));}); save();
     EX = null; V.page = 'result'; V.result = c.id + ':' + EX_I(s, c); render(); window.scrollTo(0, 0);
   }
   function EX_I(s, c) { return c.steps.indexOf(s); }
@@ -1260,6 +1377,9 @@
     (x.booksAdded || []).forEach(function (b) { if (b && b.id != null) bm[b.id] = b.t; });
     c.tracksM = tm; c.booksAddedM = bm;
     function rec(p, v) {
+      var parts=p.split(SEP);
+      // Keep one work version, review schedule or daily snapshot coherent across devices.
+      if((parts.length===2 && ['dayPlans','reviews'].indexOf(parts[0])>=0) || (parts.length===4 && parts[0]==='journeys' && parts[2]==='works')){o[p]=JSON.stringify(v);return;}
       if (v && typeof v === 'object' && !Array.isArray(v)) Object.keys(v).forEach(function (k) { rec(p === '' ? k : p + SEP + k, v[k]); });
       else if (p !== '') o[p] = JSON.stringify(v);
     }
@@ -1403,6 +1523,9 @@
 
   // ---------- отрисовка ----------
   function render() {
+    extendPlan();
+    prepareDay(clamp(rawToday()),false);
+    if (V.tab==='plan') prepareDay(sel,false);
     var html, full = false;
     if (V.page === 'exam' && EX) { html = viewExam(); full = true; }
     else if (V.page === 'lesson' && LS) { html = viewLesson(); full = true; }
@@ -1450,6 +1573,10 @@
     }
     var b = e.target.closest('button'); if (!b) return;
     var act = b.getAttribute('data-act'), v;
+    if(journeyAction(act))return;
+    if((v=b.getAttribute('data-work-stage'))!=null){go('goals',null,{workStage:+v,workRoute:b.getAttribute('data-work-route'),journeySetup:false});return;}
+    if((v=b.getAttribute('data-activate-journey')) && st.journeys[v]){st.activeJourney=v;V.workRoute=null;V.workStage=null;prepareDay(clamp(rawToday()),true);save();render();return;}
+    if((v=b.getAttribute('data-journey-task'))){var jt=tasksFor(sel).find(function(t){return t.id===v;});if(jt)openJourneyTask(jt);return;}
     if (act === 'homescene') { setTheme(homeScene() === 'day' ? 'dark' : 'light'); return; }
     if ((v = b.getAttribute('data-tab'))) { go(v); return; }
     if ((v = b.getAttribute('data-week')) != null) { V.week = Math.max(0,Math.min(P.weeks.length-1,+v)); render(); return; }
@@ -1471,9 +1598,11 @@
     if ((v = b.getAttribute('data-next-course'))) { nextInCourse(v); return; }
     if ((v = b.getAttribute('data-repeat-exam'))) { var er=v.split(':'); startExam(er[0],+er[1],true); return; }
     if ((v = b.getAttribute('data-day')) != null) { sel = +v; go('today'); return; }
-    if ((v = b.getAttribute('data-mode'))) { st.modes[keyOf(sel)] = v; save(); render(); return; }
+    if ((v = b.getAttribute('data-mode'))) { st.modes[keyOf(sel)] = v; prepareDay(sel,true); save(); render(); return; }
     if ((v = b.getAttribute('data-task')) != null) {
-      var k = keyOf(sel); st.checks[k] = st.checks[k] || {};
+      var k = keyOf(sel), linked=tasksFor(sel).find(function(t){return t.id===v;});
+      if(linked && linked.kind==='work' && !isDone(sel,v)){var wr=st.journeys[linked.routeId],ww=wr && wr.works[linked.stage];if(!ww || !ww.accepted){openJourneyTask(linked);toast('Сначала сохрани работу и пройди самопроверку');return;}}
+      st.checks[k] = st.checks[k] || {};
       if (st.checks[k][v]) delete st.checks[k][v]; else st.checks[k][v] = 1;
       save(); render();
       var s = stat(sel); if (s.n && s.done === s.n && st.checks[k][v]) toast('День закрыт полностью');
@@ -1506,7 +1635,7 @@
       if (q[0] === 'book') { st.booksAdded = st.booksAdded.filter(function (x) { return x.id !== q[1]; }); delete st.books[q[1]]; }
       pendingDel = null; save(); render(); return;
     }
-    if ((v = b.getAttribute('data-card')) != null) { if (v === '1') CARDS.known++; if (CARDS.i < CARDS.list.length - 1) { CARDS.i++; CARDS.shown = false; } else CARDS.done = true; render(); return; }
+    if ((v = b.getAttribute('data-card')) != null) { J.recordReview(st,'word:'+CARDS.list[CARDS.i][0].toLowerCase(),v==='1',isoOf(new Date()));save();if (v === '1') CARDS.known++; if (CARDS.i < CARDS.list.length - 1) { CARDS.i++; CARDS.shown = false; } else CARDS.done = true; render(); return; }
     switch (act) {
       case 'reloadapp': if(!EX || confirm('Экзамен будет начат заново. Обновить приложение сейчас?')) location.reload(); break;
       case 'treebell': var treeBell=document.getElementById('tree-notifications'); if(treeBell) treeBell.hidden=!treeBell.hidden; break;
@@ -1544,7 +1673,7 @@
       case 'endlesson': LS = null; V.page = 'course'; render(); break;
       case 'lessondone': finishLesson(); break;
       case 'quitexam': EX = null; V.page = V.tab === 'learn' ? 'course' : null; render(); break;
-      case 'cards': CARDS = { list: shuffle(learnedWords()).slice(0, 10), i: 0, shown: false, known: 0, done: false }; V.page = 'cards'; render(); window.scrollTo(0, 0); break;
+      case 'cards': var wordList=J.selectWords(st,learnedWords(),isoOf(new Date()),10);CARDS = { list: wordList, i: 0, shown: false, known: 0, done: !wordList.length }; V.page = 'cards'; render(); window.scrollTo(0, 0); break;
       case 'show': CARDS.shown = true; render(); break;
       case 'endcards': CARDS = null; V.page = 'course'; V.course = 'eng'; render(); break;
       case 'addtrack': var tn = document.getElementById('new-track').value.trim(); if (!tn) { toast('Впиши название трека'); break; } st.tracks.push({ name: tn, stage: 0 }); save(); render(); break;
@@ -1634,6 +1763,7 @@
     if (document.visibilityState !== 'visible') return;
     applyTheme();
     if (SY.cfg && Date.now() - (SY.cfg.at || 0) > 60000) syncNow(false);
+    extendPlan();
     var nt = rawToday();
     if (nt !== today) { if (sel === clamp(today)) sel = clamp(nt); today = nt; if (!V.page) render(); }
   });
@@ -1649,6 +1779,8 @@
 
   load();
   syLoad();
+  var requested=new URLSearchParams(location.search),requestedCourse=course(requested.get('course')),requestedLesson=Number(requested.get('lesson'));
+  if(requestedCourse && requestedCourse.type==='path' && Number.isInteger(requestedLesson) && requestedLesson>0){var requestedSteps=requestedCourse.steps.map(function(s,i){return {s:s,i:i};}).filter(function(x){return !x.s.exam;});if(requestedSteps[requestedLesson-1]){V.tab='learn';V.page='course';V.course=requestedCourse.id;V.step=requestedSteps[requestedLesson-1].i;}}
   render();
   if (SY.cfg) syncNow(false);
 })();

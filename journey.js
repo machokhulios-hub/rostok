@@ -33,7 +33,7 @@
   function safeUrl(x) { if (!x) return true;try { var u=new URL(x);return x.length<=2000 && ['http:','https:'].indexOf(u.protocol)>=0 && !u.username && !u.password; } catch(e) { return false; } }
   function current(s) { return s.journeys && s.journeys[s.activeJourney] || null; }
   function createRoute(input,today,id) {
-    var p=presets[input.kind],title=String(input.title || '').trim(),budget=Number(input.budget);
+    var p=Object.prototype.hasOwnProperty.call(presets,input.kind)?presets[input.kind]:null,title=String(input.title || '').trim(),budget=Number(input.budget);
     if (!p || !title || title.length>120 || !date(today) || !date(input.deadline) || input.deadline<today || !Number.isInteger(budget) || budget<15 || budget>240 || !/^[a-zA-Z0-9_-]{1,64}$/.test(id)) throw Error('Проверь название, срок и время: от 15 до 240 минут в день.');
     if (input.kind==='course' && !/^[a-zA-Z0-9_-]{1,64}$/.test(input.course || '')) throw Error('Выбери курс.');
     return {id:id,kind:input.kind,title:title,start:today,deadline:input.deadline,budget:budget,courses:input.kind==='course'?[input.course]:p.courses.slice(),works:{}};
@@ -60,7 +60,7 @@
     return out.sort(function(a,b){return a.due.localeCompare(b.due) || a.key.localeCompare(b.key);});
   }
   function selectWords(s,words,today,limit) {
-    var used={};return words.filter(function(w){var key='word:'+w[0].toLowerCase();if(used[key])return false;used[key]=true;var r=s.reviews && s.reviews[key];return !r || r.due<=today;}).sort(function(a,b){var ar=s.reviews && s.reviews['word:'+a[0].toLowerCase()],br=s.reviews && s.reviews['word:'+b[0].toLowerCase()];return (ar?ar.due:'0000').localeCompare(br?br.due:'0000');}).slice(0,limit);
+    var used={};return words.filter(function(w){var key='word:'+w[0].toLowerCase();if(used[key])return false;used[key]=true;var r=s.reviews && s.reviews[key];return !r || r.due<=today;}).sort(function(a,b){var ar=s.reviews && s.reviews['word:'+a[0].toLowerCase()],br=s.reviews && s.reviews['word:'+b[0].toLowerCase()];return (ar?ar.due:today).localeCompare(br?br.due:today);}).slice(0,limit);
   }
   function buildDay(s,courses,today,mode) {
     var r=current(s);if(!r)return null;
@@ -89,7 +89,7 @@
   function validate(s) {
     function map(x,n,test) {return x==null || plain(x) && Object.keys(x).length<=n && Object.keys(x).every(function(k){return test(x[k],k);});}
     function work(w,r,i) {var stage=presets[r.kind].stages[i];return !!stage && plain(w) && text(w.text,10000) && text(w.url,2000) && safeUrl(w.url) && !!(w.text.trim() || w.url) && Array.isArray(w.versions) && w.versions.length<=20 && w.versions.every(function(v){return plain(v) && text(v.text,10000) && text(v.url,2000) && safeUrl(v.url) && date(v.at);}) && Array.isArray(w.checks) && w.checks.every(function(c){return typeof c==='boolean';}) && (w.accepted==null || date(w.accepted) && w.checks.length===stage.checks.length && w.checks.every(Boolean));}
-    return map(s.journeys,100,function(r,id){return plain(r) && /^[a-zA-Z0-9_-]{1,64}$/.test(id) && r.id===id && !!presets[r.kind] && text(r.title,120) && !!r.title.trim() && date(r.start) && date(r.deadline) && r.deadline>=r.start && Number.isInteger(r.budget) && r.budget>=15 && r.budget<=240 && Array.isArray(r.courses) && r.courses.length<=10 && r.courses.every(function(c){return text(c,64) && /^[a-zA-Z0-9_-]+$/.test(c);}) && plain(r.works) && Object.keys(r.works).every(function(i){return /^\d+$/.test(i) && work(r.works[i],r,+i);});}) &&
+    return map(s.journeys,100,function(r,id){return plain(r) && /^[a-zA-Z0-9_-]{1,64}$/.test(id) && r.id===id && Object.prototype.hasOwnProperty.call(presets,r.kind) && text(r.title,120) && !!r.title.trim() && date(r.start) && date(r.deadline) && r.deadline>=r.start && Number.isInteger(r.budget) && r.budget>=15 && r.budget<=240 && Array.isArray(r.courses) && r.courses.length<=10 && r.courses.every(function(c){return text(c,64) && /^[a-zA-Z0-9_-]+$/.test(c);}) && plain(r.works) && Object.keys(r.works).every(function(i){return /^\d+$/.test(i) && work(r.works[i],r,+i);});}) &&
       (s.activeJourney==null || typeof s.activeJourney==='string' && !!(s.journeys && s.journeys[s.activeJourney])) &&
       map(s.reviews,20000,function(r,k){return /^(lesson|word):/.test(k) && k.length<=200 && plain(r) && date(r.due) && date(r.last) && r.due>=r.last && Number.isInteger(r.level) && r.level>=0 && r.level<intervals.length && typeof r.correct==='boolean';}) &&
       map(s.actualMinutes,5000,function(n,k){return date(k) && Number.isInteger(n) && n>=0 && n<=1440;}) &&
