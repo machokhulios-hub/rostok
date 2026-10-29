@@ -37,5 +37,5 @@
 - [x] Bump version to 4.18 consistently and cache both backgrounds.
 - [x] Run npm test, JS/CSS syntax checks and offline asset existence checks.
 - [x] Inspect mobile/desktop layouts and day/night switching using available browser; record any unavailable checks.
-- [ ] Review final diff, update HANDOFF, commit, merge safely onto current main, push and verify GitHub Pages response files.
+- [x] Review final diff, update HANDOFF, commit, merge safely onto current main, push and verify GitHub Pages response files.
 
