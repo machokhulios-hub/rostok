@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.14';
+  var APP_VERSION = '4.15';
   var P = window.PLAN, COURSES = window.COURSES;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -261,9 +261,9 @@
   I.compass = ic('<circle cx="12" cy="12" r="9"/><path d="M16 8l-2.5 5.5L8 16l2.5-5.5z"/>');
   I.trophy = ic('<path d="M7 3h10v6a5 5 0 0 1-10 0zM7 5H3v3a4 4 0 0 0 4 4M17 5h4v3a4 4 0 0 1-4 4M12 14v5M7 21h10M9 19h6"/>');
 
-  var NAV = [['today', 'Главная', I.home], ['learn', 'Обучение', I.book], ['plan', 'План дня', I.cal], ['habits', 'Привычки', I.habit], ['notes', 'Заметки', I.note], ['goals', 'Цели', I.goal], ['growth', 'Статистика', I.stats], ['library', 'Библиотека', I.lib], ['tools', 'Инструменты', I.tools]];
+  var NAV = [['today', 'Главная', I.home], ['learn', 'Обучение', I.book], ['plan', 'План дня', I.cal], ['habits', 'Привычки', I.habit], ['notes', 'Заметки', I.note], ['goals', 'Цели', I.goal], ['growth', 'Статистика', I.stats], ['library', 'Библиотека', I.lib], ['tools', 'Инструменты', I.tools], ['more', 'Профиль', I.person]];
   var MOBILE_NAV = [['today', 'Главная', I.home], ['learn', 'Карта', I.compass], ['growth', 'Прогресс', I.stats], ['notes', 'Заметки', I.note], ['more', 'Профиль', I.person]];
-  var MORE_TABS = ['habits', 'goals', 'library', 'tools', 'settings', 'more'];
+  var MORE_TABS = ['plan', 'habits', 'goals', 'library', 'tools', 'settings', 'more'];
   function renderNav() {
     var nav = document.getElementById('tabbar'); if (!nav) return;
     if (!nav.getAttribute('data-built')) {
@@ -275,7 +275,7 @@
     }
     var tabs = nav.querySelectorAll('.tab');
     for (var i = 0; i < tabs.length; i++) {
-      var t = tabs[i].getAttribute('data-tab'), on = t === V.tab || (t === 'more' && MORE_TABS.indexOf(V.tab) >= 0) || (t === 'learn' && V.tab === 'learn');
+      var t = tabs[i].getAttribute('data-tab'), on = t === V.tab || (t === 'more' && tabs[i].closest('.bottom') && MORE_TABS.indexOf(V.tab) >= 0) || (t === 'learn' && V.tab === 'learn');
       if (on) tabs[i].setAttribute('aria-current', 'page'); else tabs[i].removeAttribute('aria-current');
     }
   }
@@ -511,42 +511,20 @@
   }
 
   // ----- Главная -----
-  // Live mobile controls layered over the approved tree illustration.
+  // Course buttons on the approved tree, shared by phone and desktop.
   function treeHome() {
-    var t = totals(), g = growthRank(), pc = Math.floor((t.xp % XP_LEVEL) / XP_LEVEL * 100), next = resumeTarget(), nt = notifications();
     function node(cls, attr, icon, name, sub) {
       return '<button class="tree-node ' + cls + '" ' + attr + '><span class="tree-orb">' + icon + '</span><b>' + name + '</b><small>' + sub + '</small></button>';
     }
-    return '<div class="tree-home only-m"><header class="tree-top"><span class="tree-brand">' + I.leaf + '<b>Росток</b></span><div class="tree-tools">' + '<div class="bell"><button class="icon-btn" data-act="treebell" aria-label="Уведомления: ' + nt.length + '">' + I.bell + (nt.length ? '<i class="bell-dot"></i>' : '') + '</button><div class="bell-pop" id="tree-notifications" hidden><b class="bell-h">Уведомления</b>' + (nt.length ? nt.map(function(n){return '<button class="bell-item" '+n.attr+'><span>'+esc(n.t)+'</span><small>'+esc(n.sub)+'</small></button>';}).join('') : '<p class="small">Всё сделано, новых уведомлений нет.</p>') + '</div></div>' + '<button class="icon-btn" data-tab="settings" aria-label="Настройки">' + I.gear + '</button></div></header>' +
-      '<div class="tree-metrics"><button class="tree-profile tree-glass" data-stab="general"><span class="tree-avatar" aria-hidden="true"></span><span class="tree-level"><b>Уровень ' + t.level + '</b><small>' + esc(g.title) + ' · ' + t.xp + ' XP</small><span class="tree-meter" role="progressbar" aria-label="Прогресс уровня" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pc + '"><i style="width:' + pc + '%"></i></span></span><span class="tree-percent">' + pc + '%</span></button>' +
-      '<button class="tree-streak tree-glass" data-stab="habits"><span aria-hidden="true">🔥</span><b>' + streak() + '</b><small>' + plural(streak(), 'день', 'дня', 'дней') + '<br>в темпе</small></button></div>' +
-      '<nav class="tree-map" aria-label="Дерево знаний">' +
+    return '<div class="tree-home"><nav class="tree-map" aria-label="Дерево знаний">' +
       node('tree-lang', 'data-learnfilter="lang"', CI.eng, 'Языки', 'Русский · Английский') +
       node('tree-code', 'data-learnfilter="code"', CI.code, 'Программирование', coursePct(course('code')) + '% пройдено') +
       node('tree-ai', 'data-course="ai"', CI.ai, 'ИИ', coursePct(course('ai')) + '% пройдено') +
       node('tree-music', 'data-course="music"', CI.music, 'Музыка', st.tracks.length + ' ' + plural(st.tracks.length,'трек','трека','треков')) +
-      node('tree-art', 'data-learnfilter="art"', I.note, 'Творчество', 'Стихи · Книги') +
-      '<button class="tree-root" data-tab="goals" aria-label="Мои цели">' + I.goal + '</button></nav>' +
-      '<button class="tree-resume tree-glass" data-act="resume"><span class="tree-play" aria-hidden="true">▶</span><span><small>' + (next ? 'Продолжить обучение' : 'Все доступные уроки пройдены') + '</small><b>' + (next ? esc(next.c.name) : 'Выбрать направление') + '</b><span>' + (next ? esc(next.c.steps[next.i].t) : 'Повтори изученное') + '</span></span>' + I.right + '</button>' +
-      '<div class="tree-quick"><button class="tree-glass" data-tab="plan">' + I.clip + '<span>План<br>на сегодня</span></button><button class="tree-glass" data-stab="general">' + I.stats + '<span>Статистика</span></button><button class="tree-glass" data-act="treeawards">' + I.trophy + '<span>Достижения</span></button><button class="tree-glass" data-act="treefav">' + I.star + '<span>Избранное</span></button></div></div>';
+      node('tree-art', 'data-learnfilter="art"', I.note, 'Творчество', 'Стихи · Книги') + '</nav></div>';
   }
-
   function viewToday() {
-    var d = dateOf(sel), rt = rawToday();
-    var dateText = d.getDate() + ' ' + MON[d.getMonth()] + ', ' + DOWF[sel % 7].toLowerCase();
-    var h = '<section class="view home-view">' + treeHome() +
-      '<header class="m-head only-m"><div class="brand">' + I.leaf + '<b>ROSTOK</b></div>' + headTools(false, true) + '</header>' +
-      '<div class="hero"><div class="hero-stage"><div class="hero-bg" aria-hidden="true"><div class="hero-scene">' + plantSvg(growthRank().p) + '</div></div>' +
-      '<div class="hero-top only-d"><span class="hero-leaf">' + I.leaf + '</span>' + headTools(true, false) + '</div>' +
-      '<div class="hero-main"><div class="hero-copy"><span class="hero-leaf only-m">' + I.leaf + '</span><h1 class="hero-title"><span class="only-d">ROSTOK</span><span class="only-m">Развивай себя каждый день</span></h1>' +
-      '<p class="hero-tag only-d">Знания. Привычки. Развитие.</p><p class="hero-sub only-d">Маленькие шаги каждый день приводят к большим результатам.</p>' +
-      '<button class="btn hero-btn only-d" data-act="resume">' + resumeLabel() + ' ' + I.arrow + '</button>' +
-      '</div><blockquote class="hero-quote only-d">«' + quote(sel) + '»<span>' + I.leaf + '</span></blockquote>' +
-      '</div><div class="hero-side">' + growCard() + '</div>' + growPill() + '</div>' +
-      '<div class="dirs only-d">' + DIRS.map(function (x) { return '<button class="dir" ' + (x.id === 'art' ? 'data-learnfilter="art"' : 'data-course="' + x.courses[0] + '"') + ' style="--cc:var(--c-' + x.cat + ')"><span class="dir-ic">' + CI[x.cat] + '</span><b>' + x.name + '</b><span>' + x.desc + '</span><i>' + I.arrow + '</i></button>'; }).join('') + '</div></div>' +
-      '<p class="m-date only-m">' + dateText + '</p>' + '<div class="only-m">' + weekStrip() + '</div>';
-    if (rt < 0) h += '<p class="muted">План начнётся ' + START.getDate() + ' ' + MON[START.getMonth()] + '.</p>';
-    return h + rankCard() + '</section>';
+    return '<section class="view home-view" aria-label="Главная">' + treeHome() + '</section>';
   }
 
   // ----- Обучение -----
@@ -688,8 +666,8 @@
       '<div class="card"><h2 class="h2">О приложении</h2><p class="muted">Росток ' + APP_VERSION + ' · план v' + P.version + ' · старт ' + START.getDate() + ' ' + MON[START.getMonth()] + ' ' + START.getFullYear() + ', ' + N + ' дней.</p><p class="small">Данные хранятся в этом браузере. Копия и синхронизация — в разделе «Инструменты».</p><button class="btn" data-tab="tools">' + I.tools + ' Инструменты</button></div></section>';
   }
   function viewMore() {
-    var items = [['habits', 'Привычки', I.habit, 'Ежедневные дела и серии'], ['notes', 'Заметки', I.note, 'Идеи и записи к урокам'], ['goals', 'Цели', I.goal, 'Прогресс по курсам и плану'], ['library', 'Библиотека', I.lib, 'Книги, классика, все уроки'], ['tools', 'Инструменты', I.tools, 'Копия и синхронизация'], ['settings', 'Настройки', I.gear, 'Тема и версия']];
-    return '<section class="view more-view">' + topbar('Профиль') + '<div class="card more-list">' + items.map(function (x) { return '<button class="more-row" data-tab="' + x[0] + '"><span class="more-ic">' + x[2] + '</span><span><b>' + x[1] + '</b><small>' + x[3] + '</small></span>' + I.right + '</button>'; }).join('') + '</div></section>';
+    var items = [['plan', 'План дня', I.cal, 'Задачи и отметки'], ['habits', 'Привычки', I.habit, 'Ежедневные дела и серии'], ['notes', 'Заметки', I.note, 'Идеи и записи к урокам'], ['goals', 'Цели', I.goal, 'Прогресс по курсам и плану'], ['library', 'Библиотека', I.lib, 'Книги, классика, все уроки'], ['tools', 'Инструменты', I.tools, 'Копия и синхронизация'], ['settings', 'Настройки', I.gear, 'Тема и версия']];
+    return '<section class="view more-view">' + topbar('Профиль') + '<div class="profile-tree">' + plantSvg(growthRank().p) + growCard() + '</div>' + rankCard() + '<div class="profile-actions"><button class="btn primary" data-act="resume">' + resumeLabel() + '</button><button class="btn" data-act="treefav">' + I.star + ' Избранное</button><button class="btn" data-act="treeawards">' + I.trophy + ' Достижения</button></div><div class="card more-list">' + items.map(function (x) { return '<button class="more-row" data-tab="' + x[0] + '"><span class="more-ic">' + x[2] + '</span><span><b>' + x[1] + '</b><small>' + x[3] + '</small></span>' + I.right + '</button>'; }).join('') + '</div></section>';
   }
 
   // ----- Обучение: направление -----
