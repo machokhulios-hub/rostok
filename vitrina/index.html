@@ -1,0 +1,562 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Своя витрина</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: sticky top bar with progress; left lesson rail on desktop, slide-over on phone; one 720px reading column */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --fg:#171A21; --muted:#5C6473; --line:#D9DDE5; --line-strong:#B9C0CC;
+  --accent:#F2A33A; --accent-ink:#8A5200; --accent-soft:#FFF1DC;
+  --code-bg:#1C2129; --code-fg:#E7EAF0; --code-tag:#8FD3FF; --code-attr:#FFD27A; --code-str:#B8F08F; --code-cmt:#7B8595; --code-p:#9AA3B2;
+  --ok:#2F8F5B; --ok-soft:#E3F5EA; --bad:#C8463A; --bad-soft:#FBE7E4;
+  --display:"Unbounded",system-ui,sans-serif;
+  --body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --rail-w:300px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12151B; --surface:#1B1F27; --fg:#E8EAEE; --muted:#9AA3B2; --line:#2C323D; --line-strong:#3E4652;
+    --accent:#F2A33A; --accent-ink:#FFC46B; --accent-soft:#2E2414;
+    --code-bg:#0E1116; --ok:#5FCB8E; --ok-soft:#15301F; --bad:#F08A7E; --bad-soft:#3A1A17;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12151B; --surface:#1B1F27; --fg:#E8EAEE; --muted:#9AA3B2; --line:#2C323D; --line-strong:#3E4652;
+  --accent:#F2A33A; --accent-ink:#FFC46B; --accent-soft:#2E2414;
+  --code-bg:#0E1116; --ok:#5FCB8E; --ok-soft:#15301F; --bad:#F08A7E; --bad-soft:#3A1A17;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.55;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+a{color:var(--accent-ink)}
+button{font:inherit;color:inherit}
+h1,h2,h3{text-wrap:balance;margin:0}
+p{margin:0}
+code{font-family:var(--mono);font-size:.92em;background:var(--accent-soft);color:var(--fg);padding:.08em .35em;border-radius:4px}
+pre{margin:0}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:14px;min-height:56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px}
+.brand{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.01em;text-decoration:none;color:var(--fg);white-space:nowrap}
+.brand b{color:var(--accent)}
+.menu-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-strong);background:transparent;border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:14px}
+.menu-btn svg{width:16px;height:16px}
+.prog{margin-left:auto;display:flex;align-items:center;gap:10px;min-width:0}
+.bar{width:120px;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar span{display:block;height:100%;width:0;background:var(--accent);transition:width .4s}
+.prog small{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;white-space:nowrap}
+
+/* shell */
+.shell{display:flex;min-height:calc(100% - 57px)}
+.rail{width:var(--rail-w);flex:none;border-right:1px solid var(--line);background:var(--surface);
+  position:sticky;top:calc(57px + env(safe-area-inset-top,0px));height:calc(100vh - 57px - env(safe-area-inset-top,0px));overflow-y:auto;
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:12px;padding-block:14px}
+.scrim{display:none}
+.mod{margin-bottom:16px}
+.mod-h{display:flex;align-items:baseline;gap:8px;padding:6px 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mod-h i{font-style:normal;margin-left:auto;font-weight:500;letter-spacing:0;text-transform:none}
+.ls{list-style:none;margin:0;padding:0}
+.ls a{display:grid;grid-template-columns:30px 1fr 18px;gap:8px;align-items:center;padding:7px 8px;border-radius:8px;text-decoration:none;color:var(--fg);font-size:14.5px;line-height:1.3}
+.ls a:hover{background:var(--bg)}
+.ls a.cur{background:var(--accent-soft)}
+.ls a.soon{color:var(--muted)}
+.ls .n{font-family:var(--mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ls .st{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line-strong);display:grid;place-items:center}
+.ls a.done .st{background:var(--ok);border-color:var(--ok)}
+.ls a.done .st::after{content:"";width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.ls a.soon .st{border-style:dashed}
+
+.view{flex:1;min-width:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.col{max-width:720px;margin:0 auto}
+
+/* home */
+.hero{display:grid;gap:14px;padding-bottom:28px;border-bottom:1px solid var(--line);margin-bottom:28px}
+.eyebrow{font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.hero h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,5vw,40px);line-height:1.1}
+.hero h1 b{color:var(--accent)}
+.lead{font-size:19px;color:var(--fg);max-width:60ch}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#1A1200;border:0;border-radius:10px;padding:12px 18px;font-weight:700;text-decoration:none;cursor:pointer;font-size:16px}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line-strong);font-weight:600}
+.btn:focus-visible,.menu-btn:focus-visible,.ls a:focus-visible,.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.how{display:grid;gap:10px;margin-bottom:32px}
+.how h2,.mods h2{font-size:20px;font-weight:700;margin-bottom:6px}
+.how ol{margin:0;padding-left:22px;display:grid;gap:6px}
+.mods{display:grid;gap:12px}
+.mcard{display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:start;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.mcard .num{font-family:var(--display);font-weight:700;font-size:26px;color:var(--accent);line-height:1}
+.mcard h3{font-size:17px;font-weight:700}
+.mcard p{color:var(--muted);font-size:15px;margin-top:4px}
+.mcard .meta{text-align:right;font-size:13px;color:var(--muted);white-space:nowrap}
+.mcard .meta b{display:block;color:var(--fg);font-size:15px}
+.note{margin-top:24px;padding:14px 16px;border-left:3px solid var(--accent);background:var(--surface);border-radius:0 10px 10px 0;font-size:15px;color:var(--muted)}
+
+/* lesson */
+.lhead{display:grid;gap:10px;margin-bottom:24px}
+.lhead h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,4.5vw,34px);line-height:1.15}
+.result{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:14px 16px;background:var(--accent-soft);border-radius:12px;font-size:16px}
+.result .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--accent-ink);padding-top:3px}
+.sec{margin-top:36px;display:grid;gap:14px}
+.sec h2{font-size:22px;font-weight:700;display:flex;align-items:baseline;gap:10px}
+.sec h2 .idx{font-family:var(--mono);font-size:13px;color:var(--muted);font-weight:400}
+.sec p,.sec li{max-width:66ch}
+.sec ul,.sec ol{margin:0;padding-left:22px;display:grid;gap:8px}
+.terms{display:grid;gap:8px;padding:0;margin:0;list-style:none}
+.terms li{display:grid;grid-template-columns:minmax(90px,130px) 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--line);max-width:none}
+.terms li:last-child{border-bottom:1px solid var(--line)}
+.terms b{font-weight:700}
+.code{background:var(--code-bg);color:var(--code-fg);border-radius:12px;overflow:hidden}
+.code .cap{display:flex;align-items:center;gap:10px;padding:8px 14px;font-family:var(--mono);font-size:12.5px;color:var(--code-p);border-bottom:1px solid rgba(255,255,255,.07)}
+.code .cap .copy{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.18);color:var(--code-fg);border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer}
+.code pre{padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.55;tab-size:2}
+.code .t{color:var(--code-tag)} .code .a{color:var(--code-attr);font-weight:400} .code .s{color:var(--code-str);font-style:normal} .code .c{color:var(--code-cmt);font-style:italic} .code .p{color:var(--code-p)}
+.lines{display:grid;gap:6px;padding:0;margin:0;list-style:none}
+.lines li{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:12px;font-size:15px;max-width:none}
+.lines code{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.callout{padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:15.5px}
+.callout b{font-weight:700}
+
+/* sandbox */
+.sb{display:grid;gap:10px}
+.sb-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.sb-pane{display:grid;grid-template-rows:auto 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);min-width:0}
+.sb-pane .cap{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line)}
+.sb-pane .cap button{margin-left:auto;background:transparent;border:1px solid var(--line-strong);border-radius:6px;padding:2px 8px;font-size:12px;cursor:pointer;letter-spacing:0;text-transform:none}
+.sb textarea{width:100%;height:260px;border:0;resize:vertical;padding:12px 14px;background:var(--code-bg);color:var(--code-fg);font-family:var(--mono);font-size:13.5px;line-height:1.55;tab-size:2;outline:none;white-space:pre;overflow:auto}
+.sb iframe{width:100%;height:260px;border:0;background:#fff}
+.sb-tasks{padding:0;margin:0;list-style:none;display:grid;gap:6px;font-size:15px}
+.sb-tasks li{display:flex;gap:10px}
+.sb-tasks li::before{content:"→";color:var(--accent);font-weight:700}
+
+/* quiz */
+.q{display:grid;gap:10px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.q .qt{font-weight:600}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border:1px solid var(--line);border-radius:9px;cursor:pointer;font-size:15px}
+.opt input{margin:3px 0 0;accent-color:var(--accent)}
+.q.ok .opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.q.bad .opt.picked{border-color:var(--bad);background:var(--bad-soft)}
+.q.bad .opt.right{border-color:var(--ok)}
+.q .ex{display:none;font-size:14.5px;color:var(--muted);padding-top:4px}
+.q.ok .ex,.q.bad .ex{display:block}
+.score{font-weight:600;min-height:1.5em}
+
+/* ai */
+.prompt{position:relative;padding:14px 16px;border:1px dashed var(--line-strong);border-radius:12px;background:var(--surface);font-size:15.5px;white-space:pre-wrap}
+.prompt .copy{position:absolute;top:10px;right:10px;background:var(--bg);border:1px solid var(--line-strong);border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer}
+.check-list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.check-list li{display:flex;gap:10px;font-size:15.5px}
+.check-list li::before{content:"✓";color:var(--ok);font-weight:700;flex:none}
+
+/* done / footer nav */
+.finish{margin-top:40px;padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.finish p{flex:1 1 200px;color:var(--muted);font-size:15px}
+.btn.done{background:var(--ok);color:#fff}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:22px;flex-wrap:wrap}
+.pager a{text-decoration:none;color:var(--fg);font-weight:600;font-size:15px;padding:10px 0}
+.pager a.next{margin-left:auto}
+.pager a.next::after{content:" →"} .pager a.prev::before{content:"← "}
+.stub{padding:18px;border:1px dashed var(--line-strong);border-radius:12px;color:var(--muted);font-size:15.5px;margin-top:20px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:9px;font-size:14px;transition:.25s;pointer-events:none;z-index:20}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (min-width:900px){
+  .menu-btn{display:none}
+  .sb-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:899px){
+  .rail{position:fixed;left:0;top:0;height:100%;z-index:30;transform:translateX(-105%);transition:transform .25s;box-shadow:0 0 40px rgba(0,0,0,.25);width:min(var(--rail-w),86vw);padding-top:calc(14px + env(safe-area-inset-top,0px))}
+  .rail.open{transform:none}
+  .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:29;opacity:0;pointer-events:none;transition:.25s}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .bar{width:70px}
+  .mcard{grid-template-columns:44px 1fr}
+  .mcard .meta{grid-column:2;text-align:left;display:flex;gap:10px}
+  .mcard .meta b{display:inline}
+  .lines li{grid-template-columns:1fr}
+  .result{grid-template-columns:1fr;gap:4px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <button class="menu-btn" id="menuBtn" aria-label="Открыть список уроков">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4h12M2 8h12M2 12h12"/></svg>Уроки
+  </button>
+  <a class="brand" href="#programma">Своя <b>витрина</b></a>
+  <div class="prog"><div class="bar"><span id="progFill"></span></div><small id="progText">0 / 50</small></div>
+</header>
+<div class="shell">
+  <nav class="rail" id="rail" aria-label="Уроки"></nav>
+  <div class="scrim" id="scrim"></div>
+  <main class="view" id="view"></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- программа ---------- */
+const MODULES = [
+  {id:1,title:"HTML + CSS: витрина",weeks:"3 нед.",lessons:[
+    [1,"Как устроен сайт",35,"Понимаешь, что такое HTML, CSS и JavaScript, и у тебя открывается первая страница."],
+    [2,"Заголовки, текст, ссылки",35,"Страница с названием магазина, описанием и ссылками на разделы."],
+    [3,"Структура: шапка, основная часть, подвал",35,"Страница разбита на смысловые части тегами header, main, footer."],
+    [4,"Фото товаров и пути к файлам",40,"На странице фотографии из папки, у каждой есть подпись alt."],
+    [5,"Списки и таблица характеристик",35,"Условия доставки списком, характеристики товара таблицей."],
+    [6,"Карточка товара",40,"Карточка на HTML: фото, название, цена, кнопка. Подставляешь свои товары."],
+    [7,"Что такое CSS и как его подключить",30,"Отдельный файл styles.css меняет вид страницы."],
+    [8,"Цвета, шрифты, отступы",40,"Витрина в своих цветах и со своим шрифтом."],
+    [9,"Блоки: размеры, рамки, box-model",40,"Понимаешь, почему блок шире, чем ты задал, и умеешь это чинить."],
+    [10,"Flexbox: шапка и ряд кнопок",45,"Логотип слева, меню и значок корзины справа."],
+    [11,"Grid: сетка каталога",45,"Карточки товаров стоят ровной сеткой."],
+    [12,"Мобильная версия",45,"На телефоне одна колонка, на ноутбуке три. Проверяешь в DevTools."],
+    [13,"Страница товара",40,"У каждого товара своя страница: фото, описание, характеристики, цена."],
+    [14,"Доступность: alt, контраст, фокус",35,"Сайт читается с экрана и управляется с клавиатуры."],
+    [15,"Проект 1: витрина готова",60,"Каталог и страницы товаров с твоими товарами открываются на телефоне и ноутбуке."]
+  ]},
+  {id:2,title:"JavaScript: каталог и корзина",weeks:"3–4 нед.",lessons:[
+    [16,"Что такое JavaScript и куда его писать",30,"Первый скрипт меняет текст на странице."],
+    [17,"Переменные и числа: цена и скидка",35,"Скрипт считает цену со скидкой."],
+    [18,"Строки: подпись к товару",35,"Подпись собирается из названия и цены."],
+    [19,"Массивы: список товаров",35,"Все товары лежат в одном списке."],
+    [20,"Объекты: товар как данные",40,"У товара есть название, цена, фото, остаток на складе."],
+    [21,"Условия: в наличии или нет",35,"Кнопка «В корзину» отключается, если товара нет."],
+    [22,"Циклы: вывести все товары",40,"Каталог строится из списка автоматически."],
+    [23,"Функции: цена в рублях",35,"Одна функция форматирует все цены: 12 500 ₽."],
+    [24,"DOM: создать карточку кодом",45,"Карточки рождаются из данных, а не руками."],
+    [25,"События: клик и ввод",40,"Страница отвечает на нажатия и печать."],
+    [26,"Поиск по названию",40,"Поле поиска сужает каталог на лету."],
+    [27,"Фильтры и сортировка",45,"Категории, диапазон цены, «дешевле / дороже»."],
+    [28,"Корзина: добавить, изменить, удалить",50,"Товары складываются в корзину, сумма считается сама."],
+    [29,"Корзина не пропадает: localStorage",40,"После перезагрузки страницы корзина на месте."],
+    [30,"Проект 2: каталог с корзиной",60,"Поиск, фильтры и рабочая корзина с итоговой суммой."]
+  ]},
+  {id:3,title:"Git и публикация",weeks:"1 нед.",lessons:[
+    [31,"Что такое Git",30,"Понимаешь, зачем история изменений и что такое коммит."],
+    [32,"GitHub: репозиторий и коммиты",40,"Код магазина лежит на GitHub, каждая правка сохранена."],
+    [33,"GitHub Pages: витрина в интернете",35,"Витрина открывается по ссылке с любого телефона. Заказы подключим в модуле 5."],
+    [34,"Обновления и кеш: ?v=N",25,"Умеешь выложить правку так, чтобы её увидели сразу."],
+    [35,"Проект 3: витрина опубликована",45,"Ссылку можно показать друзьям и собрать первые отзывы о дизайне."]
+  ]},
+  {id:4,title:"Работа с ИИ",weeks:"1–2 нед.",lessons:[
+    [36,"Как ставить задачу ИИ",35,"Запрос с контекстом, целью и критерием готовности."],
+    [37,"Читать чужой код",40,"Пересказываешь по шагам, что делает код от ИИ."],
+    [38,"Проверять результат: DevTools и консоль",40,"Находишь ошибку по сообщению в консоли."],
+    [39,"Как ИИ ошибается",30,"Узнаёшь выдуманные функции и устаревшие советы."],
+    [40,"Безопасность: ключи, пароли, чужой код",30,"Знаешь, что нельзя вставлять в чат и на сайт."],
+    [41,"Проект 4: доработка через ИИ по своему ТЗ",60,"Новая функция магазина, сделанная с ИИ и проверенная тобой."]
+  ]},
+  {id:5,title:"Сервер и заказы",weeks:"4 нед.",lessons:[
+    [42,"Что такое сервер и HTTP",35,"Понимаешь запрос и ответ, адрес и статус 404."],
+    [43,"Node.js: первый сервер",45,"Сервер на твоём Маке отвечает «привет»."],
+    [44,"API: каталог с сервера",45,"Сервер отдаёт список товаров, витрина берёт их оттуда."],
+    [45,"SQLite: товары и остатки в базе",50,"Товары хранятся в базе, а не в файле."],
+    [46,"Оформление заказа: форма",45,"Покупатель вводит имя, телефон, адрес и способ доставки."],
+    [47,"Сохранение заказа",50,"Заказ с составом корзины записывается в базу и получает номер."],
+    [48,"Цена и остаток считаются на сервере",45,"Подменить цену в браузере не выйдет, лишнее не продастся."],
+    [49,"Защита от двойного заказа",40,"Двойной клик по «Оформить» создаёт один заказ, а не два."],
+    [50,"Админка: список заказов и статусы",50,"Ты видишь заказы и меняешь статус: новый, собран, отправлен."],
+    [51,"Проект 5: заказы работают",60,"Полный путь: каталог → корзина → заказ → ты видишь его в админке."]
+  ]},
+  {id:6,title:"Оплата и запуск",weeks:"2–3 нед.",lessons:[
+    [52,"Как устроена онлайн-оплата",35,"Понимаешь, кто такой платёжный сервис и почему номер карты не попадает на твой сайт."],
+    [53,"Оплата в тестовом режиме",50,"Заказ оплачивается тестовой картой, деньги не списываются."],
+    [54,"Уведомление об оплате и статус заказа",45,"После оплаты заказ сам становится «оплачен»."],
+    [55,"Документы магазина",35,"Знаешь, зачем оферта, политика конфиденциальности и согласие. Тексты проверяет юрист."],
+    [56,"Чеки, налоги, статус продавца",35,"Понимаешь, что нужно, чтобы законно принимать деньги. Детали решаешь с бухгалтером."],
+    [57,"Хостинг, домен и HTTPS",50,"Магазин работает по твоему адресу с замком в адресной строке."],
+    [58,"Резервные копии и безопасность",40,"База копируется автоматически, пароли не лежат в коде."],
+    [59,"Проект 6: магазин запущен",60,"Тестовый заказ проходит весь путь до оплаты. Настоящие платежи включаешь после юриста и бухгалтера."]
+  ]}
+];
+const TOTAL = 59;
+const BY_N = {};
+MODULES.forEach(m=>m.lessons.forEach(l=>{BY_N[l[0]]={n:l[0],title:l[1],min:l[2],result:l[3],mod:m};}));
+
+/* ---------- хранилище (может не работать: приватный режим и т.п.) ---------- */
+const store = {
+  get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+};
+let done = new Set(store.get("sv-done",[]));
+
+/* ---------- утилиты ---------- */
+const $ = s=>document.querySelector(s);
+const esc = s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+function hlHtml(src){
+  let s = esc(src);
+  s = s.replace(/(&lt;!--[\s\S]*?--&gt;)/g,'<span class="c">$1</span>');
+  s = s.replace(/(&lt;!doctype[^&]*?&gt;)/gi,'<span class="p">$1</span>');
+  s = s.replace(/(&lt;\/?)([a-zA-Z][\w-]*)([\s\S]*?)(\/?&gt;)/g,(m,o,t,a,c)=>{
+    a = a.replace(/([\w-]+)(=)(&quot;.*?&quot;)/g,'<span class="a">$1</span>$2<span class="s">$3</span>');
+    return `<span class="p">${o}</span><span class="t">${t}</span>${a}<span class="p">${c}</span>`;
+  });
+  return s;
+}
+function codeBlock(name,src){
+  return `<div class="code"><div class="cap">${esc(name)}<button class="copy" data-copy>Скопировать</button></div><pre data-src="${esc(src)}">${hlHtml(src)}</pre></div>`;
+}
+let toastT;
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),1600);}
+function copyText(text,btn){
+  const ok=()=>{toast("Скопировано");};
+  const fallback=()=>{const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok();}catch(e){toast("Выдели и скопируй вручную");}ta.remove();};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok,fallback);}else fallback();
+}
+
+/* ---------- урок 1 ---------- */
+const SKELETON = `<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Мой магазин</title>
+</head>
+<body>
+  <h1>Мой магазин</h1>
+  <p>Товары с доставкой по Петербургу.</p>
+  <a href="delivery.html">Доставка и оплата</a>
+</body>
+</html>`;
+
+const SANDBOX_1 = `<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Мой магазин</title>
+</head>
+<body>
+  <h1>Мой магазин</h1>
+  <p>Товары с доставкой по Петербургу.</p>
+
+  <h2>Товар 1</h2>
+  <p>Цена: 2 500 ₽</p>
+  <button>В корзину</button>
+</body>
+</html>`;
+
+const QUIZ_1 = [
+  {q:"За что отвечает HTML?",o:["Что есть на странице: заголовок, текст, фото","Как страница выглядит: цвета и шрифты","Что происходит при нажатиях","Где хранятся заказы"],a:0,
+   ex:"HTML описывает содержимое. Вид задаёт CSS, поведение — JavaScript."},
+  {q:"Какой тег делает ссылку?",o:["<link>","<a>","<url>","<href>"],a:1,
+   ex:"Ссылка — это <a href=\"адрес\">текст</a>. А href — атрибут внутри тега, не сам тег."},
+  {q:"Что нужно, чтобы открыть свой index.html на Маке?",o:["Хостинг и домен","Установить Node.js","Просто открыть файл в браузере","Отправить файл на GitHub"],a:2,
+   ex:"Браузер открывает файл с диска напрямую. Сервер и хостинг понадобятся, когда сайт нужно показать другим."},
+  {q:"Ты забыл закрывающий тег </h1>. Что будет?",o:["Страница не откроется","Браузер покажет окно с ошибкой","Браузер откроет страницу, но оформление может «поехать»","Ничего: закрывать теги не обязательно"],a:2,
+   ex:"Браузер прощает ошибки и достраивает страницу сам, но часто не так, как ты хотел. Поэтому проверять разметку нужно глазами."}
+];
+
+function lesson1(){
+  return `
+<section class="sec">
+  <h2><span class="idx">01</span>Три языка, одна страница</h2>
+  <p>Сайт — это папка с файлами. Браузер (Safari или Chrome) открывает их и рисует страницу. Файлов три вида, и у каждого своя работа:</p>
+  <ul class="terms">
+    <li><b>HTML</b><span><em>Что</em> есть на странице: заголовок, текст, фото, кнопка. С него начинаем.</span></li>
+    <li><b>CSS</b><span><em>Как</em> это выглядит: цвета, шрифты, где что стоит. Модуль 1, с урока 7.</span></li>
+    <li><b>JavaScript</b><span><em>Что происходит</em>, когда человек нажал или напечатал: поиск, фильтры, избранное. Модуль 2.</span></li>
+  </ul>
+  <p>Открой любой интернет-магазин. Карточки с фото, названием и ценой — это HTML. То, что всё стоит ровной сеткой и в фирменных цветах, — CSS. Корзина, которая сама пересчитывает сумму, — JavaScript.</p>
+</section>
+
+<section class="sec">
+  <h2><span class="idx">02</span>Тег — главный кирпич HTML</h2>
+  <p>Тег — это пометка в угловых скобках, которая говорит браузеру, что перед ним. Почти каждый тег открывается и закрывается:</p>
+  ${codeBlock("пример",`<h1>Мой магазин</h1>`)}
+  <ul>
+    <li><code>&lt;h1&gt;</code> — открывающий тег: «начинается заголовок первого уровня».</li>
+    <li><code>Мой магазин</code> — содержимое.</li>
+    <li><code>&lt;/h1&gt;</code> — закрывающий тег, со слэшем: «заголовок закончился».</li>
+  </ul>
+  <p>Атрибут — уточнение внутри открывающего тега. У ссылки это адрес, куда она ведёт:</p>
+  ${codeBlock("пример",`<a href="delivery.html">Доставка и оплата</a>`)}
+  <p>Несколько тегов закрывать не нужно, у них нет содержимого: <code>&lt;img&gt;</code> (картинка), <code>&lt;br&gt;</code> (перенос строки), <code>&lt;meta&gt;</code> (служебная информация).</p>
+</section>
+
+<section class="sec">
+  <h2><span class="idx">03</span>Скелет любой страницы</h2>
+  <p>Каждая страница в интернете начинается с одних и тех же строк. Выучивать не надо: ты будешь копировать этот скелет и наполнять его.</p>
+  ${codeBlock("index.html",SKELETON)}
+  <ul class="lines">
+    <li><code>&lt;!doctype html&gt;</code><span>«Это современный HTML». Всегда первая строка.</span></li>
+    <li><code>&lt;html lang="ru"&gt;</code><span>Вся страница внутри. <code>lang="ru"</code> говорит, что текст на русском: это важно для переносов и чтения вслух.</span></li>
+    <li><code>&lt;head&gt;</code><span>Служебная часть, её не видно. Здесь кодировка и заголовок вкладки.</span></li>
+    <li><code>&lt;meta charset="utf-8"&gt;</code><span>Кодировка: без неё русские буквы могут превратиться в «кракозябры».</span></li>
+    <li><code>&lt;title&gt;</code><span>Текст на вкладке браузера и в закладках.</span></li>
+    <li><code>&lt;body&gt;</code><span>Всё, что видит человек. Сюда пишем содержимое.</span></li>
+    <li><span><code>&lt;h1&gt;</code> <code>&lt;p&gt;</code> <code>&lt;a&gt;</code></span><span>Заголовок, абзац, ссылка. Этих трёх тегов хватит на первую витрину.</span></li>
+  </ul>
+  <div class="callout"><b>Правило отступов.</b> Вложенные теги сдвигают на два пробела вправо. Браузеру всё равно, а тебе будет видно, что внутри чего. На этом же правиле ты потом будешь читать код от ИИ.</div>
+</section>
+
+<section class="sec">
+  <h2><span class="idx">04</span>Попробуй прямо здесь</h2>
+  <p>Слева код, справа результат. Меняй код, страница обновляется сама. Сломать ничего нельзя: кнопка «Сбросить» вернёт исходный вариант.</p>
+  <div class="sb">
+    <div class="sb-grid">
+      <div class="sb-pane"><div class="cap">Код<button id="sbReset" type="button">Сбросить</button></div><textarea id="sb" spellcheck="false" aria-label="Код страницы"></textarea></div>
+      <div class="sb-pane"><div class="cap">Результат</div><iframe id="sbFrame" title="Результат" sandbox="allow-scripts"></iframe></div>
+    </div>
+    <ul class="sb-tasks">
+      <li>Поменяй «Мой магазин» на название своего магазина в двух местах: во вкладке и в заголовке.</li>
+      <li>Добавь второй товар: скопируй три строки от <code>&lt;h2&gt;</code> до кнопки и измени текст.</li>
+      <li>Нажми «В корзину». Ничего не происходит, и это нормально: HTML только показывает кнопку. Оживлять её будем в модуле 2 на JavaScript.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="sec">
+  <h2><span class="idx">05</span>Задание на Маке</h2>
+  <ol>
+    <li>Открой редактор кода. Подойдёт VS Code, он бесплатный.</li>
+    <li>Создай папку <code>vitrina</code>, а в ней файл <code>index.html</code>. Именно так: с этого файла браузер начинает любой сайт.</li>
+    <li>Скопируй скелет из раздела 03 (кнопка «Скопировать»), впиши название магазина и два товара: название, цена и кнопка «В корзину».</li>
+    <li>Открой файл в Safari двойным щелчком.</li>
+  </ol>
+  <div class="callout"><b>Готово, когда:</b> страница открывается, на вкладке написано название магазина, видны два товара с ценами и кнопками. Русские буквы отображаются нормально.</div>
+</section>
+
+<section class="sec">
+  <h2><span class="idx">06</span>Проверь себя</h2>
+  <div id="quiz"></div>
+  <div><button class="btn ghost" id="quizCheck" type="button">Проверить ответы</button></div>
+  <p class="score" id="quizScore"></p>
+</section>
+
+<section class="sec">
+  <h2><span class="idx">07</span>Как попросить ИИ</h2>
+  <p>Запрос, который стоит сделать после задания. Вставь вместо скобок свой код.</p>
+  <div class="prompt" id="prompt1">Я учусь HTML с нуля. Вот мой файл index.html:
+
+[вставь код]
+
+Объясни по строкам простыми словами, что делает каждый тег. Код не переписывай и ничего не добавляй.<button class="copy" data-copy-prompt type="button">Скопировать</button></div>
+  <p><b>Что проверить в ответе:</b></p>
+  <ul class="check-list">
+    <li>Объяснение совпадает с твоим кодом, а не с «типичной страницей». Если ИИ упомянул тег, которого у тебя нет, спроси, откуда он его взял.</li>
+    <li>Каждую строку объяснения ты можешь пересказать своими словами. Если нет, попроси объяснить её ещё проще.</li>
+    <li>ИИ предложил изменения, хотя ты не просил? Не вставляй их. В этом курсе правило одно: на сайт попадает только код, который ты понимаешь.</li>
+  </ul>
+</section>`;
+}
+
+/* ---------- рендер ---------- */
+function renderRail(cur){
+  $("#rail").innerHTML = MODULES.map(m=>`
+    <div class="mod"><div class="mod-h">Модуль ${m.id} · ${esc(m.title)}<i>${m.weeks}</i></div>
+    <ul class="ls">${m.lessons.map(l=>{
+      const n=l[0];const cls=[n===cur?"cur":"",done.has(n)?"done":"",n>1?"soon":""].join(" ");
+      return `<li><a class="${cls}" href="#urok-${n}"><span class="n">${String(n).padStart(2,"0")}</span><span>${esc(l[1])}</span><span class="st"></span></a></li>`;
+    }).join("")}</ul></div>`).join("");
+  const el=$("#rail .cur"); if(el) el.scrollIntoView({block:"nearest"});
+}
+function renderProgress(){
+  const n=done.size;
+  $("#progFill").style.width=(n/TOTAL*100)+"%";
+  $("#progText").textContent=`${n} / ${TOTAL}`;
+}
+function renderHome(){
+  const next = [...Array(TOTAL)].map((_,i)=>i+1).find(n=>!done.has(n)) || 1;
+  $("#view").innerHTML = `<div class="col">
+  <div class="hero">
+    <div class="eyebrow">Курс для самостоятельной учёбы</div>
+    <h1>Свой сайт-магазин <b>с нуля</b></h1>
+    <p class="lead">Настоящий интернет-магазин: витрина, корзина, оформление заказа и оплата прямо на сайте. Учишься на своём магазине, а не на выдуманном. В конце курса покупатель оформляет и оплачивает заказ, сначала в тестовом режиме.</p>
+    <div class="facts"><span><b>${TOTAL}</b> уроков</span><span><b>30–60 мин</b> каждый</span><span><b>≈ 110 часов</b> с практикой</span><span><b>${MODULES.length}</b> модулей</span></div>
+    <div><a class="btn" href="#urok-${next}">${done.size?`Продолжить: урок ${next}`:"Начать урок 1"}</a></div>
+  </div>
+  <div class="how">
+    <h2>Как заниматься</h2>
+    <ol>
+      <li>Один урок в день. Если смена длинная, то один урок за два дня: лучше медленно, чем с пропусками.</li>
+      <li>Сначала читаешь, потом правишь код прямо в уроке, потом делаешь задание на Маке.</li>
+      <li>В конце каждого урока проверка и отметка «Пройдено». Прогресс хранится в этом браузере.</li>
+      <li>Раздел «Как попросить ИИ» есть в каждом уроке. Это не замена учёбы, а часть её: ты учишься проверять, что ИИ написал.</li>
+    </ol>
+  </div>
+  <div class="mods">
+    <h2>Программа</h2>
+    ${MODULES.map(m=>`<a class="mcard" href="#urok-${m.lessons[0][0]}" style="text-decoration:none;color:inherit">
+      <div class="num">${m.id}</div>
+      <div><h3>${esc(m.title)}</h3><p>${esc(m.lessons[m.lessons.length-1][3])}</p></div>
+      <div class="meta"><b>${m.lessons.length} уроков</b>${m.weeks}</div></a>`).join("")}
+  </div>
+  <div class="note">Сроки — ориентир при занятиях 30–60 минут в день. Товары в примерах условные: с урока 6 ты подставляешь свои.</div>
+  </div>`;
+}
+function renderLesson(n){
+  const L=BY_N[n]; if(!L){location.hash="programma";return;}
+  const prev=BY_N[n-1], next=BY_N[n+1];
+  const pager=`<div class="pager">${prev?`<a class="prev" href="#urok-${prev.n}">Урок ${prev.n}</a>`:`<a class="prev" href="#programma">Программа</a>`}${next?`<a class="next" href="#urok-${next.n}">Урок ${next.n}: ${esc(next.title)}</a>`:""}</div>`;
+  const body = n===1 ? lesson1() : `<div class="stub">Этот урок ещё пишется. Сейчас готов урок 1, остальные появятся после того, как ты посмотришь макет и скажешь «ставь».</div>`;
+  const isDone=done.has(n);
+  $("#view").innerHTML = `<div class="col">
+  <div class="lhead">
+    <div class="eyebrow">Модуль ${L.mod.id} · Урок ${n} из ${TOTAL} · ${L.min} мин</div>
+    <h1>${esc(L.title)}</h1>
+    <div class="result"><span class="k">Результат</span><span>${esc(L.result)}</span></div>
+  </div>
+  ${body}
+  <div class="finish">
+    <p>${isDone?"Урок отмечен как пройденный.":"Сделал задание и ответил на вопросы? Отметь урок, и прогресс сохранится."}</p>
+    <button class="btn ${isDone?"done":""}" id="markDone" type="button">${isDone?"Пройдено ✓":"Отметить пройденным"}</button>
+  </div>
+  ${pager}
+  </div>`;
+  $("#markDone").onclick=()=>{ if(done.has(n)) done.delete(n); else done.add(n); store.set("sv-done",[...done]); renderProgress(); renderRail(n); renderLesson(n); window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"}); };
+  if(n===1) initLesson1();
+}
+function initLesson1(){
+  const ta=$("#sb"), fr=$("#sbFrame");
+  ta.value = store.get("sv-draft-1", SANDBOX_1);
+  let t; const run=()=>{fr.srcdoc=ta.value;};
+  ta.addEventListener("input",()=>{clearTimeout(t);t=setTimeout(()=>{run();store.set("sv-draft-1",ta.value);},300);});
+  $("#sbReset").onclick=()=>{ta.value=SANDBOX_1;store.set("sv-draft-1",SANDBOX_1);run();};
+  run();
+  const qz=$("#quiz");
+  qz.innerHTML = QUIZ_1.map((q,i)=>`<div class="q" data-i="${i}"><div class="qt">${i+1}. ${esc(q.q)}</div>${q.o.map((o,j)=>`<label class="opt"><input type="radio" name="q${i}" value="${j}" id="q${i}o${j}"><span>${esc(o)}</span></label>`).join("")}<div class="ex">${esc(q.ex)}</div></div>`).join("");
+  qz.style.display="grid"; qz.style.gap="12px";
+  $("#quizCheck").onclick=()=>{
+    let right=0, answered=0;
+    QUIZ_1.forEach((q,i)=>{
+      const box=qz.querySelector(`.q[data-i="${i}"]`); const picked=box.querySelector("input:checked");
+      box.classList.remove("ok","bad"); box.querySelectorAll(".opt").forEach(o=>o.classList.remove("picked","right"));
+      if(!picked) return; answered++;
+      box.querySelectorAll(".opt")[q.a].classList.add("right");
+      picked.closest(".opt").classList.add("picked");
+      if(+picked.value===q.a){right++;box.classList.add("ok");} else box.classList.add("bad");
+    });
+    $("#quizScore").textContent = answered<QUIZ_1.length ? `Ответь на все вопросы: осталось ${QUIZ_1.length-answered}.` : (right===QUIZ_1.length ? "4 из 4. Можно отмечать урок." : `${right} из ${QUIZ_1.length}. Прочитай пояснения под вопросами и попробуй ещё раз.`);
+  };
+}
+
+/* ---------- маршрут ---------- */
+function route(){
+  const h=(location.hash||"#programma").slice(1);
+  const m=/^urok-(\d+)$/.exec(h);
+  const n=m?+m[1]:0;
+  renderRail(n);
+  if(n) renderLesson(n); else renderHome();
+  closeRail();
+  window.scrollTo(0,0);
+}
+function openRail(){$("#rail").classList.add("open");$("#scrim").classList.add("on");}
+function closeRail(){$("#rail").classList.remove("open");$("#scrim").classList.remove("on");}
+$("#menuBtn").onclick=openRail;
+$("#scrim").onclick=closeRail;
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-copy]"); if(b){copyText(b.closest(".code").querySelector("pre").dataset.src,b);return;}
+  const p=e.target.closest("[data-copy-prompt]"); if(p){copyText(p.parentElement.textContent.replace(/Скопировать$/,"").trim(),p);}
+});
+window.addEventListener("hashchange",route);
+renderProgress();
+route();
+</script>
+
+</body></html>

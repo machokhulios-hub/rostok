@@ -60,3 +60,27 @@ test('Funny ranks count existing lessons and task XP and survive reload',()=>{le
 test('Rank details show all milestones and final rank has no impossible next target',()=>{const b=boot();try{assert.equal(b.doc.querySelectorAll('.rank-ladder li').length,8);assert.match(b.doc.querySelector('.rank-card').textContent,/30 XP/);}finally{b.close();}const checks={};for(let i=0;i<35;i++){checks[new Date(Date.UTC(2026,9,26+i)).toISOString().slice(0,10)]={book:1,code:1,eng:1,music:1,plan:1,poem:1,read:1,rus:1};}const c=boot({checks});try{assert.match(c.doc.querySelector('.rank-card h2').textContent,/Древо мудрости/);assert.match(c.doc.querySelector('.rank-next').textContent,/Высшая ступень/);}finally{c.close();}});
 
 test('Growth preview changes only the illustration and keeps earned progress',()=>{const b=boot();try{const before=b.w.localStorage.getItem('dnevnik-state');const rank=b.doc.querySelector('.rank-card h2').textContent;const input=b.doc.querySelector('#growth-preview');input.value='100';input.dispatchEvent(new b.w.Event('input',{bubbles:true}));assert.equal(b.doc.querySelector('#preview-value').textContent,'100%');assert.ok(b.doc.querySelectorAll('.preview-tree .plant-leaf').length>=80);assert.equal(b.doc.querySelector('.rank-card h2').textContent,rank);assert.equal(b.w.localStorage.getItem('dnevnik-state'),before);assert.equal(b.doc.querySelectorAll('.hero-scene .plant-leaf').length,3);}finally{b.close();}});
+
+test('Vitrina course exposes the interactive source and review from its course page',()=>{
+ const b=boot();try{
+  click(b,'[data-tab="learn"]');click(b,'[data-course="vitrina"]');
+  const links=[...b.doc.querySelectorAll('.course-resources a')];
+  assert.ok(links.some(a=>a.getAttribute('href')==='vitrina/index.html'));
+  assert.ok(links.some(a=>a.getAttribute('href')==='vitrina/review.html'));
+  for(const a of links)assert.ok(fs.existsSync(path.join(root,a.getAttribute('href'))));
+ }finally{b.close();}
+});
+test('Vitrina lesson saves its own completion without changing existing course progress',()=>{
+ let b=boot({checks:{},lessons:{c1:'2026-10-26'}});let seed;try{
+  openLesson(b,'vitrina');
+  const s=b.w.COURSES.find(c=>c.id==='vitrina').steps[0];
+  for(let i=0;i<s.ex.length;i++){
+   const button=[...b.doc.querySelectorAll('[data-lp^="'+i+':"]')].find(e=>e.textContent===s.ex[i].options[0]);
+   assert.ok(button);button.click();
+  }
+  click(b,'[data-act="lessondone"]');seed=b.state();
+  assert.equal(seed.lessons.c1,'2026-10-26');assert.ok(seed.lessons['vitrina-01']);
+  assert.equal(seed.practice['vitrina-01'].last,5);
+ }finally{b.close();}
+ b=boot(seed);try{click(b,'[data-tab="learn"]');click(b,'[data-course="vitrina"]');assert.match(b.doc.querySelector('.path').textContent,/пройден/);assert.equal(b.state().lessons.c1,'2026-10-26');}finally{b.close();}
+});

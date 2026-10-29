@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.8';
+  var APP_VERSION = '4.10';
   var P = window.PLAN, COURSES = window.COURSES;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -284,8 +284,8 @@
     { id: 'ai', name: 'ИИ и агенты', short: 'ИИ и агенты', desc: 'Как работает Claude, запросы, агенты', courses: ['ai'], cat: 'ai' },
     { id: 'art', name: 'Поэзия и творчество', short: 'Поэзия', desc: 'Стихи, разбор классики, чтение, музыка', courses: ['poem', 'poemlib', 'read', 'music', 'book'], cat: 'poem' }
   ];
-  var DESC = { eng: 'Слова, фразы и грамматика с нуля до A1', rus: 'Правила, запятые, грамотное письмо', code: 'HTML, CSS, JavaScript и свой сайт', ai: 'Как работает Claude, запросы, агенты', poem: 'Поэма «Гонец из будущего»: счёт строф', poemlib: 'Разбор классики и собственный стиль', read: 'Книги: страницы и прогресс', music: 'Трек от идеи до релиза', book: 'Книга по сведению: разделы' };
-  var PHOTO = { rus: 'rus', eng: 'eng', code: 'code', ai: 'ai', poem: 'poem', poemlib: 'poem', read: 'rus', music: 'music', book: 'book' };
+  var DESC = { vitrina: 'Готовый вводный урок и редактор. Полная программа — 59 уроков, остальные ещё не написаны.', eng: 'Слова, фразы и грамматика с нуля до A1', rus: 'Правила, запятые, грамотное письмо', code: 'HTML, CSS, JavaScript и свой сайт', ai: 'Как работает Claude, запросы, агенты', poem: 'Поэма «Гонец из будущего»: счёт строф', poemlib: 'Разбор классики и собственный стиль', read: 'Книги: страницы и прогресс', music: 'Трек от идеи до релиза', book: 'Книга по сведению: разделы' };
+  var PHOTO = { vitrina: 'code', rus: 'rus', eng: 'eng', code: 'code', ai: 'ai', poem: 'poem', poemlib: 'poem', read: 'rus', music: 'music', book: 'book' };
   var QUOTES = ['Рост начинается там, где заканчивается зона комфорта', 'Дисциплина сегодня — свобода завтра', 'Маленькие шаги каждый день приводят к большим результатам', 'Обрастать мясом — по чуть-чуть, но каждый день'];
   function quote(i) { return QUOTES[((i % QUOTES.length) + QUOTES.length) % QUOTES.length]; }
   function coursePct(c) {
@@ -717,6 +717,7 @@
     var ps = pathStats(c), ni = nextIdx(c), si = V.step != null ? V.step : ni;
     var h = '<div class="row" style="gap:14px"><div class="title"><h1 class="h1">' + c.name + '</h1><div class="muted">Цель: ' + esc(c.goal) + '</div></div>' +
       (c.level ? '<div class="lvl" style="background:' + col + '"><b>' + c.level + '</b><span>цель ' + c.target + '</span></div>' : '') + '</div>';
+    if (c.resources && c.resources.length) h += '<div class="card course-resources"><h2 class="h2">Материалы курса</h2>' + c.resources.map(function (r) { return '<a class="btn block" href="' + esc(r.href) + '">' + esc(r.label) + '</a>'; }).join('') + '<p class="small">Исходный макет сохранён без изменений. Его отметки и черновик редактора хранятся отдельно; ответы и завершение урока ниже сохраняет «Росток».</p></div>';
     if (si >= 0) h += stepHero(c, si);
     else h += '<div class="hero"><div class="tl">Все уроки и экзамены пройдены</div><div class="pl">Новые материалы появятся в следующих обновлениях.</div></div>';
     h += '<div class="card" style="padding:4px 0"><ul class="path">';
