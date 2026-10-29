@@ -4223,7 +4223,7 @@ window.COURSES = [
   "name": "Своя витрина",
   "type": "path",
   "unit": "урок",
-  "goal": "Собрать и опубликовать свой интернет-магазин: сначала витрина на HTML и CSS, потом каталог с корзиной на JavaScript, затем заказы и оплата. Программа — 59 уроков, пишутся блоками; готовые видны ниже. Модуль 1 (HTML + CSS) готов целиком.",
+  "goal": "Собрать и опубликовать свой интернет-магазин: сначала витрина на HTML и CSS, потом каталог с корзиной на JavaScript, затем заказы и оплата. Программа — 59 уроков, пишутся блоками; готовые видны ниже. Модули 1 (HTML + CSS) и 2 (JavaScript) готовы целиком.",
   "prompt": "Я учусь HTML с нуля. Урок {n}: {t}. Цель: {plan}. Сначала попроси показать мой код и объяснить его. Давай одну подсказку за раз. Не пиши решение целиком. После исправления предложи похожее самостоятельное задание.",
   "resources": [
     {
@@ -6611,6 +6611,970 @@ window.COURSES = [
           "a": [
             "add"
           ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-22",
+      "t": "Циклы: вывести все товары",
+      "plan": "40 минут: список названий и цен строится из массива products автоматически — одним циклом вместо копий кода на каждый товар.",
+      "theory": {
+        "rule": "**Цикл** повторяет блок кода для каждого элемента. Самый удобный для массивов — **for … of**: for (const product of products) { … } — внутри product по очереди становится каждым товаром. **forEach** делает то же через функцию: products.forEach((product) => { … }). Нужен номер — классический **for**: for (let i = 0; i < products.length; i++) { products[i] }. Внутри цикла собирай строку или текст и после цикла записывай в элемент одним присваиванием — так быстрее и проще отлаживать. **continue** — пропустить текущий элемент, **break** — выйти из цикла. Не меняй массив, по которому идёшь.",
+        "ex": [
+          [
+            "for (const product of products) {\n  console.log(product.name, product.price);\n}",
+            "три товара — три строки в консоли; product каждый раз новый"
+          ],
+          [
+            "let total = 0;\nfor (const product of products) {\n  total += product.price;\n}\nconsole.log(`Сумма цен: ${total} ₽`);",
+            "накопитель total объявлен до цикла, цикл прибавляет, результат после"
+          ],
+          [
+            "let text = \"\";\nfor (const product of products) {\n  if (product.stock === 0) continue;\n  text += `${product.name} — ${product.price} ₽\\n`;\n}\ndocument.querySelector(\"#list\").textContent = text;",
+            "товары без остатка пропускаются; строка копится и один раз записывается на страницу"
+          ],
+          [
+            "1. Выведи циклом в консоль все товары.\n2. Посчитай циклом сумму цен и число товаров в наличии.\n3. Собери текст списка и запиши в элемент #list.\n4. Добавь continue для stock === 0.\n5. Перепиши тот же цикл через forEach и через for с индексом — сравни, какой читается лучше.",
+            "Задание на Маке. Бесконечный цикл (забыл i++) вешает вкладку — закрой её и исправь."
+          ],
+          [
+            "Без образца: найди циклом самый дорогой товар (запомни текущий максимум и сравнивай) и выведи его название.",
+            "Самостоятельно. Критерий: правильное название при любом порядке товаров в массиве."
+          ],
+          [
+            "Вот мой цикл:\n[вставь]\nПроверь: объявлен ли накопитель до цикла, не меняю ли я массив внутри, нет ли лишнего присваивания textContent на каждой итерации. Не переписывай.",
+            "Три самые частые ошибки с циклами — именно эти."
+          ]
+        ],
+        "tip": "Готово, когда: список товаров на странице строится циклом из products, сумма и число в наличии считаются кодом, ты знаешь for…of, forEach и for с индексом."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Пройти по всем элементам массива products",
+          "options": [
+            "for (const p of products) { … }",
+            "for (p in products.length) { … }",
+            "foreach p of products { … }",
+            "loop products { … }"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Ключевое слово, чтобы пропустить текущий элемент и перейти к следующему",
+          "a": [
+            "continue"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Где объявлять накопитель суммы?",
+          "options": [
+            "До цикла: let total = 0",
+            "Внутри цикла на каждой итерации",
+            "После цикла",
+            "В HTML"
+          ],
+          "explanation": "Внутри цикла он обнулялся бы каждый раз."
+        },
+        {
+          "k": "choice",
+          "q": "Цикл for (let i = 0; i < 3; i++) выполнится",
+          "options": [
+            "3 раза: i = 0, 1, 2",
+            "2 раза",
+            "4 раза",
+            "бесконечно"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Забыл i++ в for. Что будет?",
+          "options": [
+            "Бесконечный цикл, вкладка зависнет",
+            "Цикл не запустится",
+            "Ошибка синтаксиса",
+            "Выполнится один раз"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-23",
+      "t": "Функции: цена в рублях",
+      "plan": "35 минут: одна функция форматирует все цены вида «12 500 ₽»; ты пишешь функции с параметрами и return и вызываешь их из циклов.",
+      "theory": {
+        "rule": "**Функция** — именованный кусок кода, который можно вызывать много раз: function formatPrice(value) { return `${value.toLocaleString(\"ru-RU\")} ₽`; }. **Параметр** (value) — что принимает; **return** — что отдаёт; без return функция возвращает undefined. Вызов: formatPrice(12500) → «12 500 ₽». **Стрелочная запись** — то же короче: const formatPrice = (value) => `${value} ₽`. Правило: одна функция — одно дело; имя — глагол (formatPrice, getTotal, renderList). Функции с числом: toLocaleString(\"ru-RU\") ставит пробел между тысячами, toFixed(2) — два знака после запятой (вернёт строку). Переменные внутри функции снаружи не видны.",
+        "ex": [
+          [
+            "function formatPrice(value) {\n  return `${value.toLocaleString(\"ru-RU\")} ₽`;\n}\n\nconsole.log(formatPrice(12500)); // 12 500 ₽",
+            "параметр value, результат через return; toLocaleString добавляет пробел между тысячами"
+          ],
+          [
+            "function getTotal(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item.price;\n  }\n  return total;\n}\n\nconsole.log(formatPrice(getTotal(products)));",
+            "функции собираются как детали: одна считает, другая форматирует"
+          ],
+          [
+            "const withDiscount = (price, percent) => Math.round(price * (1 - percent / 100));\nconsole.log(withDiscount(2500, 20)); // 2000",
+            "стрелочная функция с двумя параметрами; если тело — одно выражение, return не пишут"
+          ],
+          [
+            "1. Напиши formatPrice и замени ей все выводы цен из прошлых уроков.\n2. Напиши getTotal(items) и выведи сумму.\n3. Напиши withDiscount и примени к первому товару.\n4. Вызови formatPrice без аргумента — прочитай ошибку (toLocaleString у undefined).\n5. Попробуй обратиться к total снаружи getTotal — убедись, что переменная не видна.",
+            "Задание на Маке. «Cannot read properties of undefined» в функции — значит, её вызвали без нужного аргумента."
+          ],
+          [
+            "Без образца: функция countInStock(items), которая возвращает число товаров с stock > 0, и функция isCheap(product), возвращающая true при цене до 2000.",
+            "Самостоятельно. Критерий: обе вызываются в консоли и дают верные числа; у каждой есть return."
+          ],
+          [
+            "Вот мои функции:\n[вставь]\nПроверь имена (глагол?), один ли результат у каждой, есть ли return во всех ветках. Не переписывай.",
+            "Функция без return в одной из веток — классическая ошибка, вернёт undefined."
+          ]
+        ],
+        "tip": "Готово, когда: все цены на странице идут через formatPrice с пробелом между тысячами, сумма считается getTotal, ты пишешь функции с параметрами и return и понимаешь, что переменные внутри — локальные."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Что отдаёт функция без return?",
+          "options": [
+            "undefined",
+            "0",
+            "пустую строку",
+            "последнее значение"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Ключевое слово, которое объявляет функцию (классическая запись)",
+          "a": [
+            "function"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Вызвать formatPrice для числа 2500",
+          "options": [
+            "formatPrice(2500)",
+            "formatPrice = 2500",
+            "call formatPrice 2500",
+            "formatPrice[2500]"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Число 12500 в виде «12 500»",
+          "options": [
+            "value.toLocaleString(\"ru-RU\")",
+            "value.toString(\" \")",
+            "value.format()",
+            "String(value).split()"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Переменная total объявлена внутри функции. Снаружи она",
+          "options": [
+            "не видна",
+            "видна",
+            "видна только в циклах",
+            "становится глобальной после вызова"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-24",
+      "t": "DOM: создать карточку кодом",
+      "plan": "45 минут: карточки каталога создаёт скрипт из products; HTML-разметка карточек из файла удалена, добавить товар — значит добавить объект в массив.",
+      "theory": {
+        "rule": "**DOM** — дерево элементов страницы, которым управляет JavaScript. **Создать элемент:** const card = document.createElement(\"article\"); card.className = \"card\". **Вложить:** parent.append(child). **Наполнить:** textContent для текста; для картинки img.src и img.alt. Способ короче — **innerHTML** с шаблонной строкой: card.innerHTML = `<h3>${product.name}</h3>…` — но только для своих данных, не для того, что ввёл пользователь: иначе через поле ввода можно вставить чужой код (XSS). **Очистить контейнер:** catalog.innerHTML = \"\" перед перерисовкой. **Привязать данные к элементу:** card.dataset.id = product.id — потом событие узнает, какой товар нажали. Обычная схема: функция renderCatalog(items) — очищает контейнер, в цикле создаёт карточки, добавляет. Дай каждому товару поле id.",
+        "ex": [
+          [
+            "function createCard(product) {\n  const card = document.createElement(\"article\");\n  card.className = \"card\";\n  card.dataset.id = product.id;\n  card.innerHTML = `\n    <img src=\"${product.image}\" alt=\"${product.name}\" width=\"600\" height=\"400\">\n    <h3>${product.name}</h3>\n    <p class=\"price\">${formatPrice(product.price)}</p>\n    <button type=\"button\">В корзину</button>\n  `;\n  return card;\n}",
+            "одна карточка из одного объекта; dataset.id пригодится для кнопок"
+          ],
+          [
+            "function renderCatalog(items) {\n  const catalog = document.querySelector(\"#catalog\");\n  catalog.innerHTML = \"\";\n  for (const product of items) {\n    catalog.append(createCard(product));\n  }\n}\n\nrenderCatalog(products);",
+            "очистить, собрать заново: так же будет работать поиск и фильтры"
+          ],
+          [
+            "const title = document.createElement(\"h3\");\ntitle.textContent = userText; // безопасно\n// card.innerHTML = userText;  // опасно: чужой HTML выполнится",
+            "текст от пользователя — только через textContent"
+          ],
+          [
+            "1. Добавь каждому товару в products поле id (1, 2, 3…).\n2. Напиши createCard и renderCatalog, вызови renderCatalog(products).\n3. Удали из index.html разметку карточек — оставь пустой section#catalog с h2.\n4. Добавь в products четвёртый товар — он появится без правок HTML.\n5. В DevTools → Elements посмотри созданные карточки и их data-id.",
+            "Задание на Маке. Карточки не появились — проверь, что скрипт подключён после section#catalog и что renderCatalog вызван."
+          ],
+          [
+            "Без образца: сделай так, чтобы у товаров со stock === 0 кнопка создавалась с disabled и карточка получала класс sold-out (используй условие из урока 21 внутри createCard).",
+            "Самостоятельно. Критерий: при изменении stock в массиве и перезагрузке карточки меняются сами."
+          ],
+          [
+            "Вот мой createCard:\n[вставь]\nПроверь: нет ли innerHTML с данными от пользователя, возвращает ли функция элемент, есть ли dataset.id. Назови одну проблему, не переписывай.",
+            "Данные из products — твои, им можно доверять; данным из полей ввода — нет."
+          ]
+        ],
+        "tip": "Готово, когда: каталог строится renderCatalog(products), разметки карточек в HTML нет, у карточек data-id, новый товар добавляется одной строкой в массив, а текст пользователя никогда не попадает в innerHTML."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Создать элемент article",
+          "options": [
+            "document.createElement(\"article\")",
+            "document.new(\"article\")",
+            "new Element(\"article\")",
+            "document.append(\"article\")"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Метод, который добавляет созданный элемент внутрь родителя (без скобок)",
+          "a": [
+            "append",
+            "appendChild"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Текст, который ввёл пользователь, вставлять через",
+          "options": [
+            "textContent",
+            "innerHTML",
+            "eval",
+            "document.write"
+          ],
+          "explanation": "innerHTML выполнит чужой HTML и скрипт."
+        },
+        {
+          "k": "choice",
+          "q": "Зачем card.dataset.id = product.id?",
+          "options": [
+            "Чтобы по клику узнать, какой товар нажали",
+            "Чтобы карточка была видна",
+            "Для CSS-анимации",
+            "Без этого createElement не работает"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Перед перерисовкой каталога",
+          "options": [
+            "Очистить контейнер: catalog.innerHTML = \"\"",
+            "Перезагрузить страницу",
+            "Удалить products",
+            "Ничего не делать"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-25",
+      "t": "События: клик и ввод",
+      "plan": "40 минут: страница отвечает на нажатия и ввод; кнопка «В корзину» знает, какой товар нажали, поле ввода сообщает каждую букву.",
+      "theory": {
+        "rule": "**Событие** — то, что случилось: клик, ввод, отправка формы. Подписка: element.addEventListener(\"click\", (event) => { … }). Внутри **event.target** — элемент, на котором произошло событие. Чтобы не вешать обработчик на каждую кнопку, вешай один на контейнер — **делегирование**: catalog.addEventListener(\"click\", …) и внутри проверяй event.target.closest(\"button\"); карточку находишь через closest(\".card\") и читаешь dataset.id. Для полей ввода — событие **input** (срабатывает на каждую букву), значение — event.target.value. Для форм — **submit** и event.preventDefault(), чтобы страница не перезагружалась. Обработчик вешают после того, как элемент создан; при делегировании это неважно — карточки могут пересоздаваться.",
+        "ex": [
+          [
+            "const catalog = document.querySelector(\"#catalog\");\ncatalog.addEventListener(\"click\", (event) => {\n  const button = event.target.closest(\"button\");\n  if (!button) return;\n  const card = button.closest(\".card\");\n  const id = Number(card.dataset.id);\n  console.log(\"Нажали товар\", id);\n});",
+            "один обработчик на весь каталог; клик не по кнопке игнорируется"
+          ],
+          [
+            "const search = document.querySelector(\"#search\");\nsearch.addEventListener(\"input\", (event) => {\n  console.log(\"Ввели:\", event.target.value);\n});",
+            "input срабатывает на каждую букву; value — текущий текст поля"
+          ],
+          [
+            "const form = document.querySelector(\"#order\");\nform.addEventListener(\"submit\", (event) => {\n  event.preventDefault();\n  console.log(\"Форма отправлена без перезагрузки\");\n});",
+            "preventDefault отменяет стандартное действие — перезагрузку страницы"
+          ],
+          [
+            "1. Повесь обработчик клика на #catalog и выводи id нажатого товара.\n2. Добавь в HTML поле input id=\"search\" и выводи введённое.\n3. По клику меняй текст кнопки на «Добавлено» на 1 секунду (setTimeout(() => …, 1000)).\n4. Добавь товар в products, перерисуй каталог — клик по новой карточке тоже работает (делегирование).\n5. Нажми не по кнопке, а по фото — убедись, что ничего не происходит.",
+            "Задание на Маке. Обработчик не срабатывает — проверь, что элемент существует в момент addEventListener, и что имя события в кавычках и строчными."
+          ],
+          [
+            "Без образца: по клику на фото товара открывай его страницу: location.href = `products/${product.slug}.html` — добавь товарам поле slug.",
+            "Самостоятельно. Критерий: клик по фото ведёт на нужную страницу у всех товаров."
+          ],
+          [
+            "Вот мои обработчики:\n[вставь]\nПроверь: делегирование или по обработчику на кнопку, есть ли проверка closest, не теряется ли обработчик после перерисовки. Не переписывай.",
+            "Обработчик на кнопке пропадает вместе с кнопкой при перерисовке — поэтому делегирование."
+          ]
+        ],
+        "tip": "Готово, когда: клик по кнопке сообщает id товара через делегирование, поле ввода отдаёт текст на каждую букву, форма не перезагружает страницу, и всё работает после перерисовки каталога."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Подписаться на клик",
+          "options": [
+            "el.addEventListener(\"click\", (e) => { … })",
+            "el.onclick(\"click\")",
+            "el.click = () => { … }",
+            "listen(el, click)"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Свойство события, в котором лежит элемент, на котором оно произошло (без event.)",
+          "a": [
+            "target"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Один обработчик на контейнер вместо обработчика на каждую кнопку — это",
+          "options": [
+            "делегирование",
+            "дублирование",
+            "рекурсия",
+            "замыкание"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Событие, которое срабатывает на каждую введённую букву",
+          "options": [
+            "input",
+            "click",
+            "submit",
+            "change"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Форма перезагружает страницу при отправке. Что сделать?",
+          "options": [
+            "event.preventDefault() в обработчике submit",
+            "Убрать кнопку",
+            "Поставить return false в HTML",
+            "Отключить JavaScript"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-26",
+      "t": "Поиск по названию",
+      "plan": "40 минут: поле поиска сужает каталог на лету; пустой запрос показывает всё, «ничего не найдено» — отдельное сообщение.",
+      "theory": {
+        "rule": "Поиск — это три шага: взять текст из поля, **отфильтровать** массив, **перерисовать** каталог. **filter** возвращает новый массив из элементов, для которых функция вернула true: products.filter((p) => p.name.toLowerCase().includes(query)). Запрос готовь как в уроке 18: trim() и toLowerCase(). Пустой запрос — показывать всё: if (!query) return products. Искать можно по нескольким полям: name или description. Если результат пустой — выводи «Ничего не найдено», а не пустой экран. Исходный массив products не меняй: filter его не трогает. Функция search(query) возвращает массив, renderCatalog его рисует — не смешивай поиск и рисование в одной функции.",
+        "ex": [
+          [
+            "function search(query) {\n  const q = query.trim().toLowerCase();\n  if (!q) return products;\n  return products.filter((p) =>\n    p.name.toLowerCase().includes(q) ||\n    (p.description || \"\").toLowerCase().includes(q)\n  );\n}",
+            "filter собирает подходящие товары; description может отсутствовать — на этот случай || \"\""
+          ],
+          [
+            "const input = document.querySelector(\"#search\");\ninput.addEventListener(\"input\", () => {\n  renderCatalog(search(input.value));\n});",
+            "каждая буква — новый список; renderCatalog из урока 24 очищает и рисует"
+          ],
+          [
+            "function renderCatalog(items) {\n  const catalog = document.querySelector(\"#catalog\");\n  catalog.innerHTML = \"\";\n  if (items.length === 0) {\n    catalog.innerHTML = \"<p class=\\\"empty\\\">Ничего не найдено</p>\";\n    return;\n  }\n  for (const product of items) catalog.append(createCard(product));\n}",
+            "пустой результат — сообщение; это свой HTML, не пользовательский, поэтому innerHTML допустим"
+          ],
+          [
+            "1. Добавь поле input id=\"search\" с placeholder «Поиск» над каталогом.\n2. Напиши search(query) и подключи к событию input.\n3. Введи заглавными и с пробелами — поиск должен работать.\n4. Введи то, чего нет, — увидь «Ничего не найдено».\n5. Очисти поле — каталог полный.",
+            "Задание на Маке. Поиск не находит товар с буквой ё? Сравни написание в products и в запросе: «ё» и «е» — разные символы."
+          ],
+          [
+            "Без образца: добавь счётчик «Найдено: N» над каталогом и подсветку совпадения в названии (замена через replace на <mark>…</mark> — только для своих данных).",
+            "Самостоятельно. Критерий: счётчик совпадает с числом карточек, подсветка не ломает текст."
+          ],
+          [
+            "Вот мой поиск:\n[вставь]\nПроверь: не меняю ли products, обрабатываю ли пустой запрос и пустой результат, не рисую ли внутри search. Не переписывай.",
+            "Разделение search и renderCatalog — то, что позволит в уроке 27 добавить фильтры без переписывания."
+          ]
+        ],
+        "tip": "Готово, когда: поиск работает на каждую букву без учёта регистра и пробелов, пустой запрос возвращает всё, пустой результат показывает сообщение, products не меняется."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Метод массива, который возвращает новый массив по условию",
+          "options": [
+            "filter",
+            "find",
+            "forEach",
+            "map"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Что вернёт [1, 2, 3].filter((n) => n > 1).length?",
+          "a": [
+            "2"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Пустой запрос в поиске должен",
+          "options": [
+            "показывать все товары",
+            "показывать «Ничего не найдено»",
+            "очищать каталог",
+            "вызывать ошибку"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Почему trim() и toLowerCase() перед поиском?",
+          "options": [
+            "Чтобы пробелы и регистр не мешали находить",
+            "Чтобы ускорить поиск",
+            "Чтобы изменить products",
+            "Это требование filter"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "filter меняет исходный массив?",
+          "options": [
+            "Нет, возвращает новый",
+            "Да, удаляет лишнее",
+            "Да, сортирует",
+            "Зависит от браузера"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-27",
+      "t": "Фильтры и сортировка",
+      "plan": "45 минут: каталог фильтруется по категории и цене и сортируется «дешевле / дороже»; поиск, фильтры и сортировка работают вместе.",
+      "theory": {
+        "rule": "Дай товарам поле category. **Фильтр по категории:** select с вариантами и items.filter((p) => category === \"all\" || p.category === category). **По цене:** два поля min/max и p.price >= min && p.price <= max. **Сортировка:** sort с функцией сравнения: items.sort((a, b) => a.price - b.price) — по возрастанию; b.price - a.price — по убыванию; по названию — a.name.localeCompare(b.name). **Важно:** sort меняет массив на месте — сортируй копию: [...items].sort(…). Все условия хранят в одном объекте state = { query, category, min, max, sortBy }; одна функция applyFilters() берёт products, прогоняет через filter и sort и отдаёт renderCatalog. Любое изменение поля — обновить state и вызвать applyFilters.",
+        "ex": [
+          [
+            "const state = { query: \"\", category: \"all\", max: Infinity, sortBy: \"default\" };\n\nfunction applyFilters() {\n  let items = search(state.query);\n  if (state.category !== \"all\") {\n    items = items.filter((p) => p.category === state.category);\n  }\n  items = items.filter((p) => p.price <= state.max);\n  if (state.sortBy === \"cheap\") items = [...items].sort((a, b) => a.price - b.price);\n  if (state.sortBy === \"expensive\") items = [...items].sort((a, b) => b.price - a.price);\n  renderCatalog(items);\n}",
+            "одна функция собирает всё: поиск, категория, цена, сортировка — и рисует"
+          ],
+          [
+            "<select id=\"category\">\n  <option value=\"all\">Все</option>\n  <option value=\"kitchen\">Кухня</option>\n  <option value=\"decor\">Декор</option>\n</select>\n<select id=\"sort\">\n  <option value=\"default\">По умолчанию</option>\n  <option value=\"cheap\">Дешевле</option>\n  <option value=\"expensive\">Дороже</option>\n</select>",
+            "значения option — латиницей, они попадут в state"
+          ],
+          [
+            "document.querySelector(\"#category\").addEventListener(\"change\", (e) => {\n  state.category = e.target.value;\n  applyFilters();\n});\ndocument.querySelector(\"#search\").addEventListener(\"input\", (e) => {\n  state.query = e.target.value;\n  applyFilters();\n});",
+            "каждый элемент управления только меняет state и зовёт applyFilters; для select — событие change"
+          ],
+          [
+            "1. Добавь товарам category и два select в HTML.\n2. Заведи state и applyFilters, переведи поиск на state.query.\n3. Подключи select категории и сортировки через change.\n4. Проверь сочетания: запрос + категория + сортировка.\n5. Отсортируй products напрямую без копии и посмотри, что порядок «по умолчанию» сломался; верни копию.",
+            "Задание на Маке. Сортировка «сломала» порядок — sort изменил products; нужна копия [...items]."
+          ],
+          [
+            "Без образца: добавь фильтр «только в наличии» (checkbox, событие change, state.inStock) и сортировку по названию через localeCompare.",
+            "Самостоятельно. Критерий: чекбокс убирает товары со stock 0, сортировка по названию правильно ставит «Ё» и «Я»."
+          ],
+          [
+            "Вот мой applyFilters:\n[вставь]\nПроверь порядок: сначала filter, потом sort; копия перед sort; один renderCatalog в конце. Не переписывай.",
+            "Сортировать после фильтра — меньше работы и меньше ошибок."
+          ]
+        ],
+        "tip": "Готово, когда: поиск, категория, цена и сортировка работают в любом сочетании через один state и applyFilters, products не меняется, порядок «по умолчанию» восстанавливается."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Сортировка по возрастанию цены",
+          "options": [
+            "items.sort((a, b) => a.price - b.price)",
+            "items.sort(\"price\")",
+            "items.sort((a, b) => a.price > b.price)",
+            "items.order(price)"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "sort меняет исходный массив?",
+          "options": [
+            "Да, сортирует на месте — сортируй копию",
+            "Нет, возвращает новый",
+            "Только числа",
+            "Только строки"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Событие для select, когда пользователь выбрал другой пункт",
+          "a": [
+            "change"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Где хранить все текущие условия?",
+          "options": [
+            "В одном объекте state",
+            "В отдельных глобальных переменных",
+            "В HTML",
+            "В localStorage сразу"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Сравнить строки по-русски при сортировке",
+          "options": [
+            "a.name.localeCompare(b.name)",
+            "a.name - b.name",
+            "a.name > b.name",
+            "a.name.sort(b.name)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-28",
+      "t": "Корзина: добавить, изменить, удалить",
+      "plan": "50 минут: товары складываются в корзину, количество меняется, лишнее удаляется, сумма считается сама; корзина — массив объектов {id, qty}.",
+      "theory": {
+        "rule": "**Корзина** — массив записей { id, qty }, отдельно от products: let cart = []. **Добавить:** найти запись find((item) => item.id === id); есть — qty += 1, нет — push({ id, qty: 1 }). **Изменить:** qty = новое; если стало 0 — удалить. **Удалить:** cart = cart.filter((item) => item.id !== id). **Сумма:** для каждой записи найти товар в products по id и умножить price на qty. **Показать:** renderCart() — список строк «название × qty = сумма», кнопки +, −, ×, итог; кнопки — через делегирование с data-action и data-id. Все изменения — только через функции addToCart, changeQty, removeFromCart, и после каждой — renderCart(). Не храни в корзине цену: цена живёт в products.",
+        "ex": [
+          [
+            "let cart = [];\n\nfunction addToCart(id) {\n  const item = cart.find((i) => i.id === id);\n  if (item) {\n    item.qty += 1;\n  } else {\n    cart.push({ id, qty: 1 });\n  }\n  renderCart();\n}",
+            "одна функция на добавление: либо увеличить, либо создать запись"
+          ],
+          [
+            "function changeQty(id, delta) {\n  const item = cart.find((i) => i.id === id);\n  if (!item) return;\n  item.qty += delta;\n  if (item.qty <= 0) removeFromCart(id);\n  else renderCart();\n}\n\nfunction removeFromCart(id) {\n  cart = cart.filter((i) => i.id !== id);\n  renderCart();\n}",
+            "изменение на +1/−1; ноль — удаление"
+          ],
+          [
+            "function getCartTotal() {\n  let total = 0;\n  for (const item of cart) {\n    const product = products.find((p) => p.id === item.id);\n    total += product.price * item.qty;\n  }\n  return total;\n}\n\nfunction renderCart() {\n  const box = document.querySelector(\"#cart\");\n  if (cart.length === 0) { box.textContent = \"Корзина пуста\"; return; }\n  box.innerHTML = cart.map((item) => {\n    const p = products.find((x) => x.id === item.id);\n    return `<div class=\"row\" data-id=\"${item.id}\">\n      ${p.name} × ${item.qty} = ${formatPrice(p.price * item.qty)}\n      <button data-action=\"minus\">−</button>\n      <button data-action=\"plus\">+</button>\n      <button data-action=\"remove\">×</button>\n    </div>`;\n  }).join(\"\") + `<p class=\"total\">Итого: ${formatPrice(getCartTotal())}</p>`;\n}",
+            "цена берётся из products по id; map превращает записи в строки HTML (свои данные)"
+          ],
+          [
+            "1. Добавь в HTML section#cart.\n2. Напиши cart, addToCart, changeQty, removeFromCart, getCartTotal, renderCart.\n3. В обработчике каталога по кнопке вызывай addToCart(id).\n4. Повесь делегирование на #cart: по data-action вызывай нужную функцию.\n5. Проверь: добавь товар трижды, убавь до нуля, удали другой — итог всегда верный.",
+            "Задание на Маке. Сумма «NaN» — товар не найден по id: сравни типы, dataset даёт строку, в products число; Number() спасает."
+          ],
+          [
+            "Без образца: ограничь qty остатком stock (не больше, чем есть), и показывай в шапке счётчик «Корзина (N)», где N — сумма qty.",
+            "Самостоятельно. Критерий: нельзя добавить больше остатка, счётчик в шапке совпадает с корзиной."
+          ],
+          [
+            "Вот мой код корзины:\n[вставь]\nПроверь: не храню ли цену в корзине, все ли изменения идут через функции, вызывается ли renderCart после каждого, Number у id. Не переписывай.",
+            "Корзина — первое место, где ошибки стоят денег: проверяй итог калькулятором."
+          ]
+        ],
+        "tip": "Готово, когда: добавление, +, −, удаление работают через функции, итог верный, пустая корзина показывает сообщение, цены берутся из products, в шапке счётчик."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Запись в корзине — это",
+          "options": [
+            "{ id, qty }",
+            "{ name, price, image, stock }",
+            "строка «Кружка × 2»",
+            "число"
+          ],
+          "explanation": "Цена и название живут в products, корзине нужны только id и количество."
+        },
+        {
+          "k": "choice",
+          "q": "Найти запись корзины по id",
+          "options": [
+            "cart.find((i) => i.id === id)",
+            "cart.filter(id)",
+            "cart[id]",
+            "cart.search(id)"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Удалить запись из корзины",
+          "options": [
+            "cart = cart.filter((i) => i.id !== id)",
+            "cart.remove(id)",
+            "delete cart[id]",
+            "cart.pop(id)"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Итог «NaN» при расчёте суммы. Какой функцией превратить строку из dataset в число?",
+          "a": [
+            "Number"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "После каждого изменения корзины",
+          "options": [
+            "вызывать renderCart()",
+            "перезагружать страницу",
+            "ничего, страница обновится сама",
+            "очищать products"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-29",
+      "t": "Корзина не пропадает: localStorage",
+      "plan": "40 минут: после перезагрузки страницы корзина на месте; данные сохраняются в браузере как JSON и безопасно читаются обратно.",
+      "theory": {
+        "rule": "**localStorage** — хранилище браузера: пары «ключ — строка», живут после перезагрузки и закрытия вкладки, отдельные для каждого сайта. Хранит только строки, поэтому массив превращают в текст: **JSON.stringify(cart)**, а обратно — **JSON.parse(text)**. Запись: localStorage.setItem(\"cart\", JSON.stringify(cart)); чтение: const raw = localStorage.getItem(\"cart\") — null, если ничего нет. Чтение оборачивай в **try … catch**: повреждённая строка или приватный режим не должны ломать магазин — тогда cart = []. Проверяй, что прочитанное — массив: Array.isArray. Сохраняй после каждого изменения — внутри renderCart или в отдельной saveCart(). Ключ называй с префиксом: \"vitrina-cart\", чтобы не пересечься с другими скриптами. Удалить: localStorage.removeItem(\"vitrina-cart\"). Посмотреть: DevTools → Application → Local Storage.",
+        "ex": [
+          [
+            "const CART_KEY = \"vitrina-cart\";\n\nfunction saveCart() {\n  try {\n    localStorage.setItem(CART_KEY, JSON.stringify(cart));\n  } catch (e) {\n    console.warn(\"Не удалось сохранить корзину\", e);\n  }\n}",
+            "stringify делает из массива строку; try/catch на случай заполненного или недоступного хранилища"
+          ],
+          [
+            "function loadCart() {\n  try {\n    const raw = localStorage.getItem(CART_KEY);\n    const data = raw ? JSON.parse(raw) : [];\n    return Array.isArray(data) ? data : [];\n  } catch (e) {\n    return [];\n  }\n}\n\ncart = loadCart();\nrenderCart();",
+            "при загрузке страницы корзина восстанавливается; что угодно сломанное → пустая корзина, без ошибок"
+          ],
+          [
+            "function renderCart() {\n  saveCart();\n  // …дальше как раньше\n}",
+            "одна строка в начале renderCart — и каждое изменение сохранено"
+          ],
+          [
+            "1. Напиши saveCart и loadCart, вызови loadCart при старте.\n2. Добавь товары, перезагрузи страницу — корзина на месте.\n3. В DevTools → Application → Local Storage найди ключ и посмотри JSON.\n4. Испорти значение руками (сотри скобку) и перезагрузи — корзина должна стать пустой, а не упасть.\n5. Открой сайт в приватном окне — убедись, что ошибок нет.",
+            "Задание на Маке. Сохранение в «Ростке» устроено точно так же; загляни в его код, если интересно."
+          ],
+          [
+            "Без образца: сохраняй также state фильтров (урок 27) под отдельным ключом и восстанавливай при загрузке; товары, которых больше нет в products, из корзины выбрасывай при loadCart.",
+            "Самостоятельно. Критерий: фильтры переживают перезагрузку; удалённый из products товар не ломает корзину."
+          ],
+          [
+            "Вот мои saveCart/loadCart:\n[вставь]\nПроверь: try/catch на чтение и запись, Array.isArray, префикс в ключе, вызов save после каждого изменения. Не переписывай.",
+            "localStorage хранит максимум около 5 МБ и только строки — для корзины достаточно, для фото нет."
+          ]
+        ],
+        "tip": "Готово, когда: корзина переживает перезагрузку, повреждённые данные дают пустую корзину без ошибок, ключ с префиксом, сохранение идёт после каждого изменения, приватный режим не ломает сайт."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "localStorage хранит",
+          "options": [
+            "только строки",
+            "любые объекты",
+            "только числа",
+            "файлы"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Функция, которая превращает массив в строку JSON (без скобок)",
+          "a": [
+            "JSON.stringify"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "getItem вернул null. Это значит",
+          "options": [
+            "Такого ключа нет",
+            "Хранилище сломано",
+            "Корзина пуста, но ключ есть",
+            "Ошибка JSON"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Зачем try … catch вокруг JSON.parse?",
+          "options": [
+            "Повреждённая строка не должна уронить сайт",
+            "Чтобы ускорить чтение",
+            "Это требование браузера",
+            "Чтобы данные не удалялись"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Где в DevTools смотреть localStorage?",
+          "options": [
+            "Application → Local Storage",
+            "Elements",
+            "Network",
+            "Console → Storage"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-30",
+      "t": "Проект 2: каталог с корзиной",
+      "plan": "60 минут: каталог строится из данных, поиск, фильтры и рабочая корзина с итогом переживают перезагрузку; проверены крайние случаи.",
+      "theory": {
+        "rule": "Проект собирает уроки 16–29. **Чек-лист:** 1) products — массив объектов с одинаковыми ключами (id, name, price, image, stock, category); 2) каталог рисует renderCatalog, в HTML разметки карточек нет; 3) поиск, категория, сортировка работают вместе через state; 4) корзина: добавить, +, −, удалить, итог, счётчик в шапке, ограничение по остатку; 5) корзина и фильтры сохраняются; 6) **крайние случаи**: пустой каталог, «ничего не найдено», товар с stock 0, повреждённый localStorage, приватный режим, удалённый товар в сохранённой корзине; 7) Console чистая на всех сценариях; 8) цены везде через formatPrice; 9) textContent для всего, что вводит пользователь; 10) два человека попробовали купить и ничего не сломали. Что не входит: оформление заказа и сервер — модуль 5.",
+        "ex": [
+          [
+            "Чек-лист проекта 2:\n[ ] products с одинаковыми ключами и id\n[ ] каталог из renderCatalog, без карточек в HTML\n[ ] поиск + категория + сортировка через state\n[ ] корзина: + − × итог, счётчик, лимит по stock\n[ ] localStorage для корзины и фильтров\n[ ] крайние случаи: пусто, не найдено, stock 0, битый JSON, приватный режим\n[ ] Console без ошибок\n[ ] formatPrice везде, textContent для ввода\n[ ] 2 человека попробовали купить",
+            "скопируй в заметки; отмечай по ходу"
+          ],
+          [
+            "Сценарий проверки:\n1. Открыть сайт → каталог полный.\n2. Ввести «кру» → один товар; стереть → все.\n3. Категория + «дешевле» → порядок верный.\n4. Добавить 3 кружки, 1 вазу → итог = 3×цена + цена.\n5. Убавить кружки до 0 → строка исчезла.\n6. Перезагрузить → корзина та же.\n7. DevTools → удалить ключ → корзина пуста без ошибок.",
+            "семь шагов, которые ты проходишь руками перед сдачей; в модуле 4 это станет автотестом"
+          ],
+          [
+            "// Проверка крайнего случая: товар удалили из products\nfunction loadCart() {\n  const data = /* …как в уроке 29… */;\n  return data.filter((item) => products.some((p) => p.id === item.id));\n}",
+            "some — есть ли хоть один товар с таким id; чужие записи отбрасываются"
+          ],
+          [
+            "1. Пройди чек-лист и сценарий проверки.\n2. На каждом шаге смотри Console.\n3. Поправь крайние случаи, которые упали.\n4. Дай двум людям задание «купи кружку и вазу» — смотри, куда они нажимают, не подсказывай.\n5. Запиши замечания и исправь главное за 20 минут.",
+            "Задание на Маке. Если человек ищет кнопку дольше трёх секунд — это ошибка интерфейса, а не человека."
+          ],
+          [
+            "Без образца: напиши в заметках три правила, которые ты вывел для себя про JavaScript за модуль (например, «одна функция — одно дело»), и один баг, который искал дольше всего, с причиной.",
+            "Самостоятельно. Это итог модуля: собственные правила запоминаются лучше чужих."
+          ],
+          [
+            "Вот мой app.js целиком:\n[вставь]\nСделай ревью как старший разработчик: 5 главных замечаний по убыванию важности (структура, имена, дублирование, безопасность innerHTML, крайние случаи). Не переписывай код.",
+            "Ревью — чтобы понять, что улучшить в модуле 3, а не чтобы переделать всё сейчас."
+          ]
+        ],
+        "tip": "Готово, когда: весь чек-лист отмечен, сценарий проверки проходит без ошибок в Console, два человека купили, замечания записаны. Модуль 2 закрыт — впереди Git и публикация."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Товар удалили из products, а в сохранённой корзине он остался. Что делать при loadCart?",
+          "options": [
+            "Отфильтровать записи, для которых нет товара в products",
+            "Ничего: корзина сама разберётся",
+            "Удалить localStorage целиком",
+            "Добавить товар обратно"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Проверка «есть ли хоть один товар с таким id»",
+          "options": [
+            "products.some((p) => p.id === id)",
+            "products.includes(id)",
+            "products.has(id)",
+            "products.find(id) === true"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Человек не находит кнопку «В корзину» три секунды. Это",
+          "options": [
+            "ошибка интерфейса — исправить",
+            "ошибка человека",
+            "нормально",
+            "проблема телефона"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Через что вставлять текст, который ввёл пользователь?",
+          "a": [
+            "textContent"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Что НЕ входит в проект 2?",
+          "options": [
+            "Оформление заказа и сервер",
+            "Поиск",
+            "Корзина",
+            "localStorage"
+          ],
+          "explanation": "Заказы и сервер — модуль 5."
+        }
+      ]
+    },
+    {
+      "id": "vitrina-x5",
+      "exam": true,
+      "t": "Экзамен: JavaScript, уроки 22–30",
+      "covers": [
+        "vitrina-22",
+        "vitrina-23",
+        "vitrina-24",
+        "vitrina-25",
+        "vitrina-26",
+        "vitrina-27",
+        "vitrina-28",
+        "vitrina-29",
+        "vitrina-30"
+      ],
+      "pass": 0.8,
+      "q": [
+        {
+          "k": "choice",
+          "s": "vitrina-22",
+          "q": "Перебрать массив без индекса",
+          "options": [
+            "for (const p of products)",
+            "for (p in products)",
+            "while (products)",
+            "each (products)"
+          ]
+        },
+        {
+          "k": "input",
+          "s": "vitrina-22",
+          "q": "Ключевое слово, которое прерывает цикл",
+          "a": [
+            "break"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-23",
+          "q": "Функция, которая возвращает цену со скидкой",
+          "options": [
+            "function withDiscount(p, d) { return Math.round(p * (1 - d / 100)); }",
+            "function withDiscount(p, d) { Math.round(p * (1 - d / 100)); }",
+            "withDiscount(p, d) => p - d",
+            "function withDiscount { return p * d; }"
+          ]
+        },
+        {
+          "k": "input",
+          "s": "vitrina-23",
+          "q": "Что вернёт функция, в которой нет return?",
+          "a": [
+            "undefined"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-24",
+          "q": "Вставить HTML-строку из своих данных в элемент",
+          "options": [
+            "el.innerHTML = `…`",
+            "el.textContent = `…`",
+            "el.html(`…`)",
+            "el = `…`"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-24",
+          "q": "Привязать id товара к карточке",
+          "options": [
+            "card.dataset.id = product.id",
+            "card.id = product",
+            "card.data = id",
+            "card.setId(product.id)"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-25",
+          "q": "Найти ближайшего родителя с классом card",
+          "options": [
+            "event.target.closest(\".card\")",
+            "event.target.parent(\".card\")",
+            "event.closest(\"card\")",
+            "document.closest(\".card\")"
+          ]
+        },
+        {
+          "k": "input",
+          "s": "vitrina-25",
+          "q": "Метод события, который отменяет перезагрузку страницы при submit (без скобок)",
+          "a": [
+            "preventDefault"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-26",
+          "q": "Товары с названием, содержащим query",
+          "options": [
+            "products.filter((p) => p.name.toLowerCase().includes(query))",
+            "products.find(query)",
+            "products.includes(query)",
+            "products.search(query)"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-26",
+          "q": "Результат поиска пуст. Показать",
+          "options": [
+            "сообщение «Ничего не найдено»",
+            "пустой экран",
+            "все товары",
+            "ошибку в консоли"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-27",
+          "q": "Сортировка «дороже»",
+          "options": [
+            "[...items].sort((a, b) => b.price - a.price)",
+            "items.sort((a, b) => a.price - b.price)",
+            "items.reverse()",
+            "items.sort(\"desc\")"
+          ]
+        },
+        {
+          "k": "input",
+          "s": "vitrina-27",
+          "q": "Объект, где хранятся все текущие условия поиска, фильтров и сортировки (имя из урока)",
+          "a": [
+            "state"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-28",
+          "q": "В корзине хранить",
+          "options": [
+            "id и qty",
+            "name и price",
+            "весь объект товара",
+            "строку с описанием"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-28",
+          "q": "Увеличить количество, если запись уже есть",
+          "options": [
+            "item.qty += 1",
+            "cart.push(item)",
+            "item.qty = 1",
+            "cart.qty++"
+          ]
+        },
+        {
+          "k": "input",
+          "s": "vitrina-29",
+          "q": "Функция, которая превращает строку JSON обратно в массив (без скобок)",
+          "a": [
+            "JSON.parse"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-29",
+          "q": "Повреждённые данные в localStorage. Корзина должна",
+          "options": [
+            "стать пустой без ошибок",
+            "уронить сайт",
+            "показать JSON",
+            "перезагрузить страницу"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-30",
+          "q": "«Крайний случай» — это",
+          "options": [
+            "пустой каталог, битый JSON, товар без остатка",
+            "самый дорогой товар",
+            "ошибка в CSS",
+            "медленный интернет"
+          ]
+        },
+        {
+          "k": "order",
+          "s": "vitrina-30",
+          "q": "Порядок работы с данными в каталоге",
+          "words": [
+            "products",
+            "filter",
+            "sort",
+            "render"
+          ],
+          "a": "products filter sort render"
         }
       ]
     }
