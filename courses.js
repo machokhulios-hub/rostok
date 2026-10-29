@@ -4223,7 +4223,7 @@ window.COURSES = [
   "name": "Своя витрина",
   "type": "path",
   "unit": "урок",
-  "goal": "Собрать и опубликовать свой интернет-магазин: сначала витрина на HTML и CSS, потом каталог с корзиной на JavaScript, затем заказы и оплата. Программа — 59 уроков, пишутся блоками; готовые видны ниже. Модули 1–4 (HTML + CSS, JavaScript, Git и публикация, работа с ИИ) готовы целиком.",
+  "goal": "Собрать и опубликовать свой интернет-магазин: сначала витрина на HTML и CSS, потом каталог с корзиной на JavaScript, затем заказы и оплата. Программа — 59 уроков, пишутся блоками; готовые видны ниже. Модули 1–5 (HTML + CSS, JavaScript, Git и публикация, работа с ИИ, сервер и заказы) готовы целиком.",
   "prompt": "Я учусь HTML с нуля. Урок {n}: {t}. Цель: {plan}. Сначала попроси показать мой код и объяснить его. Давай одну подсказку за раз. Не пиши решение целиком. После исправления предложи похожее самостоятельное задание.",
   "resources": [
     {
@@ -8770,6 +8770,1088 @@ window.COURSES = [
             "push"
           ],
           "a": "ТЗ запрос пересказ проверка push"
+        }
+      ]
+    },
+    {
+      "id": "vitrina-42",
+      "t": "Что такое сервер и HTTP",
+      "plan": "35 минут: ты понимаешь, что происходит между браузером и сервером при открытии страницы, читаешь запросы в Network и знаешь, почему GitHub Pages не принимает заказы.",
+      "theory": {
+        "rule": "**Сервер** — программа на компьютере в интернете, которая отвечает на запросы. **Браузер (клиент)** отправляет **запрос**: метод + адрес; сервер возвращает **ответ**: код состояния + содержимое. **Методы:** GET — получить (страницу, список товаров), POST — отправить данные (заказ), PATCH — изменить часть (статус заказа), DELETE — удалить. **Коды:** 200 — ок, 201 — создано, 400 — плохой запрос (ошибка в данных), 401 — нужен вход, 404 — не найдено, 500 — сервер сломался. **Адрес (URL):** https://магазин.ру/api/products?category=kitchen — схема, домен, путь, параметры. Данные между клиентом и сервером ходят в **JSON** — тот же формат, что в localStorage. **GitHub Pages** отдаёт файлы как есть: GET работает, а принять POST с заказом и что-то сохранить некому — нужен свой сервер (модуль 5) и хостинг под него (урок 57).",
+        "ex": [
+          [
+            "GET /index.html          → 200 OK, HTML\nGET /img/cup.jpg          → 200 OK, картинка\nGET /img/cupp.jpg         → 404 Not Found\nPOST /api/orders {…JSON…} → 201 Created, { \"id\": 12 }",
+            "четыре обмена: три запроса файлов и один — отправка заказа; на Pages последний невозможен"
+          ],
+          [
+            "https://shop.example/api/products?category=kitchen&max=3000\nсхема  домен         путь          параметры",
+            "части адреса; параметры после ? — пары ключ=значение через &"
+          ],
+          [
+            "{ \"name\": \"Иван\", \"phone\": \"+79000000000\", \"items\": [{ \"id\": 1, \"qty\": 2 }] }",
+            "так выглядит тело POST-запроса с заказом: JSON, как в localStorage"
+          ],
+          [
+            "1. Открой витрину на Pages, DevTools → Network, обнови страницу.\n2. Найди запросы к index.html, styles.css, картинкам: метод, код, размер, время.\n3. Открой несуществующий адрес — найди 404.\n4. Нажми на любой запрос → Headers: посмотри адрес, метод, код ответа.\n5. Открой любой сайт с формой, отправь — найди POST и его тело во вкладке Payload.",
+            "Задание на Маке. Network — главный инструмент модуля: всё, что ходит между браузером и сервером, видно здесь."
+          ],
+          [
+            "Без образца: нарисуй на бумаге или в заметках схему заказа: браузер → запрос → сервер → база → ответ → браузер, с методами и кодами на каждой стрелке.",
+            "Самостоятельно. Критерий: схема из 4–6 стрелок, у каждой метод или код; её ты будешь воплощать в уроках 43–48."
+          ],
+          [
+            "Вот запрос и ответ из Network:\n[вставь из вкладки Headers]\nОбъясни каждую строку: метод, адрес, код, тип содержимого. Что бы изменилось, если бы файла не было?",
+            "Чтение заголовков — навык, который понадобится при каждой ошибке с сервером."
+          ]
+        ],
+        "tip": "Готово, когда: ты читаешь Network (метод, адрес, код, тело), отличаешь GET от POST и 200 от 404, знаешь части URL и можешь объяснить, почему для заказов нужен сервер."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Отправить заказ на сервер — метод",
+          "options": [
+            "POST",
+            "GET",
+            "OPEN",
+            "SEND"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Код ответа «не найдено»",
+          "a": [
+            "404"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Код 500 означает",
+          "options": [
+            "сервер сломался при обработке",
+            "всё хорошо",
+            "нужно войти",
+            "файл слишком большой"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Почему GitHub Pages не принимает заказы?",
+          "options": [
+            "Он только отдаёт файлы, обработать POST и сохранить некому",
+            "Запрещено правилами",
+            "Нет HTTPS",
+            "Слишком медленный"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "В https://shop.example/api/products?max=3000 параметр — это",
+          "options": [
+            "max=3000",
+            "/api/products",
+            "shop.example",
+            "https"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-43",
+      "t": "Node.js: первый сервер",
+      "plan": "45 минут: на Маке стоит Node.js, сервер на Express отвечает «привет» на localhost:3000 и отдаёт твою витрину как статические файлы.",
+      "theory": {
+        "rule": "**Node.js** — JavaScript вне браузера: тот же язык, но с доступом к файлам, сети, базе. Установка: nodejs.org → LTS → установить; проверка в Терминале: node -v, npm -v. **npm** — установщик пакетов. **Express** — библиотека для серверов. Порядок: папка server внутри проекта → npm init -y (создаст package.json) → npm install express → файл server.js. Запуск: node server.js, остановка — Ctrl+C; после изменения кода перезапускать. **localhost:3000** — адрес сервера на твоём же Маке; порт 3000 — число, которое ты выбрал. **Статика:** app.use(express.static(\"public\")) отдаёт файлы витрины из папки public — перенеси туда index.html, styles.css, app.js, img, products. node_modules — в .gitignore (пакеты ставятся заново через npm install). Сервер видит только ты; в интернет он выйдет в уроке 57.",
+        "ex": [
+          [
+            "cd ~/vitrina\nmkdir server && cd server\nnpm init -y\nnpm install express",
+            "четыре команды один раз; появятся package.json, package-lock.json и node_modules"
+          ],
+          [
+            "// server/server.js\nconst express = require(\"express\");\nconst app = express();\n\napp.get(\"/hello\", (req, res) => {\n  res.send(\"Привет, магазин!\");\n});\n\napp.listen(3000, () => {\n  console.log(\"Сервер: http://localhost:3000\");\n});",
+            "самый маленький сервер: один адрес, один ответ; запуск — node server.js"
+          ],
+          [
+            "const path = require(\"path\");\napp.use(express.static(path.join(__dirname, \"..\", \"public\")));",
+            "одна строка — и витрина из папки public открывается по http://localhost:3000/"
+          ],
+          [
+            "node_modules/\n.env\n*.db",
+            "в .gitignore проекта: пакеты, секреты и база в историю не идут"
+          ],
+          [
+            "1. Установи Node.js LTS, проверь node -v.\n2. Создай server, npm init -y, npm install express.\n3. Напиши server.js с /hello, запусти, открой localhost:3000/hello.\n4. Перенеси витрину в public, добавь express.static, открой localhost:3000 — витрина работает с сервера.\n5. Измени текст в /hello, обнови страницу — не изменилось; перезапусти сервер — изменилось.",
+            "Задание на Маке. EADDRINUSE — порт занят другим запущенным сервером: Ctrl+C в том окне или другой порт."
+          ],
+          [
+            "Без образца: добавь адрес /api/time, который отвечает JSON { \"time\": \"…\" } с текущим временем (res.json и new Date().toISOString()).",
+            "Самостоятельно. Критерий: localhost:3000/api/time показывает JSON, Network показывает Content-Type: application/json."
+          ],
+          [
+            "Вот ошибка при запуске node server.js:\n[вставь]\nОбъясни, что значит, и где искать причину: порт, пакет, путь, синтаксис. Не переписывай.",
+            "Ошибки Node подробные: первая строка — что, стек ниже — где."
+          ]
+        ],
+        "tip": "Готово, когда: node -v работает, сервер на Express запускается командой node server.js, отвечает на /hello и отдаёт витрину из public, node_modules в .gitignore, ты знаешь, что после правок сервер перезапускают."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Node.js — это",
+          "options": [
+            "JavaScript вне браузера: сервер, файлы, база",
+            "новый браузер",
+            "библиотека для CSS",
+            "редактор кода"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Команда установки Express в папке проекта (три слова)",
+          "a": [
+            "npm install express",
+            "npm i express"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "localhost:3000 — это",
+          "options": [
+            "сервер на твоём же Маке, порт 3000",
+            "сайт в интернете",
+            "GitHub Pages",
+            "база данных"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Изменил server.js, а в браузере старое. Что сделать?",
+          "options": [
+            "Перезапустить node server.js",
+            "Обновить страницу",
+            "Переустановить Node",
+            "Очистить кеш"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Папку node_modules",
+          "options": [
+            "добавить в .gitignore",
+            "закоммитить обязательно",
+            "удалить навсегда",
+            "переименовать"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-44",
+      "t": "API: каталог с сервера",
+      "plan": "45 минут: сервер отдаёт список товаров по адресу /api/products, витрина берёт его через fetch и рисует каталог; данные живут в одном месте.",
+      "theory": {
+        "rule": "**API** — набор адресов, по которым сервер отдаёт и принимает данные, а не страницы. Сервер: app.get(\"/api/products\", (req, res) => res.json(products)) — массив из файла products.json превращается в JSON-ответ. Витрина: **fetch** запрашивает адрес и возвращает обещание (Promise) — результат придёт позже; удобная запись — **async/await**: const res = await fetch(\"/api/products\"); const products = await res.json(). Функция с await объявляется как async. Ошибки сети и коды 4xx/5xx ловим: if (!res.ok) throw new Error(res.status) внутри try…catch, и показываем «Не удалось загрузить каталог». Пока данные грузятся — текст «Загрузка…». Массив products в app.js больше не нужен: источник истины — сервер. Параметры запроса читаются из req.query: /api/products?category=kitchen → req.query.category.",
+        "ex": [
+          [
+            "// server/products.json — переносим сюда массив из app.js\n[\n  { \"id\": 1, \"name\": \"Кружка «Утро»\", \"price\": 2500, \"image\": \"img/cup.jpg\", \"stock\": 3, \"category\": \"kitchen\" }\n]\n\n// server.js\nconst products = require(\"./products.json\");\napp.get(\"/api/products\", (req, res) => {\n  res.json(products);\n});",
+            "данные в файле рядом с сервером; require читает JSON как массив"
+          ],
+          [
+            "// public/app.js\nasync function loadProducts() {\n  const res = await fetch(\"/api/products\");\n  if (!res.ok) throw new Error(`Ошибка ${res.status}`);\n  return res.json();\n}\n\nasync function init() {\n  const catalog = document.querySelector(\"#catalog\");\n  catalog.textContent = \"Загрузка…\";\n  try {\n    products = await loadProducts();\n    renderCatalog(products);\n  } catch (e) {\n    catalog.textContent = \"Не удалось загрузить каталог\";\n    console.error(e);\n  }\n}\ninit();",
+            "await ждёт ответ; try…catch ловит и сеть, и плохой код ответа; products теперь let и заполняется с сервера"
+          ],
+          [
+            "app.get(\"/api/products\", (req, res) => {\n  const { category } = req.query;\n  const list = category ? products.filter((p) => p.category === category) : products;\n  res.json(list);\n});",
+            "фильтр на сервере по параметру адреса: /api/products?category=kitchen"
+          ],
+          [
+            "1. Перенеси products в server/products.json, замени const products на let products = [].\n2. Добавь /api/products на сервере, открой адрес в браузере — JSON.\n3. Напиши loadProducts и init, убедись, что каталог рисуется.\n4. Останови сервер, обнови страницу — увидишь сообщение об ошибке, а не пустоту.\n5. Добавь параметр category и проверь в Network.",
+            "Задание на Маке. «Failed to fetch» — сервер не запущен или адрес с другим портом; «Unexpected token <» — сервер вернул HTML вместо JSON (обычно 404)."
+          ],
+          [
+            "Без образца: добавь /api/products/:id, который отдаёт один товар (req.params.id, Number, find) и 404 с { error: \"Не найдено\" }, если нет.",
+            "Самостоятельно. Критерий: /api/products/1 — объект, /api/products/999 — код 404 и JSON с ошибкой."
+          ],
+          [
+            "Вот мой fetch и обработчик на сервере:\n[вставь]\nПроверь: есть ли проверка res.ok, try…catch, состояние «Загрузка…», и что сервер отвечает JSON, а не строкой. Не переписывай.",
+            "Четыре вещи, без которых fetch «иногда не работает» без объяснений."
+          ]
+        ],
+        "tip": "Готово, когда: каталог берётся с сервера через fetch с async/await, есть состояния «Загрузка…» и ошибка, массив в app.js убран, параметр category работает, Network показывает JSON."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Отдать массив как JSON в Express",
+          "options": [
+            "res.json(products)",
+            "res.send(products.toString())",
+            "return products",
+            "res.html(products)"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Функция браузера для запроса к серверу (без скобок)",
+          "a": [
+            "fetch"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Перед await в функции нужно слово",
+          "options": [
+            "async",
+            "await",
+            "promise",
+            "static"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "fetch завершился, res.ok === false. Это",
+          "options": [
+            "сервер ответил кодом 4xx или 5xx — показать ошибку",
+            "всё хорошо",
+            "сеть недоступна",
+            "JSON пустой"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "«Unexpected token < in JSON» при res.json()",
+          "options": [
+            "Сервер вернул HTML вместо JSON — скорее всего 404",
+            "JSON слишком большой",
+            "Нужен другой браузер",
+            "Express не установлен"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-45",
+      "t": "SQLite: товары и остатки в базе",
+      "plan": "50 минут: товары и остатки лежат в базе SQLite, сервер читает их запросами SQL, а не из файла; есть скрипт, который создаёт таблицу и заполняет её.",
+      "theory": {
+        "rule": "**База данных** хранит данные в таблицах и отвечает на запросы на языке **SQL**. **SQLite** — база в одном файле shop.db, без отдельного сервера: для небольшого магазина достаточно. Пакет better-sqlite3 (npm install better-sqlite3): const db = new Database(\"shop.db\"). **Создать таблицу:** CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, name TEXT NOT NULL, price INTEGER NOT NULL, image TEXT, stock INTEGER NOT NULL DEFAULT 0, category TEXT). **Прочитать:** db.prepare(\"SELECT * FROM products\").all(); один: .get(id). **Вставить:** db.prepare(\"INSERT INTO products (name, price, …) VALUES (?, ?, …)\").run(name, price, …) — значения только через ? (**параметры**), никогда не склеивай строку запроса из данных пользователя: это дыра (SQL-инъекция). **Изменить:** UPDATE products SET stock = ? WHERE id = ?. Цены храни целыми числами в рублях. Скрипт seed.js заполняет базу из products.json один раз. Файл *.db — в .gitignore, его копируют отдельно (урок 58).",
+        "ex": [
+          [
+            "// server/db.js\nconst Database = require(\"better-sqlite3\");\nconst db = new Database(\"shop.db\");\ndb.exec(`\n  CREATE TABLE IF NOT EXISTS products (\n    id INTEGER PRIMARY KEY,\n    name TEXT NOT NULL,\n    price INTEGER NOT NULL,\n    image TEXT,\n    stock INTEGER NOT NULL DEFAULT 0,\n    category TEXT\n  )\n`);\nmodule.exports = db;",
+            "один модуль открывает базу и создаёт таблицу, если её ещё нет; остальные файлы делают require(\"./db\")"
+          ],
+          [
+            "// server/seed.js — запустить один раз: node seed.js\nconst db = require(\"./db\");\nconst products = require(\"./products.json\");\nconst insert = db.prepare(\"INSERT INTO products (name, price, image, stock, category) VALUES (?, ?, ?, ?, ?)\");\nfor (const p of products) insert.run(p.name, p.price, p.image, p.stock, p.category);\nconsole.log(\"Товаров:\", db.prepare(\"SELECT COUNT(*) AS n FROM products\").get().n);",
+            "параметры через ?, значения — в run; COUNT считает строки"
+          ],
+          [
+            "app.get(\"/api/products\", (req, res) => {\n  const rows = db.prepare(\"SELECT * FROM products ORDER BY id\").all();\n  res.json(rows);\n});\n\napp.get(\"/api/products/:id\", (req, res) => {\n  const row = db.prepare(\"SELECT * FROM products WHERE id = ?\").get(Number(req.params.id));\n  if (!row) return res.status(404).json({ error: \"Не найдено\" });\n  res.json(row);\n});",
+            "API теперь читает базу; products.json остаётся только для seed"
+          ],
+          [
+            "// НИКОГДА так:\ndb.prepare(\"SELECT * FROM products WHERE name = '\" + req.query.q + \"'\")\n// Только так:\ndb.prepare(\"SELECT * FROM products WHERE name LIKE ?\").all(`%${req.query.q}%`)",
+            "строка из запроса пользователя не должна попадать внутрь SQL — только параметром"
+          ],
+          [
+            "1. npm install better-sqlite3 (при ошибке сборки — xcode-select --install).\n2. Создай db.js и seed.js, запусти seed один раз.\n3. Переведи /api/products и /:id на базу.\n4. Открой shop.db в бесплатной программе DB Browser for SQLite — посмотри таблицу.\n5. Добавь *.db в .gitignore.",
+            "Задание на Маке. Запустил seed дважды — товары задвоились; очисти таблицу (DELETE FROM products) или удали shop.db и запусти заново."
+          ],
+          [
+            "Без образца: добавь /api/products?q=круж — поиск на сервере через LIKE с параметром, и проверь, что q с кавычкой (') не ломает запрос.",
+            "Самостоятельно. Критерий: поиск работает, кавычка в запросе даёт пустой результат, а не ошибку 500."
+          ],
+          [
+            "Вот мои SQL-запросы:\n[вставь]\nПроверь: все ли данные идут через ?, есть ли NOT NULL у цены и остатка, не храню ли цену дробью. Не переписывай.",
+            "Три проверки, которые отделяют учебную базу от опасной."
+          ]
+        ],
+        "tip": "Готово, когда: товары в shop.db, seed заполняет базу один раз, API читает SELECT с параметрами через ?, поиск с кавычкой не ломает сервер, *.db в .gitignore."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "SQLite — это",
+          "options": [
+            "база в одном файле, без отдельного сервера",
+            "язык программирования",
+            "хостинг",
+            "библиотека для CSS"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Команда SQL, которая читает строки из таблицы (одно слово)",
+          "a": [
+            "SELECT",
+            "select"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Подставлять данные пользователя в SQL",
+          "options": [
+            "только через параметры ?",
+            "склейкой строк",
+            "через шаблонную строку",
+            "как угодно, SQLite безопасен"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Запустил seed.js дважды",
+          "options": [
+            "Товары задвоились — очистить таблицу и заполнить заново",
+            "Ничего не произошло",
+            "База удалилась",
+            "Сервер остановился"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Цену хранить",
+          "options": [
+            "целым числом в рублях",
+            "дробью с копейками",
+            "строкой «2 500 ₽»",
+            "в отдельном файле"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-46",
+      "t": "Оформление заказа: форма",
+      "plan": "45 минут: в корзине есть форма с именем, телефоном, адресом и способом доставки; браузер проверяет поля, скрипт собирает заказ и отправляет POST на сервер, сервер проверяет данные ещё раз.",
+      "theory": {
+        "rule": "**Форма** — form с полями input и select, у каждого **name** (ключ в данных) и **label** (подпись, доступность). Проверка в браузере: **required**, **type=\"tel\"**, **pattern** для телефона, **minlength**. Отправка: событие submit, event.preventDefault(), new FormData(form) → Object.fromEntries — объект из полей; к нему добавляем items из корзины. Запрос: fetch(\"/api/orders\", { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(order) }). На сервере app.use(express.json()) разбирает тело в req.body. **Сервер проверяет всё заново:** браузерную проверку легко обойти. Нет имени, телефон не по шаблону, пустые items, qty не число — ответ 400 с { error: \"…\" }; клиент показывает текст ошибки у формы. Успех — 201 и { id }. Пока кнопка отправляет — disabled, чтобы не нажали дважды (подробно — урок 49).",
+        "ex": [
+          [
+            "<form id=\"order\">\n  <label>Имя <input name=\"name\" required minlength=\"2\"></label>\n  <label>Телефон <input name=\"phone\" type=\"tel\" required pattern=\"\\+7[0-9]{10}\" placeholder=\"+79000000000\"></label>\n  <label>Адрес <input name=\"address\" required></label>\n  <label>Доставка\n    <select name=\"delivery\">\n      <option value=\"courier\">Курьер</option>\n      <option value=\"pickup\">Самовывоз</option>\n    </select>\n  </label>\n  <button type=\"submit\">Оформить</button>\n  <p class=\"form-error\" hidden></p>\n</form>",
+            "подписи через label, проверка атрибутами; пустой p для ошибок с сервера"
+          ],
+          [
+            "const form = document.querySelector(\"#order\");\nform.addEventListener(\"submit\", async (event) => {\n  event.preventDefault();\n  const data = Object.fromEntries(new FormData(form));\n  const order = { ...data, items: cart };\n  const button = form.querySelector(\"button\");\n  button.disabled = true;\n  try {\n    const res = await fetch(\"/api/orders\", {\n      method: \"POST\",\n      headers: { \"Content-Type\": \"application/json\" },\n      body: JSON.stringify(order)\n    });\n    const result = await res.json();\n    if (!res.ok) throw new Error(result.error || \"Ошибка\");\n    alert(`Заказ №${result.id} принят`);\n  } catch (e) {\n    showFormError(e.message);\n  } finally {\n    button.disabled = false;\n  }\n});",
+            "собрать, отправить, показать результат; finally возвращает кнопку в любом случае"
+          ],
+          [
+            "app.use(express.json());\n\napp.post(\"/api/orders\", (req, res) => {\n  const { name, phone, address, delivery, items } = req.body;\n  if (!name || name.trim().length < 2) return res.status(400).json({ error: \"Укажите имя\" });\n  if (!/^\\+7\\d{10}$/.test(phone || \"\")) return res.status(400).json({ error: \"Телефон в формате +79000000000\" });\n  if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: \"Корзина пуста\" });\n  res.status(201).json({ id: 1 }); // сохранение — в уроке 47\n});",
+            "сервер проверяет сам, не доверяя браузеру; пока отвечает заглушкой id: 1"
+          ],
+          [
+            "1. Добавь форму в раздел корзины.\n2. Напиши обработчик submit с FormData и fetch POST.\n3. На сервере добавь express.json и /api/orders с проверками.\n4. Отправь пустую форму — браузер не пустит; отправь через DevTools → Console fetch с плохим телефоном — сервер вернёт 400.\n5. Покажи ошибку сервера в .form-error.",
+            "Задание на Маке. req.body undefined — забыл app.use(express.json()) или заголовок Content-Type."
+          ],
+          [
+            "Без образца: добавь поле «комментарий» (textarea, необязательное, до 200 символов) и проверку длины на сервере.",
+            "Самостоятельно. Критерий: 201-символьный комментарий получает 400 с понятным текстом, обычный — проходит."
+          ],
+          [
+            "Вот моя форма, обработчик и маршрут:\n[вставь]\nПроверь, что каждое правило браузера (required, pattern) повторено на сервере, и что ответ 400 всегда содержит текст для человека. Не переписывай.",
+            "Правило модуля: браузер проверяет для удобства, сервер — для безопасности."
+          ]
+        ],
+        "tip": "Готово, когда: форма с подписями и проверкой, submit шлёт JSON на /api/orders, сервер проверяет имя, телефон, items и отвечает 400 с текстом или 201 с id, ошибки видны у формы, кнопка блокируется на время отправки."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Зачем проверять данные на сервере, если браузер уже проверил?",
+          "options": [
+            "Браузерную проверку легко обойти",
+            "Для скорости",
+            "Иначе fetch не работает",
+            "Не нужно"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Строка Express, которая включает разбор JSON в req.body: app.use(express.___())",
+          "a": [
+            "json"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Собрать поля формы в объект",
+          "options": [
+            "Object.fromEntries(new FormData(form))",
+            "form.values()",
+            "JSON.parse(form)",
+            "form.toObject()"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Заказ не прошёл проверку на сервере. Ответ",
+          "options": [
+            "400 и { error: \"текст для человека\" }",
+            "200 и пустой объект",
+            "500",
+            "перезагрузка страницы"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Заголовок для отправки JSON",
+          "options": [
+            "Content-Type: application/json",
+            "Accept: text/html",
+            "Type: json",
+            "Body: json"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-47",
+      "t": "Сохранение заказа",
+      "plan": "50 минут: заказ с составом корзины записывается в две таблицы одной транзакцией и получает номер; покупатель видит «Заказ №N принят», корзина очищается.",
+      "theory": {
+        "rule": "Заказ — две таблицы: **orders** (id, name, phone, address, delivery, total, status, created_at) и **order_items** (id, order_id, product_id, qty, price) — по строке на каждый товар. Цена в order_items фиксируется на момент заказа: потом цены могут измениться, а заказ — нет. **Транзакция** — несколько записей выполняются как одна: либо все, либо ни одной. В better-sqlite3: const createOrder = db.transaction((order) => { … }) — внутри INSERT в orders, берём lastInsertRowid как номер, INSERT для каждого item; createOrder(order) запускает. Статус первого заказа — \"new\". created_at — datetime('now'). Сервер отвечает 201 { id }. Клиент: показывает номер, очищает cart и localStorage, перерисовывает корзину. Сумму total пока берём из клиента — в уроке 48 научимся не доверять ей.",
+        "ex": [
+          [
+            "db.exec(`\n  CREATE TABLE IF NOT EXISTS orders (\n    id INTEGER PRIMARY KEY,\n    name TEXT NOT NULL, phone TEXT NOT NULL, address TEXT NOT NULL,\n    delivery TEXT NOT NULL, total INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'new',\n    created_at TEXT NOT NULL DEFAULT (datetime('now'))\n  );\n  CREATE TABLE IF NOT EXISTS order_items (\n    id INTEGER PRIMARY KEY,\n    order_id INTEGER NOT NULL REFERENCES orders(id),\n    product_id INTEGER NOT NULL REFERENCES products(id),\n    qty INTEGER NOT NULL, price INTEGER NOT NULL\n  );\n`);",
+            "две таблицы, связанные через order_id; REFERENCES не даст записать позицию несуществующего заказа"
+          ],
+          [
+            "const insertOrder = db.prepare(\"INSERT INTO orders (name, phone, address, delivery, total) VALUES (?, ?, ?, ?, ?)\");\nconst insertItem = db.prepare(\"INSERT INTO order_items (order_id, product_id, qty, price) VALUES (?, ?, ?, ?)\");\n\nconst createOrder = db.transaction((o) => {\n  const info = insertOrder.run(o.name, o.phone, o.address, o.delivery, o.total);\n  const orderId = info.lastInsertRowid;\n  for (const item of o.items) {\n    insertItem.run(orderId, item.id, item.qty, item.price);\n  }\n  return orderId;\n});",
+            "транзакция: заказ и позиции записываются вместе; lastInsertRowid — номер нового заказа"
+          ],
+          [
+            "app.post(\"/api/orders\", (req, res) => {\n  // …проверки из урока 46…\n  const id = createOrder({ name, phone, address, delivery, total, items });\n  res.status(201).json({ id });\n});\n\n// клиент после успеха:\ncart = [];\nsaveCart();\nrenderCart();\nshowMessage(`Заказ №${result.id} принят. Мы позвоним.`);",
+            "сервер вернул номер, клиент убрал корзину и показал подтверждение"
+          ],
+          [
+            "1. Добавь таблицы в db.js (перезапусти сервер).\n2. Напиши insertOrder, insertItem и транзакцию createOrder.\n3. Подключи в /api/orders, оформи заказ с витрины.\n4. Открой shop.db в DB Browser: строка в orders и строки в order_items.\n5. Сломай транзакцию (например, item.id = null) и убедись, что в orders ничего не записалось.",
+            "Задание на Маке. FOREIGN KEY работает только после db.pragma(\"foreign_keys = ON\") — добавь в db.js, иначе REFERENCES не проверяется."
+          ],
+          [
+            "Без образца: добавь GET /api/orders/:id, который возвращает заказ вместе с позициями (два SELECT) и 404, если нет; покажи его покупателю по ссылке после оформления.",
+            "Самостоятельно. Критерий: /api/orders/1 отдаёт объект с массивом items, чужой номер — 404."
+          ],
+          [
+            "Вот мой createOrder:\n[вставь]\nПроверь: всё ли внутри транзакции, фиксируется ли цена позиции, возвращается ли номер, есть ли pragma foreign_keys. Не переписывай.",
+            "Заказ без транзакции рано или поздно запишется наполовину."
+          ]
+        ],
+        "tip": "Готово, когда: заказ записывается в orders и order_items одной транзакцией, получает номер и статус new, покупатель видит номер, корзина очищена, сломанная транзакция не оставляет половины заказа."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Зачем две таблицы для заказа?",
+          "options": [
+            "В заказе несколько товаров — по строке на каждый в order_items",
+            "Так быстрее",
+            "SQLite не умеет одну большую",
+            "Для красоты"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Поле ответа run(), в котором номер новой строки",
+          "a": [
+            "lastInsertRowid"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Транзакция гарантирует",
+          "options": [
+            "либо все записи, либо ни одной",
+            "скорость",
+            "уникальность телефона",
+            "сортировку"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Цена товара изменилась после заказа. В order_items",
+          "options": [
+            "остаётся цена на момент заказа",
+            "меняется автоматически",
+            "становится 0",
+            "удаляется"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Статус нового заказа",
+          "options": [
+            "new",
+            "paid",
+            "done",
+            "empty"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-48",
+      "t": "Цена и остаток считаются на сервере",
+      "plan": "45 минут: сумму заказа считает сервер по базе, а не по данным из браузера; остаток проверяется и уменьшается в той же транзакции; подменить цену через DevTools нельзя.",
+      "theory": {
+        "rule": "**Правило:** всё, что влияет на деньги, считает сервер по своим данным. Клиент присылает только id и qty. Сервер для каждой позиции: SELECT price, stock FROM products WHERE id = ?; нет товара — 400; stock < qty — 400 «Недостаточно товара»; qty не целое больше 0 — 400. Сумма = Σ price × qty из базы. **Остаток уменьшается в той же транзакции**, где создаётся заказ: UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ? — условие в WHERE защищает от двух одновременных заказов на последний товар; если изменённых строк 0 (info.changes === 0) — бросить ошибку, транзакция откатится. Ошибка внутри db.transaction отменяет всё. Клиент показывает текст ошибки и обновляет каталог. Сумму, которую показывает корзина, можно оставить для удобства, но сервер её не читает.",
+        "ex": [
+          [
+            "const getProduct = db.prepare(\"SELECT id, price, stock FROM products WHERE id = ?\");\nconst takeStock = db.prepare(\"UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?\");\n\nconst createOrder = db.transaction((o) => {\n  let total = 0;\n  const lines = [];\n  for (const item of o.items) {\n    const qty = Number(item.qty);\n    if (!Number.isInteger(qty) || qty <= 0) throw new Error(\"Неверное количество\");\n    const p = getProduct.get(Number(item.id));\n    if (!p) throw new Error(\"Товар не найден\");\n    if (p.stock < qty) throw new Error(`Недостаточно: ${p.id}`);\n    const info = takeStock.run(qty, p.id, qty);\n    if (info.changes === 0) throw new Error(`Недостаточно: ${p.id}`);\n    total += p.price * qty;\n    lines.push({ id: p.id, qty, price: p.price });\n  }\n  const info = insertOrder.run(o.name, o.phone, o.address, o.delivery, total);\n  for (const l of lines) insertItem.run(info.lastInsertRowid, l.id, l.qty, l.price);\n  return info.lastInsertRowid;\n});",
+            "цена и остаток — из базы; throw внутри транзакции откатывает и UPDATE остатков, и заказ"
+          ],
+          [
+            "app.post(\"/api/orders\", (req, res) => {\n  try {\n    const id = createOrder(req.body);\n    res.status(201).json({ id });\n  } catch (e) {\n    res.status(400).json({ error: e.message });\n  }\n});",
+            "ошибки транзакции превращаются в понятный ответ 400"
+          ],
+          [
+            "// Попытка подмены в DevTools → Console:\nfetch(\"/api/orders\", { method: \"POST\", headers: { \"Content-Type\": \"application/json\" },\n  body: JSON.stringify({ name: \"Тест\", phone: \"+79000000000\", address: \"—\", delivery: \"pickup\",\n    total: 1, items: [{ id: 1, qty: 1, price: 1 }] }) })\n// Сервер проигнорирует total и price и посчитает сам",
+            "так проверяют защиту: прислать заниженную цену и посмотреть total в базе"
+          ],
+          [
+            "1. Перепиши createOrder: цена и остаток из базы, UPDATE с условием, проверки qty.\n2. Оформи заказ — остаток в products уменьшился.\n3. Попробуй заказать больше, чем есть — 400 и остаток не изменился.\n4. Подмени цену через Console — в базе настоящая сумма.\n5. Обнови каталог после заказа, чтобы остатки на витрине были свежими.",
+            "Задание на Маке. Проверяй остатки в DB Browser после каждого сценария — цифры честнее слов."
+          ],
+          [
+            "Без образца: добавь в ответ 400 список позиций, которых не хватило, с доступным остатком, и покажи его в корзине.",
+            "Самостоятельно. Критерий: заказ двух кружек при остатке 1 возвращает понятное сообщение с цифрой 1."
+          ],
+          [
+            "Вот мой createOrder:\n[вставь]\nНайди место, где сервер всё ещё доверяет клиенту (цена, сумма, остаток, qty), и объясни, как это использовать для подмены. Не исправляй.",
+            "Думай как покупатель с DevTools — так находят дыры до запуска."
+          ]
+        ],
+        "tip": "Готово, когда: сервер игнорирует цены и сумму от клиента, проверяет qty и остаток, уменьшает остаток в транзакции с условием stock >= qty, нехватка даёт 400 без изменений в базе, подмена через Console не проходит."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Откуда сервер берёт цену товара при расчёте заказа?",
+          "options": [
+            "Из базы по id",
+            "Из тела запроса",
+            "Из localStorage",
+            "Из корзины клиента"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Зачем AND stock >= ? в UPDATE?",
+          "options": [
+            "Чтобы два одновременных заказа не ушли в минус",
+            "Для скорости",
+            "Чтобы цена не менялась",
+            "Это синтаксис SQLite"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Поле результата run(), в котором число изменённых строк",
+          "a": [
+            "changes"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "throw внутри db.transaction",
+          "options": [
+            "откатывает все записи транзакции",
+            "ничего не делает",
+            "сохраняет часть",
+            "перезапускает сервер"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Клиент прислал total: 1. Сервер",
+          "options": [
+            "игнорирует и считает сам",
+            "записывает 1",
+            "возвращает 500",
+            "просит подтвердить"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-49",
+      "t": "Защита от двойного заказа",
+      "plan": "40 минут: двойной клик по «Оформить», повторная отправка после обрыва сети или обновление страницы создают один заказ, а не два; дубликат отвергается сервером.",
+      "theory": {
+        "rule": "Двойной заказ возникает трижды: **двойной клик** — кнопка disabled на время запроса (урок 46) решает только это; **повтор после обрыва** — ответ не дошёл, покупатель жмёт ещё раз; **обновление страницы** — форма отправляется заново. Решение — **ключ идемпотентности**: клиент перед отправкой создаёт случайный идентификатор crypto.randomUUID() и хранит его с корзиной; сервер пишет его в orders.idempotency_key с **UNIQUE**; повторный запрос с тем же ключом не создаёт заказ, а возвращает уже существующий номер (200). Ключ сбрасывается только после успешного ответа вместе с очисткой корзины. Сервер ловит ошибку уникальности (SQLITE_CONSTRAINT_UNIQUE) или сначала ищет по ключу. На клиенте после ошибки сети — предложить «Повторить», тот же ключ. Это та же идея, которой пользуются платёжные системы (урок 53).",
+        "ex": [
+          [
+            "// клиент: ключ живёт вместе с корзиной\nfunction getOrderKey() {\n  let key = localStorage.getItem(\"vitrina-order-key\");\n  if (!key) {\n    key = crypto.randomUUID();\n    localStorage.setItem(\"vitrina-order-key\", key);\n  }\n  return key;\n}\n// в теле заказа: { ...data, items: cart, key: getOrderKey() }\n// после 201/200: localStorage.removeItem(\"vitrina-order-key\")",
+            "один ключ на одну попытку оформления; пока заказ не подтверждён — ключ тот же"
+          ],
+          [
+            "ALTER TABLE orders ADD COLUMN idempotency_key TEXT UNIQUE;",
+            "один раз в DB Browser или db.exec в миграции; UNIQUE не пустит два заказа с одним ключом"
+          ],
+          [
+            "app.post(\"/api/orders\", (req, res) => {\n  const key = String(req.body.key || \"\");\n  if (!key) return res.status(400).json({ error: \"Нет ключа заказа\" });\n  const existing = db.prepare(\"SELECT id FROM orders WHERE idempotency_key = ?\").get(key);\n  if (existing) return res.status(200).json({ id: existing.id, repeated: true });\n  try {\n    const id = createOrder({ ...req.body, key });\n    res.status(201).json({ id });\n  } catch (e) {\n    if (String(e.code).includes(\"UNIQUE\")) {\n      const row = db.prepare(\"SELECT id FROM orders WHERE idempotency_key = ?\").get(key);\n      return res.status(200).json({ id: row.id, repeated: true });\n    }\n    res.status(400).json({ error: e.message });\n  }\n});",
+            "сначала поиск по ключу, потом создание; гонка двух одновременных запросов упрётся в UNIQUE и тоже вернёт существующий"
+          ],
+          [
+            "1. Добавь колонку idempotency_key UNIQUE и запись ключа в insertOrder.\n2. На клиенте — getOrderKey и сброс после успеха.\n3. Оформи заказ и быстро нажми кнопку несколько раз — один заказ.\n4. В Console отправь тот же fetch с тем же key дважды — второй ответ 200 с repeated: true.\n5. DevTools → Network → Offline, отправь, включи сеть, нажми «Повторить» — заказ один.",
+            "Задание на Маке. Ключ сбросился до ответа сервера — защита не работает; сбрасывай только после 201/200."
+          ],
+          [
+            "Без образца: ограничь на сервере число заказов с одного телефона — не больше 3 за 10 минут (SELECT COUNT по phone и created_at), ответ 429.",
+            "Самостоятельно. Критерий: четвёртый заказ за 10 минут получает 429 и понятный текст."
+          ],
+          [
+            "Вот моя защита от дублей:\n[вставь]\nПроверь три сценария: двойной клик, обрыв сети с повтором, обновление страницы. Где заказ может создаться дважды? Не исправляй.",
+            "Три сценария — три разных дыры; кнопка disabled закрывает только первую."
+          ]
+        ],
+        "tip": "Готово, когда: у заказа есть ключ, колонка UNIQUE, повторный запрос возвращает существующий номер, двойной клик, обрыв сети и обновление страницы не создают второй заказ, ключ сбрасывается только после подтверждения."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Кнопка disabled на время запроса защищает от",
+          "options": [
+            "двойного клика, но не от повтора после обрыва сети",
+            "всех дублей",
+            "подмены цены",
+            "ошибок сервера"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Функция браузера для случайного идентификатора: crypto.___()",
+          "a": [
+            "randomUUID"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Повторный запрос с тем же ключом. Сервер",
+          "options": [
+            "возвращает существующий номер заказа",
+            "создаёт второй заказ",
+            "отвечает 500",
+            "удаляет первый"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Что защищает от двух одновременных запросов с одним ключом?",
+          "options": [
+            "UNIQUE на колонке ключа",
+            "disabled у кнопки",
+            "alert",
+            "setTimeout"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Когда сбрасывать ключ на клиенте?",
+          "options": [
+            "После успешного ответа сервера",
+            "Перед отправкой",
+            "При загрузке страницы",
+            "Никогда"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-50",
+      "t": "Админка: список заказов и статусы",
+      "plan": "50 минут: по адресу /admin ты видишь заказы с составом и меняешь статус: новый → собран → отправлен; вход защищён паролем из .env.",
+      "theory": {
+        "rule": "Админка — отдельная страница public/admin.html и защищённые маршруты /api/admin/*. **Защита:** HTTP Basic Auth — браузер сам покажет окно логина; сервер сравнивает логин и пароль с ADMIN_USER и ADMIN_PASSWORD из .env (пакет dotenv: require(\"dotenv\").config()). Пароль не в коде и не в git. Этого хватает для одного владельца; для нескольких сотрудников нужен настоящий вход с сессиями — за рамками курса. **Маршруты:** GET /api/admin/orders — список с позициями (JOIN или два запроса), сортировка по created_at DESC; PATCH /api/admin/orders/:id — { status } из допустимого списка [\"new\", \"packed\", \"shipped\", \"cancelled\"], иначе 400. Отмена возвращает остаток. **Страница:** таблица заказов, кнопки статусов, fetch с методом PATCH. Админку не индексировать и не показывать в меню. Запросы к /api/admin без правильного пароля — 401.",
+        "ex": [
+          [
+            "// server/auth.js\nrequire(\"dotenv\").config();\nmodule.exports = function adminAuth(req, res, next) {\n  const header = req.headers.authorization || \"\";\n  const [scheme, encoded] = header.split(\" \");\n  const [user, pass] = Buffer.from(encoded || \"\", \"base64\").toString().split(\":\");\n  if (scheme === \"Basic\" && user === process.env.ADMIN_USER && pass === process.env.ADMIN_PASSWORD) return next();\n  res.set(\"WWW-Authenticate\", \"Basic realm=\\\"admin\\\"\");\n  res.status(401).send(\"Нужен вход\");\n};\n// .env: ADMIN_USER=alex  ADMIN_PASSWORD=длинный-пароль",
+            "проверка логина и пароля из .env; без них — 401 и окно входа в браузере"
+          ],
+          [
+            "const adminAuth = require(\"./auth\");\napp.get(\"/api/admin/orders\", adminAuth, (req, res) => {\n  const orders = db.prepare(\"SELECT * FROM orders ORDER BY created_at DESC\").all();\n  const items = db.prepare(\"SELECT * FROM order_items WHERE order_id = ?\");\n  res.json(orders.map((o) => ({ ...o, items: items.all(o.id) })));\n});\n\nconst STATUSES = [\"new\", \"packed\", \"shipped\", \"cancelled\"];\napp.patch(\"/api/admin/orders/:id\", adminAuth, (req, res) => {\n  const { status } = req.body;\n  if (!STATUSES.includes(status)) return res.status(400).json({ error: \"Неверный статус\" });\n  const info = db.prepare(\"UPDATE orders SET status = ? WHERE id = ?\").run(status, Number(req.params.id));\n  if (info.changes === 0) return res.status(404).json({ error: \"Заказ не найден\" });\n  res.json({ ok: true });\n});",
+            "adminAuth стоит перед обработчиком; статус проверяется по списку"
+          ],
+          [
+            "// public/admin.js\nasync function loadOrders() {\n  const res = await fetch(\"/api/admin/orders\");\n  const orders = await res.json();\n  table.innerHTML = orders.map((o) => `\n    <tr><td>№${o.id}</td><td>${o.created_at}</td><td>${escapeHtml(o.name)}, ${escapeHtml(o.phone)}</td>\n    <td>${o.items.map((i) => `${i.product_id} × ${i.qty}`).join(\", \")}</td>\n    <td>${formatPrice(o.total)}</td>\n    <td><select data-id=\"${o.id}\">${STATUSES.map((s) => `<option ${s === o.status ? \"selected\" : \"\"}>${s}</option>`).join(\"\")}</select></td></tr>`).join(\"\");\n}",
+            "имя и телефон покупателя — чужой текст: экранировать (escapeHtml), иначе XSS в твоей же админке"
+          ],
+          [
+            "1. npm install dotenv, создай .env с логином и паролем.\n2. Напиши auth.js и защищённые маршруты.\n3. Сделай admin.html и admin.js: таблица и смена статуса через PATCH.\n4. Открой /api/admin/orders без входа — 401; войди — список.\n5. Поменяй статус, проверь в DB Browser.",
+            "Задание на Маке. Браузер запомнил пароль и не спрашивает — открой приватное окно, чтобы проверить 401."
+          ],
+          [
+            "Без образца: при статусе cancelled верни остатки в products в транзакции и запрети менять статус отменённого заказа.",
+            "Самостоятельно. Критерий: отмена увеличивает stock ровно на qty, повторная смена статуса даёт 400."
+          ],
+          [
+            "Вот моя админка:\n[вставь]\nПроверь: пароль не в коде, все /api/admin за adminAuth, статусы по списку, чужой текст экранирован, отмена возвращает остаток. Не переписывай.",
+            "Админка — вторая по риску часть магазина после оплаты: проверь каждый пункт."
+          ]
+        ],
+        "tip": "Готово, когда: /admin показывает заказы с позициями и датой, статусы меняются через PATCH по списку, без пароля — 401, пароль в .env, имена покупателей экранированы, отмена возвращает остаток."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Где хранить пароль админки?",
+          "options": [
+            "В .env, который в .gitignore",
+            "В admin.js",
+            "В server.js",
+            "В README"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Код ответа «нужен вход»",
+          "a": [
+            "401"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Метод для изменения статуса заказа",
+          "options": [
+            "PATCH",
+            "GET",
+            "POST /delete",
+            "PUT /all"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Имя покупателя в таблице админки вставлять",
+          "options": [
+            "экранированным (escapeHtml) или через textContent",
+            "как есть в innerHTML",
+            "заглавными",
+            "без телефона"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Статус не из списка",
+          "options": [
+            "400 «Неверный статус»",
+            "записать как есть",
+            "500",
+            "игнорировать молча"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-51",
+      "t": "Проект 5: заказы работают",
+      "plan": "60 минут: полный путь каталог → корзина → заказ → админка проходит без ошибок, крайние случаи проверены, база копируется, README описывает запуск сервера.",
+      "theory": {
+        "rule": "Проект закрывает модуль 5. **Чек-лист:** 1) витрина и API с одного сервера, каталог из базы; 2) форма с проверкой в браузере и на сервере; 3) заказ пишется транзакцией, цена и остаток считаются на сервере, нехватка — 400 без изменений; 4) ключ идемпотентности и UNIQUE, три сценария дублей не создают второй заказ; 5) админка за паролем из .env, статусы по списку, отмена возвращает остаток, чужой текст экранирован; 6) .env, *.db, node_modules в .gitignore; 7) копия базы: cp shop.db backups/shop-ДАТА.db и проверка, что копия открывается; 8) README: как запустить сервер, seed, переменные .env; 9) сценарий проверки пройден руками; 10) Console браузера и вывод сервера без ошибок. Что дальше: модуль 6 — оплата, документы, хостинг для сервера, запуск.",
+        "ex": [
+          [
+            "Чек-лист проекта 5:\n[ ] каталог из базы, статика с сервера\n[ ] форма: браузер + сервер\n[ ] транзакция, цена/остаток на сервере\n[ ] ключ заказа, UNIQUE, 3 сценария дублей\n[ ] админка: .env, 401, статусы, отмена, экранирование\n[ ] .gitignore: .env, *.db, node_modules\n[ ] копия базы сделана и открыта\n[ ] README: запуск, seed, .env\n[ ] сценарий проверки пройден\n[ ] Console и сервер без ошибок",
+            "скопируй в заметки"
+          ],
+          [
+            "Сценарий проверки:\n1. node server.js → витрина открывается\n2. поиск, фильтр, 2 товара в корзину\n3. форма с ошибкой телефона → 400 с текстом\n4. верная форма → №N, корзина пуста, остатки уменьшились\n5. тот же fetch с тем же key → 200 repeated\n6. заказать больше остатка → 400, остаток прежний\n7. /admin без пароля → 401; с паролем → заказ №N\n8. статус packed → в базе packed; cancelled → остаток вернулся\n9. копия базы → открывается в DB Browser",
+            "девять шагов — ровно по одному на каждый урок модуля"
+          ],
+          [
+            "## Запуск сервера\ncd server && npm install\nсоздать .env: ADMIN_USER, ADMIN_PASSWORD\nnode seed.js   # один раз\nnode server.js # http://localhost:3000\n\n## Копия базы\nmkdir -p backups && cp shop.db backups/shop-$(date +%F).db",
+            "раздел README для себя через месяц"
+          ],
+          [
+            "1. Пройди чек-лист и сценарий, записывая, что упало.\n2. Исправь главное.\n3. Сделай копию базы и открой её.\n4. Дополни README.\n5. Покажи другу путь покупателя с телефона в локальной сети и админку себе.",
+            "Задание на Маке. Телефон в той же сети видит сервер по адресу Mac с портом 3000 — express.static делает витрину доступной."
+          ],
+          [
+            "Без образца: напиши в README раздел «Что я бы сделал иначе» на три пункта и один вопрос, на который пока нет ответа, — его решишь в модуле 6.",
+            "Самостоятельно. Критерий: вопрос конкретный: «как принимать оплату без доступа к карте» — хороший."
+          ],
+          [
+            "Вот мой сервер целиком:\n[вставь server.js, db.js, auth.js]\nСделай ревью по безопасности и надёжности: 5 замечаний по убыванию важности с примером атаки или сбоя. Не переписывай код.",
+            "Ревью сервера — обязательная часть проекта: здесь ошибки стоят денег и репутации."
+          ]
+        ],
+        "tip": "Готово, когда: весь чек-лист отмечен, сценарий из девяти шагов проходит, копия базы есть, README описывает запуск, друг оформил заказ с телефона, а ты увидел его в админке. Модуль 5 закрыт."
+      },
+      "ex": [
+        {
+          "k": "choice",
+          "q": "Копия базы — это",
+          "options": [
+            "копия файла shop.db с датой в имени, которую открыли и проверили",
+            "git push",
+            "скриншот админки",
+            "экспорт в Excel"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Сколько шагов в сценарии проверки?",
+          "options": [
+            "9",
+            "3",
+            "20",
+            "1"
+          ]
+        },
+        {
+          "k": "input",
+          "q": "Команда, которая заполняет базу товарами один раз (два слова)",
+          "a": [
+            "node seed.js"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Телефон в локальной сети видит сервер",
+          "options": [
+            "по адресу Mac и порту 3000",
+            "по localhost:3000",
+            "только после публикации",
+            "никак"
+          ]
+        },
+        {
+          "k": "choice",
+          "q": "Что НЕ входит в проект 5?",
+          "options": [
+            "Оплата картой",
+            "Админка",
+            "Защита от дублей",
+            "Сохранение заказа"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vitrina-x8",
+      "exam": true,
+      "t": "Экзамен: сервер и заказы",
+      "covers": [
+        "vitrina-42",
+        "vitrina-43",
+        "vitrina-44",
+        "vitrina-45",
+        "vitrina-46",
+        "vitrina-47",
+        "vitrina-48",
+        "vitrina-49",
+        "vitrina-50",
+        "vitrina-51"
+      ],
+      "pass": 0.8,
+      "q": [
+        {
+          "k": "choice",
+          "s": "vitrina-42",
+          "q": "Получить список товаров — метод",
+          "options": [
+            "GET",
+            "POST",
+            "PATCH",
+            "DELETE"
+          ]
+        },
+        {
+          "k": "input",
+          "s": "vitrina-42",
+          "q": "Код ответа «создано»",
+          "a": [
+            "201"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-43",
+          "q": "Запустить сервер",
+          "options": [
+            "node server.js",
+            "npm server.js",
+            "open server.js",
+            "express start"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-43",
+          "q": "EADDRINUSE при запуске",
+          "options": [
+            "Порт занят другим сервером",
+            "Нет Express",
+            "Ошибка синтаксиса",
+            "Нет интернета"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-44",
+          "q": "const res = await fetch(…); дальше для JSON",
+          "options": [
+            "await res.json()",
+            "res.body",
+            "JSON.parse(res)",
+            "res.text"
+          ]
+        },
+        {
+          "k": "input",
+          "s": "vitrina-44",
+          "q": "Свойство ответа fetch, которое true при кодах 200–299",
+          "a": [
+            "ok"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-45",
+          "q": "Безопасная подстановка в SQL",
+          "options": [
+            "db.prepare(\"… WHERE id = ?\").get(id)",
+            "db.prepare(\"… WHERE id = \" + id)",
+            "db.prepare(`… WHERE id = ${id}`)",
+            "eval(sql)"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-45",
+          "q": "Файл базы shop.db",
+          "options": [
+            "в .gitignore, копируется отдельно",
+            "в git, как код",
+            "в public",
+            "в README"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-46",
+          "q": "req.body undefined в POST",
+          "options": [
+            "Нет app.use(express.json())",
+            "Форма без label",
+            "Нет pattern",
+            "Сервер не на 3000"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-46",
+          "q": "Ошибка проверки на сервере",
+          "options": [
+            "400 с текстом для человека",
+            "200",
+            "перезагрузка",
+            "alert на сервере"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-47",
+          "q": "Позиции заказа хранятся",
+          "options": [
+            "в order_items, по строке на товар",
+            "в orders строкой через запятую",
+            "в localStorage",
+            "в products"
+          ]
+        },
+        {
+          "k": "input",
+          "s": "vitrina-47",
+          "q": "Функция better-sqlite3, которая объединяет записи в одно целое: db.___()",
+          "a": [
+            "transaction"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-48",
+          "q": "Клиент прислал price: 1",
+          "options": [
+            "Сервер берёт цену из базы и игнорирует присланную",
+            "Сервер записывает 1",
+            "Сервер спрашивает покупателя",
+            "Ошибка 500"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-48",
+          "q": "UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?",
+          "options": [
+            "не даст уйти в минус при одновременных заказах",
+            "удаляет товар",
+            "обнуляет остаток",
+            "ничего не меняет"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-49",
+          "q": "Ключ идемпотентности нужен, чтобы",
+          "options": [
+            "повтор запроса не создал второй заказ",
+            "ускорить сервер",
+            "зашифровать заказ",
+            "проверить телефон"
+          ]
+        },
+        {
+          "k": "input",
+          "s": "vitrina-49",
+          "q": "Ограничение колонки, запрещающее два одинаковых ключа (одно слово латиницей)",
+          "a": [
+            "UNIQUE",
+            "unique"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-50",
+          "q": "Без пароля /api/admin/orders отвечает",
+          "options": [
+            "401",
+            "200",
+            "404",
+            "302"
+          ]
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-50",
+          "q": "Пакет, который читает .env в process.env",
+          "options": [
+            "dotenv",
+            "express",
+            "sqlite",
+            "fetch"
+          ]
+        },
+        {
+          "k": "order",
+          "s": "vitrina-51",
+          "q": "Путь заказа",
+          "words": [
+            "каталог",
+            "корзина",
+            "форма",
+            "сервер",
+            "база",
+            "админка"
+          ],
+          "a": "каталог корзина форма сервер база админка"
+        },
+        {
+          "k": "choice",
+          "s": "vitrina-51",
+          "q": "Копия базы проверена, когда",
+          "options": [
+            "файл с датой открылся и в нём есть заказы",
+            "cp выполнился без ошибок",
+            "сделан git push",
+            "файл переименован"
+          ]
         }
       ]
     }
