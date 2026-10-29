@@ -1,5 +1,5 @@
 # Day and Night Home Implementation Plan
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Publish the approved realistic tree homepage with automatic and manual day/night appearance.
 **Architecture:** Reuse rostok-theme for manual preference; resolve automatic appearance from device hours. Crossfade two clean background images underneath real DOM course controls. Update appearance in place without interrupting lessons.
@@ -23,19 +23,19 @@
 ### Task 1: Appearance behavior
 **Files:** Modify app.js, app.test.cjs, settings appearance copy.
 **Interfaces:** effective scene day/night -> root data-scene and data-theme; existing rostok-theme values light/dark.
-- [ ] Add UI behavior tests for boundaries, manual persistence/reset, timer/visibility refresh preserving lesson DOM, and unavailable storage.
-- [ ] Run focused tests, observe missing day/night behavior failures.
-- [ ] Implement scene resolution, button, settings, minute/visibility/storage refresh without lesson rerenders.
-- [ ] Run full npm test, expect all green.
-- [ ] Commit appearance logic and tests after integration with Task 2.
+- [x] Add UI behavior tests for boundaries, manual persistence/reset, timer/visibility refresh preserving lesson DOM, and unavailable storage.
+- [x] Run focused tests, observe missing day/night behavior failures.
+- [x] Implement scene resolution, button, settings, minute/visibility/storage refresh without lesson rerenders.
+- [x] Run full npm test, expect all green.
+- [x] Commit appearance logic and tests after integration with Task 2.
 
 ### Task 2: Approved art, layout and publication
 **Files:** Create tree-day.webp/tree-night.webp; modify tree-mobile.css, app.js treeHome, index.html, sw.js, HANDOFF.md.
 **Interfaces:** root data-scene from Task 1 controls background crossfade and nav colors.
-- [ ] Prepare clean day/night backgrounds from approved image references and inspect them.
-- [ ] Position real DOM nodes and header to match the selected tree; keep existing destinations.
-- [ ] Bump version to 4.18 consistently and cache both backgrounds.
-- [ ] Run npm test, JS/CSS syntax checks and offline asset existence checks.
-- [ ] Inspect mobile/desktop layouts and day/night switching using available browser; record any unavailable checks.
+- [x] Prepare clean day/night backgrounds from approved image references and inspect them.
+- [x] Position real DOM nodes and header to match the selected tree; keep existing destinations.
+- [x] Bump version to 4.18 consistently and cache both backgrounds.
+- [x] Run npm test, JS/CSS syntax checks and offline asset existence checks.
+- [x] Inspect mobile/desktop layouts and day/night switching using available browser; record any unavailable checks.
 - [ ] Review final diff, update HANDOFF, commit, merge safely onto current main, push and verify GitHub Pages response files.
 
