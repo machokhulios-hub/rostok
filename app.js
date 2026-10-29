@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.12';
+  var APP_VERSION = '4.13';
   var P = window.PLAN, COURSES = window.COURSES;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -288,7 +288,7 @@
     { id: 'ai', name: 'ИИ и агенты', short: 'ИИ и агенты', desc: 'Как работает Claude, запросы, агенты', courses: ['ai'], cat: 'ai' },
     { id: 'art', name: 'Поэзия и творчество', short: 'Поэзия', desc: 'Стихи, разбор классики, чтение, музыка', courses: ['poem', 'poemlib', 'read', 'music', 'book'], cat: 'poem' }
   ];
-  var DESC = { vitrina: 'Готовый вводный урок и редактор. Полная программа — 59 уроков, остальные ещё не написаны.', eng: 'Слова, фразы и грамматика с нуля до A1', rus: 'Правила, запятые, грамотное письмо', code: 'HTML, CSS, JavaScript и свой сайт', ai: 'Как работает Claude, запросы, агенты', poem: 'Поэма «Гонец из будущего»: счёт строф', poemlib: 'Разбор классики и собственный стиль', read: 'Книги: страницы и прогресс', music: 'Трек от идеи до релиза', book: 'Книга по сведению: разделы' };
+  var DESC = { vitrina: 'Свой интернет-магазин с нуля: HTML, CSS, JavaScript, заказы', eng: 'Слова, фразы и грамматика с нуля до A1', rus: 'Правила, запятые, грамотное письмо', code: 'HTML, CSS, JavaScript и свой сайт', ai: 'Как работает Claude, запросы, агенты', poem: 'Поэма «Гонец из будущего»: счёт строф', poemlib: 'Разбор классики и собственный стиль', read: 'Книги: страницы и прогресс', music: 'Трек от идеи до релиза', book: 'Книга по сведению: разделы' };
   var PHOTO = { vitrina: 'code', rus: 'rus', eng: 'eng', code: 'code', ai: 'ai', poem: 'poem', poemlib: 'poem', read: 'rus', music: 'music', book: 'book' };
   var QUOTES = ['Рост начинается там, где заканчивается зона комфорта', 'Дисциплина сегодня — свобода завтра', 'Маленькие шаги каждый день приводят к большим результатам', 'Обрастать мясом — по чуть-чуть, но каждый день'];
   function quote(i) { return QUOTES[((i % QUOTES.length) + QUOTES.length) % QUOTES.length]; }
@@ -807,6 +807,26 @@
 
   // ----- Урок внутри приложения -----
   function md(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }
+  function lessonKind(q) { return q.k || 'choice'; }
+  function lessonAnswered(q) { return lessonKind(q) === 'choice' ? q.pick != null : q.checked === true; }
+  function lessonCorrect(q) {
+    if (!lessonAnswered(q)) return false;
+    if (lessonKind(q) === 'input') return q.a.some(function (a) { return norm(a) === norm(q.typed); });
+    if (lessonKind(q) === 'order') return norm(q.built.map(function (i) { return q.words[i]; }).join(' ')) === norm(q.a);
+    return q.pick === q.right;
+  }
+  function saveLessonAnswer() {
+    if (LS.firstScore == null && LS.qs.every(lessonAnswered)) LS.firstScore = LS.qs.filter(lessonCorrect).length;
+    rememberLesson(); render();
+  }
+  function submitLessonAnswer(qi) {
+    var q = LS && LS.qs[qi];
+    if (!q || lessonAnswered(q) || lessonKind(q) === 'choice') return;
+    if (lessonKind(q) === 'input' && !q.typed.trim() || lessonKind(q) === 'order' && !q.built.length) return;
+    q.checked = true; saveLessonAnswer();
+  }
+  function lessonAnswerText(q) { return lessonKind(q) === 'choice' ? q.options[q.right] : lessonKind(q) === 'input' ? q.a[0] : q.a; }
+
   function startLesson(cid, i) {
     var c = course(cid), s = c.steps[i];
     if (stepState(c,i) === 'locked' || s.exam || !s.ex || !s.theory) return;
@@ -814,8 +834,11 @@
       LS = JSON.parse(JSON.stringify(st.session)); V.tab = 'learn'; V.course = cid; V.page = 'lesson'; render(); window.scrollTo(0,0); return;
     }
     var qs = s.ex.map(function (q) {
-      var idx = shuffle(q.options.map(function (x, j) { return j; }));
-      return { q: q.q, options: idx.map(function (j) { return q.options[j]; }), right: idx.indexOf(0), pick: null, why: q.explanation || q.why || '' };
+      var o = {k: lessonKind(q), q: q.q, why: q.explanation || q.why || ''};
+      if (o.k === 'input') { o.a = q.a.slice(); o.typed = ''; o.checked = false; }
+      else if (o.k === 'order') { o.a = q.a; o.words = shuffle(q.words); o.built = []; o.checked = false; }
+      else { var idx = shuffle(q.options.map(function (x,j) { return j; })); o.options = idx.map(function(j){return q.options[j];}); o.right = idx.indexOf(0); o.pick = null; }
+      return o;
     });
     LS = { cid: cid, i: i, qs: qs, phase: 'theory', retry: false };
     st.lastStudy = {cid:cid,sid:s.id,at:Date.now()};
@@ -827,8 +850,14 @@
     var c = course(x.cid), s = c && c.steps && c.steps[x.i];
     return !!(s && Number.isInteger(x.i) && !s.exam && s.ex && (x.firstScore==null || validCount(x.firstScore) && x.firstScore<=s.ex.length) && (x.retry==null || typeof x.retry==='boolean') &&
       (!x.retry || Array.isArray(x.retrySet) && x.retrySet.length>0 && x.retrySet.every(function(i){return Number.isInteger(i)&&i>=0&&i<s.ex.length;}) && x.firstScore!=null) && Array.isArray(x.qs) && x.qs.length === s.ex.length && x.qs.every(function (q,j) {
-      if(x.retry && q && q.pick==null && x.retrySet.indexOf(j)<0)return false;
-      return plain(q) && q.q === s.ex[j].q && Array.isArray(q.options) && JSON.stringify(q.options.slice().sort())===JSON.stringify(s.ex[j].options.slice().sort()) && q.options[q.right] === s.ex[j].options[0] && (q.pick == null || Number.isInteger(q.pick) && q.pick >= 0 && q.pick < q.options.length);
+      var source = s.ex[j];
+      if (!plain(q) || q.q !== source.q || lessonKind(q) !== lessonKind(source)) return false;
+      if (x.retry && !lessonAnswered(q) && x.retrySet.indexOf(j)<0) return false;
+      if (lessonKind(q) === 'choice') return Array.isArray(q.options) && JSON.stringify(q.options.slice().sort())===JSON.stringify(source.options.slice().sort()) && q.options[q.right] === source.options[0] && (q.pick == null || Number.isInteger(q.pick) && q.pick >= 0 && q.pick < q.options.length);
+      if (typeof q.checked !== 'boolean') return false;
+      if (lessonKind(q) === 'input') return JSON.stringify(q.a) === JSON.stringify(source.a) && typeof q.typed === 'string' && (!q.checked || !!q.typed.trim());
+      if (lessonKind(q) === 'order') return q.a === source.a && Array.isArray(q.words) && JSON.stringify(q.words.slice().sort()) === JSON.stringify(source.words.slice().sort()) && Array.isArray(q.built) && q.built.every(function(i,p){return Number.isInteger(i) && i>=0 && i<q.words.length && q.built.indexOf(i)===p;}) && (!q.checked || q.built.length>0);
+      return false;
     }));
   }
   function rememberLesson() { st.session = JSON.parse(JSON.stringify(LS)); save(); }
@@ -904,8 +933,8 @@
   function lessonView() {
     var n = LS.qs.length, last = n + 1;
     if (typeof LS.view !== 'number' || LS.view < 0 || LS.view > last || LS.view !== Math.floor(LS.view)) {
-      var fu = LS.qs.findIndex(function (q, qi) { return q.pick == null && (!LS.retry || LS.retrySet.indexOf(qi) >= 0); });
-      LS.view = LS.qs.every(function (q) { return q.pick == null; }) ? 0 : fu < 0 ? last : fu + 1;
+      var fu = LS.qs.findIndex(function (q, qi) { return !lessonAnswered(q) && (!LS.retry || LS.retrySet.indexOf(qi) >= 0); });
+      LS.view = LS.qs.every(function (q) { return !lessonAnswered(q); }) ? 0 : fu < 0 ? last : fu + 1;
     }
     if (LS.retry && LS.view >= 1 && LS.view <= n && LS.retrySet.indexOf(LS.view - 1) < 0) { var nx = LS.retrySet.filter(function (j) { return j + 1 > LS.view; })[0]; LS.view = nx == null ? last : nx + 1; }
     return LS.view;
@@ -924,15 +953,15 @@
   }
   function viewLesson() {
     var c = course(LS.cid), s = c.steps[LS.i], th = s.theory, col = 'var(--c-' + c.cat + ')';
-    var answered = LS.qs.filter(function (q) { return q.pick != null; }).length, n = LS.qs.length;
-    var okN = LS.qs.filter(function (q) { return q.pick === q.right; }).length;
+    var answered = LS.qs.filter(function (q) { return lessonAnswered(q); }).length, n = LS.qs.length;
+    var okN = LS.qs.filter(function (q) { return lessonCorrect(q); }).length;
     var cur = lessonView(), steps = lessonSteps(), k = steps.findIndex(function (x) { return x.v === cur; });
     var lesNo = lessonNo(c, LS.i), lesN = pathStats(c).les, unit = c.unit === 'правило' ? 'Правило ' : 'Урок ';
     var h = '<section class="view lesson-view"><div class="lesson-top"><nav class="crumbs" aria-label="Путь"><button data-act="endlesson" aria-label="Назад к курсу">' + I.left + '</button><button data-tab="learn">Обучение</button>' + I.right + '<button data-act="endlesson">' + esc(c.name) + '</button>' + I.right + '<span>' + unit + lesNo + '</span></nav>' +
       '<span class="save-indicator only-d">Ответы сохраняются</span><button class="btn small-btn" data-act="lessonnote">' + I.note + ' Заметки</button></div>' +
       '<div class="lesson-head"><h1 class="h1">' + esc(s.t) + '</h1><div class="l-progress">' + bar((k + 1) / steps.length, 'var(--chart-full)') + '<span>' + (k + 1) + ' из ' + steps.length + '</span></div></div>' +
       '<div class="lesson-grid"><ol class="lesson-steps card">' + steps.map(function (x, i) {
-        var cls = x.v === cur ? 'active' : x.q ? (x.q.pick == null ? '' : x.q.pick === x.q.right ? 'ok' : 'wrong') : (x.v === 0 && answered ? 'ok' : '');
+        var cls = x.v === cur ? 'active' : x.q ? (!lessonAnswered(x.q) ? '' : lessonCorrect(x.q) ? 'ok' : 'wrong') : (x.v === 0 && answered ? 'ok' : '');
         return '<li><button class="' + cls + '" data-lv="' + x.v + '"' + (x.v === cur ? ' aria-current="step"' : '') + '><span>' + (i + 1) + '. ' + x.t + '</span>' + (x.v === cur ? '' : I.right) + '</button></li>';
       }).join('') + '</ol><div class="lesson-main card">';
     // шаг 0: теория
@@ -943,13 +972,22 @@
     // шаги-вопросы
     LS.qs.forEach(function (q, qi) {
       if (LS.retry && LS.retrySet.indexOf(qi) < 0) return;
-      var done = q.pick != null;
-      h += '<div class="lsec exercise-card"' + (cur === qi + 1 ? '' : ' hidden') + '><span class="eyebrow">' + (LS.retry ? 'Работа над ошибками · ' : '') + 'Вопрос ' + (qi + 1) + ' из ' + n + '</span><div class="qtext sm">' + esc(q.q) + '</div><div class="opts row2">' + q.options.map(function (o, oi) {
-        var cls = 'opt';
-        if (done) { if (oi === q.right) cls += ' right'; else if (oi === q.pick) cls += ' wrong'; }
-        return '<button class="' + cls + '" data-lp="' + qi + ':' + oi + '"' + (done ? ' disabled' : '') + '>' + esc(o) + '</button>';
-      }).join('') + '</div>' +
-        (done ? '<div class="feedback ' + (q.pick === q.right ? 'ok' : 'no') + '"><b>' + (q.pick === q.right ? 'Верно.' : 'Пока нет. Правильный ответ: ' + esc(q.options[q.right])) + '</b><div class="explanation"><strong>Почему так</strong><p>' + explanation(c, s, q) + '</p></div></div>' : '') + '</div>';
+      var done = lessonAnswered(q), kind = lessonKind(q);
+      h += '<div class="lsec exercise-card"' + (cur === qi + 1 ? '' : ' hidden') + '><span class="eyebrow">' + (LS.retry ? 'Работа над ошибками · ' : '') + 'Вопрос ' + (qi + 1) + ' из ' + n + '</span><div class="qtext sm">' + esc(q.q) + '</div>';
+      if (kind === 'choice') {
+        h += '<div class="opts row2">' + q.options.map(function (o, oi) {
+          var cls = 'opt';
+          if (done) { if (oi === q.right) cls += ' right'; else if (oi === q.pick) cls += ' wrong'; }
+          return '<button class="' + cls + '" data-lp="' + qi + ':' + oi + '"' + (done ? ' disabled' : '') + '>' + esc(o) + '</button>';
+        }).join('') + '</div>';
+      } else if (kind === 'input') {
+        h += '<label class="lab" for="lesson-answer-' + qi + '">Ответ<input id="lesson-answer-' + qi + '" data-linput="' + qi + '" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + esc(q.typed) + '"' + (done ? ' disabled' : '') + '></label>';
+      } else if (kind === 'order') {
+        h += '<p class="small">Нажимай на слова по порядку. Чтобы убрать слово, нажми на него в собранной фразе.</p><div class="chips built" aria-label="Собранная фраза">' + (q.built.length ? q.built.map(function(wi,p){return '<button class="chip" data-lunbuild="' + qi + ':' + p + '"' + (done ? ' disabled' : '') + '>' + esc(q.words[wi]) + '</button>';}).join('') : '<span class="small">Сюда встанут слова</span>') + '</div><div class="chips">' + q.words.map(function(word,wi){return q.built.indexOf(wi)>=0 ? '' : '<button class="chip" data-lbuild="' + qi + ':' + wi + '"' + (done ? ' disabled' : '') + '>' + esc(word) + '</button>';}).join('') + '</div>';
+      }
+      if (kind !== 'choice' && !done) h += '<button class="btn primary" data-lcheck="' + qi + '">Проверить ответ</button>';
+      if (done) h += '<div class="feedback ' + (lessonCorrect(q) ? 'ok' : 'no') + '"><b>' + (lessonCorrect(q) ? 'Верно.' : 'Пока нет. Правильный ответ: ' + esc(lessonAnswerText(q))) + '</b><div class="explanation"><strong>Почему так</strong><p>' + explanation(c, s, q) + '</p></div></div>';
+      h += '</div>';
     });
     // итоги
     h += '<div class="lsec" id="practice"' + (cur === n + 1 ? '' : ' hidden') + '>';
@@ -963,10 +1001,10 @@
     return h + '</section>';
   }
   function finishLesson() {
-    if (!LS || LS.qs.some(function(q) { return q.pick == null; })) return;
+    if (!LS || LS.qs.some(function(q) { return !lessonAnswered(q); })) return;
     var c = course(LS.cid), s = c.steps[LS.i], n = LS.qs.length;
-    var okN = LS.firstScore == null ? LS.qs.filter(function (q) { return q.pick === q.right; }).length : LS.firstScore;
-    var wrong = []; LS.qs.forEach(function(q,j) {if(q.pick !== q.right) wrong.push(j);});
+    var okN = LS.firstScore == null ? LS.qs.filter(function (q) { return lessonCorrect(q); }).length : LS.firstScore;
+    var wrong = []; LS.qs.forEach(function(q,j) {if(!lessonCorrect(q)) wrong.push(j);});
     var previous = st.practice[s.id] || {};
     st.practice[s.id] = {last:okN,n:n,wrong:wrong,attempts:(previous.attempts || []).concat([{d:isoOf(new Date()),at:Date.now(),ok:okN,n:n}]).slice(-30)};
     if (wrong.length && okN / n < 0.75) {
@@ -1429,11 +1467,12 @@
       save(); V.step = null; render(); return;
     }
     if ((v = b.getAttribute('data-lopen'))) { var lp = v.split(':'); startLesson(lp[0], +lp[1]); return; }
-    if ((v = b.getAttribute('data-lp'))) { var lq = v.split(':'); if (LS && LS.qs[+lq[0]].pick == null) {
-      LS.qs[+lq[0]].pick = +lq[1];
-      if (LS.firstScore == null && LS.qs.every(function(q){return q.pick!=null;})) {LS.firstScore=LS.qs.filter(function(q){return q.pick===q.right;}).length;}
-      rememberLesson(); render();
+    if ((v = b.getAttribute('data-lp'))) { var lq = v.split(':'), lqi = +lq[0], loi = +lq[1], choice = LS && LS.qs[lqi]; if (choice && lessonKind(choice) === 'choice' && !lessonAnswered(choice) && Number.isInteger(loi) && loi>=0 && loi<choice.options.length) {
+      choice.pick = loi; saveLessonAnswer();
     } return; }
+    if ((v = b.getAttribute('data-lcheck')) != null) { submitLessonAnswer(+v); return; }
+    if ((v = b.getAttribute('data-lbuild')) != null) { var lb=v.split(':'), bq=LS && LS.qs[+lb[0]], wi=+lb[1]; if(bq && lessonKind(bq)==='order' && !lessonAnswered(bq) && Number.isInteger(wi) && wi>=0 && wi<bq.words.length && bq.built.indexOf(wi)<0){bq.built.push(wi);rememberLesson();render();} return; }
+    if ((v = b.getAttribute('data-lunbuild')) != null) { var lu=v.split(':'), uq=LS && LS.qs[+lu[0]], up=+lu[1]; if(uq && lessonKind(uq)==='order' && !lessonAnswered(uq) && Number.isInteger(up) && up>=0 && up<uq.built.length){uq.built.splice(up,1);rememberLesson();render();} return; }
     if ((v = b.getAttribute('data-exam'))) { var p = v.split(':'); startExam(p[0], +p[1]); return; }
     if ((v = b.getAttribute('data-result'))) { V.result = v; V.page = 'result'; render(); window.scrollTo(0, 0); return; }
     if ((v = b.getAttribute('data-pick')) != null) { EX.pick = +v; render(); return; }
@@ -1455,7 +1494,7 @@
       case 'treefav': go('learn', null, {filter:'all',status:'fav'}); break;
       case 'treeawards': go('growth', null, {stab:'general'}); var awardsEl=document.querySelector('.awards'); if(awardsEl) awardsEl.scrollIntoView({block:'center',behavior:'smooth'}); break;
       case 'resume': resumeStudy(); break;
-      case 'retrywrong': LS.retrySet=[]; LS.qs.forEach(function(q,j){if(q.pick!==q.right) {LS.retrySet.push(j);q.pick=null;}}); LS.retry=true; LS.view=LS.retrySet.length?LS.retrySet[0]+1:LS.qs.length+1; rememberLesson(); render(); window.scrollTo(0,0); break;
+      case 'retrywrong': if(!LS || !LS.qs.every(lessonAnswered)) break; LS.retrySet=[]; LS.qs.forEach(function(q,j){if(!lessonCorrect(q)) {LS.retrySet.push(j); if(lessonKind(q)==='choice') q.pick=null; else {q.checked=false;if(lessonKind(q)==='input')q.typed='';else q.built=[];}}}); LS.retry=true; LS.view=LS.retrySet.length?LS.retrySet[0]+1:LS.qs.length+1; rememberLesson(); render(); window.scrollTo(0,0); break;
       case 'nextlesson': nextInCourse(V.completed.cid); break;
       case 'prev': if (sel > 0) { sel--; render(); } break;
       case 'next': if (sel < N - 1) { sel++; render(); } break;
@@ -1501,6 +1540,8 @@
   });
 
   document.addEventListener('keydown', function (e) {
+    var linput=e.target.getAttribute('data-linput');
+    if(e.key==='Enter' && linput!=null && LS){e.preventDefault();submitLessonAnswer(+linput);return;}
     if (e.key === 'Enter' && e.target.id === 'ans' && EX && !EX.checked) { e.preventDefault(); check(); }
     if (e.key === 'Enter' && (e.target.id === 'new-task' || e.target.id === 'new-task-min')) { e.preventDefault(); var ab = document.querySelector('[data-act="addtask"]'); if (ab) ab.click(); }
     if (e.key === 'Escape' && e.target.id === 'search-input') { e.target.value = ''; renderSearch(''); e.target.blur(); }
@@ -1508,6 +1549,8 @@
   document.addEventListener('input', function (e) {
     if(e.target.id==='growth-preview'){var pv=Number(e.target.value);document.querySelector('.preview-tree').innerHTML=plantSvg(pv/100).replaceAll('leaf-fill','preview-leaf-fill').replaceAll('bark-fill','preview-bark-fill');document.getElementById('preview-value').textContent=pv+'%';return;}
     var t = e.target;
+    var linput=t.getAttribute('data-linput'), lq=LS && linput!=null && LS.qs[+linput];
+    if(lq && lessonKind(lq)==='input' && !lessonAnswered(lq)){lq.typed=t.value;rememberLesson();updateStorageAlert();return;}
     if (t.id === 'ans' && EX) { EX.typed = t.value; return; }
     if (t.id === 'search-input') { renderSearch(t.value); return; }
     if (t.id === 'note-filter') { V.nq = t.value; var qn = norm(t.value), cards = document.querySelectorAll('.note-card'); for (var ci = 0; ci < cards.length; ci++) cards[ci].hidden = !!qn && cards[ci].getAttribute('data-text').indexOf(qn) < 0; return; }
