@@ -19,14 +19,14 @@
 
 ### Task 1: Shell and layout contracts
 Files: app.js, app.test.cjs, sections.css, index.html.
-- [ ] Test new catalog filter reachability on phone and lesson-note isolation/escaping through real DOM; observe missing behavior.
-- [ ] Add scoped inner body class, manual-dark handling, shared sidebar/headers, catalog controls and genuine lesson note rail.
-- [ ] Implement approved card, course, learning, planning, profile and settings styling without changing application state.
-- [ ] Run npm test and inspect desktop/mobile in browser against approved references.
+- [x] Test new catalog filter reachability on phone and lesson-note isolation/escaping through real DOM; observe missing behavior.
+- [x] Add scoped inner body class, manual-dark handling, shared sidebar/headers, catalog controls and genuine lesson note rail.
+- [x] Implement approved card, course, learning, planning, profile and settings styling without changing application state.
+- [x] Run npm test and audit desktop/mobile CSS against approved references. Browser verification remains unavailable: CUA returns disabled after user enabled it; alternate verification was not authorized.
 
 ### Task 2: Integration and publication
 Files: sw.js, index.html, app.js version, HANDOFF.md.
-- [ ] Review all routes, syntax, layout at narrow/mobile/desktop widths, keyboard/lesson navigation and unchanged homepage.
-- [ ] Independent review, fix material findings, run full tests.
+- [x] Review all routes, syntax, layout at narrow/mobile/desktop widths, keyboard/lesson navigation and unchanged homepage.
+- [x] Independent review, fix material findings, run full tests.
 - [ ] Record exact verification, preserve parallel main updates, publish next available version and verify HTTPS file contents.
 
