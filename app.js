@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.23';
+  var APP_VERSION = '4.24';
   var P = window.PLAN, COURSES = window.COURSES;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -245,7 +245,7 @@
     return '<svg class="ring" width="76" height="76" viewBox="0 0 76 76" role="img" aria-label="Сделано ' + done + ' из ' + n + '">' +
       '<circle cx="38" cy="38" r="34" fill="none" stroke="var(--soft)" stroke-width="7"/>' +
       (p > 0 ? '<circle cx="38" cy="38" r="34" fill="none" stroke="var(--done)" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + (C * p).toFixed(1) + ' ' + C.toFixed(1) + '" transform="rotate(-90 38 38)"/>' : '') +
-      '<text x="38" y="45" text-anchor="middle" font-family="Oswald, Arial Narrow, sans-serif" font-size="21" font-weight="600" fill="var(--ink)">' + done + '/' + n + '</text></svg>';
+      '<text x="38" y="45" text-anchor="middle" font-family="Onest, system-ui, sans-serif" font-size="21" font-weight="600" fill="var(--ink)">' + done + '/' + n + '</text></svg>';
   }
   function bar(pct, col) { return '<div class="bar"><i style="width:' + Math.round(Math.max(0, Math.min(1, pct)) * 100) + '%;background:' + col + '"></i></div>'; }
   function claudeLink(text, label, cls) {
@@ -299,7 +299,7 @@
   function renderNav() {
     var nav = document.getElementById('tabbar'); if (!nav) return;
     if (!nav.getAttribute('data-built')) {
-      nav.innerHTML = '<div class="side"><div class="side-brand">' + I.leaf + '<b>ROSTOK</b></div><div class="side-list">' +
+      nav.innerHTML = '<div class="side"><div class="side-brand">' + I.leaf + '<b>Росток</b></div><div class="side-list">' +
         NAV.map(function (x) { return '<button class="tab" data-tab="' + x[0] + '">' + x[2] + '<span>' + x[1] + '</span></button>'; }).join('') +
         '</div><button class="tab side-settings" data-tab="settings">' + I.gear + '<span>Настройки</span>' + I.arrow + '</button></div>' +
         '<div class="bottom">' + MOBILE_NAV.map(function (x) { return '<button class="tab" data-tab="' + x[0] + '">' + x[2] + '<span>' + x[1] + '</span></button>'; }).join('') + '</div>';
@@ -551,13 +551,12 @@
     var book = ic('<path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1zM12 5v15"/>');
     var chip = ic('<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><rect x="9" y="9" width="6" height="6" rx="1"/>');
     var palette = ic('<path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1-3.7c-1-.6-.4-2.3 1-2.3h2a4 4 0 0 0 4-4c0-4.5-4-8-9-8z"/><circle cx="7" cy="10" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/><circle cx="17" cy="11" r="1"/>');
-    var compass = ic('<circle cx="12" cy="12" r="7"/><path d="M12 1v2M12 21v2M1 12h2M21 12h2"/><path d="m12 7 1.5 3.5L17 12l-3.5 1.5L12 17l-1.5-3.5L7 12l3.5-1.5z"/>');
     return '<div class="orbit-home">' +
       '<header class="home-heading"><span class="home-brand">' + I.leaf + '<span>Росток</span></span><button class="home-theme-toggle" data-act="homescene" type="button"></button></header>' +
       '<h1 class="home-prompt" id="home-directions">Выберите направление</h1>' +
-      '<nav class="orbit-map" aria-labelledby="home-directions"><span class="orbit-guide" aria-hidden="true"></span><span class="orbit-compass" aria-hidden="true">' + compass + '</span>' +
+      '<nav class="orbit-map" aria-labelledby="home-directions"><span class="orbit-guide" aria-hidden="true"></span>' +
       node('orbit-lang', 'data-learnfilter="lang"', book, 'Языки') +
-      node('orbit-code', 'data-learnfilter="code"', CI.code, 'Программирование') +
+      node('orbit-code', 'data-learnfilter="code"', CI.code, 'Программи<wbr>рование') +
       node('orbit-ai', 'data-course="ai"', chip, 'ИИ') +
       node('orbit-music', 'data-course="music"', CI.music, 'Музыка') +
       node('orbit-art', 'data-learnfilter="art"', palette, 'Творчество') + '</nav></div>';

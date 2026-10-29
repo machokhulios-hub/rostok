@@ -1,6 +1,6 @@
 /* Approved inner-screen design. Every rule is scoped away from the homepage. */
 body.sections-ui{
- --bg:#f7f5ef;--card:#fffefa;--ink:#203d31;--mute:#727e75;--line:#e6e8df;--soft:#f0f2e9;--box:#b9c6b9;
+ --bg:#f7f5ef;--card:#fffefa;--ink:#203d31;--mute:#627066;--line:#e6e8df;--soft:#f0f2e9;--box:#b9c6b9;
  --accent:#386a4b;--accent-ink:#fff;--done:#386a4b;--full:#386a4b;--part:#e1eadb;--part-ink:#254730;--bad:#b44c43;
  --chart-soft:#e6ece1;--chart-bar:#a1bb9e;--chart-full:#527f5c;--chip:#eeeee6;--chip-on:#386a4b;--chip-on-ink:#fff;
  --tip:#eaf0e3;--tip-ink:#294d35;--hero:#eaf0e3;--hero-ink:#203d31;--focus-ring:#386a4b38;
@@ -16,6 +16,7 @@ body.sections-ui.sections-dark{
 .sections-ui main#app,.sections-ui main#app.full{max-width:650px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(92px + env(safe-area-inset-bottom,0px))}
 .sections-ui .view{gap:22px;min-width:0}
 .sections-ui .view>*{min-width:0;max-width:100%}
+.sections-ui h1,.sections-ui h2,.sections-ui h3,.sections-ui .h1,.sections-ui .h2,.sections-ui button,.sections-ui input,.sections-ui textarea,.sections-ui select{font-family:inherit}
 .sections-ui .h1{font-size:30px;line-height:1.17;font-weight:700;letter-spacing:-.035em;color:var(--ink)}
 .sections-ui .h2,.sections-ui h2{font-size:19px;font-weight:650;line-height:1.35;color:var(--ink)}
 .sections-ui h3{font-size:16px;line-height:1.4;font-weight:600}
@@ -43,10 +44,10 @@ body.sections-ui.sections-dark{
 .sections-ui .search-results,.sections-ui .bell-pop{background:var(--card);color:var(--ink);border-color:var(--line);box-shadow:0 12px 40px #18312116;border-radius:16px}
 .sections-ui .search.open input{background:var(--card)}
 :root body.sections-ui nav#tabbar{background:var(--bg)!important;border-color:var(--line);box-shadow:none;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-:root body.sections-ui nav#tabbar .bottom .tab{font-size:10px;color:var(--mute);background:transparent}
+:root body.sections-ui nav#tabbar .bottom .tab{font-size:11px;color:var(--mute);background:transparent}
 :root body.sections-ui nav#tabbar .bottom .tab[aria-current=page]{color:var(--accent);font-weight:600}
-:root body.sections-ui nav#tabbar .bottom .tab[aria-current=page]::after{background:var(--accent);bottom:auto;top:0;width:36px;height:2px}
-:root body.sections-ui nav#tabbar .bottom .tab[aria-current=page] svg{fill:var(--part)}
+:root body.sections-ui nav#tabbar .bottom .tab[aria-current=page]::after{background:currentColor;bottom:0;top:auto;width:28px;height:3px;border-radius:3px}
+:root body.sections-ui nav#tabbar .bottom .tab[aria-current=page] svg{fill:currentColor}
 .sections-ui .catalog-toolbar{display:flex;gap:12px;align-items:center}
 .sections-ui .catalog-search{position:relative;flex:1;min-width:0;display:flex;align-items:center}
 .sections-ui .catalog-search>svg{position:absolute;left:14px;width:21px;height:21px;color:var(--mute);pointer-events:none}
@@ -63,7 +64,7 @@ body.sections-ui.sections-dark{
 .sections-ui .ccard{display:flex;flex-direction:row;gap:0;min-height:146px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;overflow:hidden;padding:12px;position:relative;transition:border-color .2s}
 .sections-ui .ccard:hover{transform:none;box-shadow:none;border-color:var(--box)}
 .sections-ui .ccard .cc-photo{order:-1;width:102px;min-width:102px;height:auto;min-height:118px;border-radius:12px;overflow:hidden;background:var(--soft)}
-.sections-ui .ccard .cc-photo img{object-fit:cover}
+.sections-ui .cc-photo img{object-fit:cover;object-position:50% 50%;filter:saturate(.9) contrast(.98)}
 .sections-ui .cc-body{padding:8px 34px 6px 16px;gap:6px;justify-content:center;min-width:0}
 .sections-ui .cc-top .nm{font-size:16px;font-weight:650;line-height:1.32;hyphens:none;overflow-wrap:anywhere}
 .sections-ui .cc-pct{display:none}
@@ -224,7 +225,7 @@ body.sections-ui.sections-dark{
 @media(min-width:768px){
  .sections-ui main#app,.sections-ui main#app.full{margin:0 0 0 216px;max-width:none;padding:36px 32px 56px}
  .sections-ui main#app>.view{max-width:1260px;margin:0 auto}
- :root body.sections-ui nav#tabbar{width:216px;top:0;bottom:0;left:0;right:auto;border-right:1px solid var(--line);border-top:0;padding:24px 14px 18px}
+ :root body.sections-ui nav#tabbar{width:216px;top:0;bottom:0;left:0;right:auto;border-right:1px solid var(--line);border-top:0;border-radius:0;padding:24px 14px 18px}
  .sections-ui nav#tabbar .side-brand{font-size:25px;padding:2px 8px 30px;letter-spacing:-.04em;color:var(--ink);justify-content:flex-start}
  .sections-ui nav#tabbar .side-brand b{display:inline}
  .sections-ui nav#tabbar .side-brand svg{color:var(--accent);width:28px;height:28px}
@@ -283,6 +284,7 @@ body.sections-ui.sections-dark{
  .sections-ui .goals-grid,.sections-ui .notes-grid,.sections-ui .tools-grid,.sections-ui .lib-grid{grid-template-columns:1fr}
 }
 @media(max-width:767px){
+ :root body.sections-ui nav#tabbar{border-radius:22px 22px 0 0}
  .sections-ui .catalog-toolbar{flex-wrap:nowrap}
  .sections-ui .catalog-search{flex-basis:auto}
  .sections-ui .catalog-toolbar .sort select{min-height:48px;font-size:12px;width:125px}
