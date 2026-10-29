@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.32';
+  var APP_VERSION = '4.33';
   var P = window.PLAN, COURSES = window.COURSES;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
