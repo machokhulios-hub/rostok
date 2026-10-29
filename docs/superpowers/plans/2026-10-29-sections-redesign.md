@@ -28,5 +28,5 @@ Files: app.js, app.test.cjs, sections.css, index.html.
 Files: sw.js, index.html, app.js version, HANDOFF.md.
 - [x] Review all routes, syntax, layout at narrow/mobile/desktop widths, keyboard/lesson navigation and unchanged homepage.
 - [x] Independent review, fix material findings, run full tests.
-- [ ] Record exact verification, preserve parallel main updates, publish next available version and verify HTTPS file contents.
+- [x] Record exact verification, preserve parallel main updates, publish next available version and verify HTTPS file contents.
 
