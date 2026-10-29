@@ -316,7 +316,7 @@
   var DIRS = [
     { id: 'rus', name: 'Русский язык', short: 'Русский', desc: 'Правила, запятые, грамотное письмо', courses: ['rus'], cat: 'rus' },
     { id: 'eng', name: 'Английский язык', short: 'Английский', desc: 'Слова, фразы и грамматика с нуля до A1', courses: ['eng'], cat: 'eng' },
-    { id: 'code', name: 'Программирование', short: 'Программирование', desc: 'HTML, CSS, JavaScript и свой сайт', courses: ['code'], cat: 'code' },
+    { id: 'code', name: 'Программирование', short: 'Программирование', desc: 'HTML, CSS, JavaScript, WordPress и свой магазин', courses: ['code', 'vitrina', 'wordpress'], cat: 'code' },
     { id: 'ai', name: 'ИИ и агенты', short: 'ИИ и агенты', desc: 'Как работает Claude, запросы, агенты', courses: ['ai'], cat: 'ai' },
     { id: 'art', name: 'Поэзия и творчество', short: 'Поэзия', desc: 'Стихи, разбор классики, чтение, музыка', courses: ['poem', 'poemlib', 'read', 'music', 'book'], cat: 'poem' }
   ];
@@ -972,7 +972,7 @@
     var okN = LS.qs.filter(function (q) { return lessonCorrect(q); }).length;
     var cur = lessonView(), steps = lessonSteps(), k = steps.findIndex(function (x) { return x.v === cur; });
     var lesNo = lessonNo(c, LS.i), lesN = pathStats(c).les, unit = c.unit === 'правило' ? 'Правило ' : 'Урок ';
-    var h = '<section class="view lesson-view"><div class="lesson-top"><nav class="crumbs" aria-label="Путь"><button data-act="endlesson" aria-label="Назад к курсу">' + I.left + '</button><button data-tab="learn">Обучение</button>' + I.right + '<button data-act="endlesson">' + esc(c.name) + '</button>' + I.right + '<span>' + unit + lesNo + '</span></nav>' +
+    var h = '<section class="view lesson-view' + (c.exampleFormat === 'text' ? ' prose-examples' : '') + '"><div class="lesson-top"><nav class="crumbs" aria-label="Путь"><button data-act="endlesson" aria-label="Назад к курсу">' + I.left + '</button><button data-tab="learn">Обучение</button>' + I.right + '<button data-act="endlesson">' + esc(c.name) + '</button>' + I.right + '<span>' + unit + lesNo + '</span></nav>' +
       '<span class="save-indicator only-d">Ответы сохраняются</span><button class="btn small-btn" data-act="lessonnote">' + I.note + ' Заметки</button></div>' +
       '<div class="lesson-head"><h1 class="h1">' + esc(s.t) + '</h1><div class="l-progress">' + bar((k + 1) / steps.length, 'var(--chart-full)') + '<span>' + (k + 1) + ' из ' + steps.length + '</span></div></div>' +
       '<nav class="lesson-tabs" aria-label="Этап урока">' + [[0,'Теория'],[1,'Практика'],[n+1,'Итоги']].map(function(t){return '<button data-lv="' + t[0] + '"' + ((t[0] === 0 ? cur === 0 : t[0] === 1 ? cur > 0 && cur <= n : cur === n+1) ? ' aria-current="step"' : '') + '>' + t[1] + '</button>';}).join('') + '</nav>' +
@@ -982,7 +982,7 @@
       }).join('') + '</ol><div class="lesson-main card">';
     // шаг 0: теория
     h += '<div class="lsec"' + (cur === 0 ? '' : ' hidden') + '><span class="eyebrow">' + unit + lesNo + ' из ' + lesN + '</span><p class="l-lead">' + md(th.rule) + '</p>' +
-      (c.cat === 'code' ? th.ex.map(function (e) { return '<div class="code-block"><div class="code-h"><span>Пример</span><button class="copy-btn" data-copytext="' + esc(e[0]) + '">' + I.copy + ' Копировать</button></div><pre><code>' + esc(e[0]) + '</code></pre><p class="code-c">' + esc(e[1]) + '</p></div>'; }).join('')
+      (c.cat === 'code' && c.exampleFormat !== 'text' ? th.ex.map(function (e) { return '<div class="code-block"><div class="code-h"><span>Пример</span><button class="copy-btn" data-copytext="' + esc(e[0]) + '">' + I.copy + ' Копировать</button></div><pre><code>' + esc(e[0]) + '</code></pre><p class="code-c">' + esc(e[1]) + '</p></div>'; }).join('')
         : '<div class="ex-list">' + th.ex.map(function (e) { return '<div class="exm"><span class="ex">' + esc(e[0]) + '</span><span class="small">' + esc(e[1]) + '</span></div>'; }).join('') + '</div>') +
       (th.tip ? '<div class="tip"><span>' + I.leaf + '</span><p>' + md(th.tip) + '</p></div>' : '') + poemBlock(s) + '</div>';
     // шаги-вопросы

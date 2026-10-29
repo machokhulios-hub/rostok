@@ -15,6 +15,23 @@ function boot(seed, backup, raw, setup, extraCourses) {
   return {w,doc:w.document,close:()=>w.close(),state:()=>JSON.parse(w.localStorage.getItem('dnevnik-state')||'{}')};
 }
 function click(b,sel){const el=b.doc.querySelector(sel);assert.ok(el,'Missing '+sel);el.click();}
+test('Programming lessons can use readable prose examples without converting instructions to code',()=>{
+ const fixture={id:'prose-code',cat:'code',type:'path',name:'Текстовая практика',exampleFormat:'text',unit:'урок',prompt:'{t}',steps:[{id:'prose-01',t:'Админка',plan:'Практика',theory:{rule:'Порядок действий',ex:[['Создай страницу и проверь её в браузере.','Практика']],tip:'Проверяй результат'},ex:[{k:'choice',q:'Где проверить страницу?',options:['В браузере','В письме']}]}]};
+ const b=boot(null,null,undefined,null,[fixture]);try{openLesson(b,'prose-code');assert.equal(b.doc.querySelector('.lesson-main .code-block'),null);assert.match(b.doc.querySelector('.ex-list').textContent,/Создай страницу/);}finally{b.close();}
+});
+test('WordPress course is reachable from programming and saves its own answers and completion',()=>{
+ let b=boot({checks:{},lessons:{c1:'2026-10-26'}});try{
+  click(b,'.orbit-node[data-learnfilter="code"]');assert.ok(b.doc.querySelector('[data-course="wordpress"]'));click(b,'[data-course="wordpress"]');
+  assert.ok(b.doc.querySelector('a[href="wordpress/guide.html"]'));click(b,'[data-lopen="wordpress:0"]');
+  const s=b.w.COURSES.find(c=>c.id==='wordpress').steps[0];assert.equal(b.doc.querySelector('.lesson-main .code-block'),null);
+  s.ex.forEach((q,i)=>{if(q.k==='input'){typeLesson(b,i,q.a[0]);click(b,'[data-lcheck="'+i+'"]');}else if(q.k==='order'){buildLesson(b,i,q.a.split(' '));click(b,'[data-lcheck="'+i+'"]');}else{const button=[...b.doc.querySelectorAll('[data-lp^="'+i+':"]')].find(e=>e.textContent===q.options[0]);assert.ok(button);button.click();}});
+  click(b,'[data-act="lessondone"]');const saved=b.state();assert.ok(saved.lessons['wp-01']);assert.equal(saved.practice['wp-01'].last,s.ex.length);assert.equal(saved.lessons.c1,'2026-10-26');b.close();b=boot(saved);click(b,'[data-tab="learn"]');click(b,'[data-course="wordpress"]');assert.match(b.doc.querySelector('.path').textContent,/пройден/);
+ }finally{b.close();}
+});
+test('WordPress module exam accepts answers and unlocks the next module without resetting existing progress',()=>{
+ const first=boot();const c=first.w.COURSES.find(c=>c.id==='wordpress');first.close();assert.ok(c,'WordPress course exists');const i=c.steps.findIndex(s=>s.exam),exam=c.steps[i];
+ const seed={checks:{},lessons:{c1:'2026-10-26'}};exam.covers.forEach(id=>seed.lessons[id]='2026-10-30');const b=boot(seed);try{click(b,'[data-tab="learn"]');click(b,'[data-course="wordpress"]');click(b,'[data-exam="wordpress:'+i+'"]');for(const q of exam.q)answerExam(b,q,true);assert.equal(b.state().exams[exam.id].last,exam.q.length);assert.equal(b.state().lessons.c1,'2026-10-26');assert.ok(b.doc.querySelector('[data-next-course="wordpress"]'));}finally{b.close();}
+});
 test('Inner appearance is scoped away from home across navigation and learning screens',()=>{
  const b=boot();try{
   const home=b.doc.querySelector('.home-view').outerHTML;
