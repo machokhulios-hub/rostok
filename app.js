@@ -1,12 +1,12 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.37';
+  var APP_VERSION = '4.38';
   var P = window.PLAN, COURSES = window.COURSES, J = window.RostokJourney;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
   var MON = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
   var MONS = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-  var CATS = [['eng', 'Английский'], ['rus', 'Русский'], ['code', 'Код'], ['ai', 'ИИ'], ['poem', 'Стихи'], ['read', 'Чтение'], ['music', 'Музыка'], ['book', 'Книга'], ['plan', 'Итоги недели']];
+  var CATS = [['eng', 'Английский'], ['rus', 'Русский'], ['code', 'Код'], ['ai', 'ИИ'], ['marketing', 'Продвижение'], ['poem', 'Стихи'], ['read', 'Чтение'], ['music', 'Музыка'], ['book', 'Книга'], ['plan', 'Итоги недели']];
   var MODES = [['free', 'Свободный'], ['shift', 'Смена'], ['light', 'Лёгкий']];
   var XP_LEVEL = 500;
   var CLAUDE_URL = 'https://claude.ai/new';
@@ -271,6 +271,7 @@
   var SVG0 = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
   function ic(p) { return SVG0 + p + '</svg>'; }
   var CI = {
+    marketing: ic('<path d="M4 16l5-5 4 3 7-9M15 5h5v5M4 21h16"/>'),
     video: ic('<rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3z"/>'),
     eng: ic('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>'),
     rus: ic('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20M8 7h8M8 10.5h5"/>'),
@@ -328,15 +329,16 @@
     }
   }
 
-  // Пять направлений как в макете; «Поэзия и творчество» объединяет стихи, классику, чтение, музыку и книгу.
+  // Направления обучения; «Поэзия и творчество» объединяет стихи, классику, чтение, музыку и книгу.
   var DIRS = [
     { id: 'rus', name: 'Русский язык', short: 'Русский', desc: 'Правила, запятые, грамотное письмо', courses: ['rus'], cat: 'rus' },
     { id: 'eng', name: 'Английский язык', short: 'Английский', desc: 'Слова, фразы и грамматика с нуля до A1', courses: ['eng'], cat: 'eng' },
     { id: 'code', name: 'Программирование', short: 'Программирование', desc: 'HTML, CSS, JavaScript, WordPress и свой магазин', courses: ['code', 'vitrina', 'wordpress'], cat: 'code' },
     { id: 'ai', name: 'ИИ и видео', short: 'ИИ и видео', desc: 'ИИ, запросы, агенты и генерация видеороликов', courses: ['ai', 'video'], cat: 'ai' },
+    { id: 'marketing', name: 'Продвижение магазина', short: 'Продвижение', desc: 'Аналитика, Яндекс Директ и SEO магазина', courses: ['marketing-basics', 'direct', 'seo'], cat: 'marketing' },
     { id: 'art', name: 'Поэзия и творчество', short: 'Поэзия', desc: 'Стихи, разбор классики, чтение, музыка', courses: ['poem', 'poemlib', 'read', 'music', 'book'], cat: 'poem' }
   ];
-  var DESC = { vitrina: 'Свой интернет-магазин с нуля: HTML, CSS, JavaScript, заказы', eng: 'Слова, фразы и грамматика с нуля до A1', rus: 'Правила, запятые, грамотное письмо', code: 'HTML, CSS, JavaScript и свой сайт', ai: 'Как работает Claude, запросы, агенты', poem: 'Поэма «Гонец из будущего»: счёт строф', poemlib: 'Разбор классики и собственный стиль', read: 'Книги: страницы и прогресс', music: 'Трек от идеи до релиза', book: 'Книга по сведению: разделы' };
+  var DESC = { 'marketing-basics': 'Покупатель, предложение, экономика заказа и Метрика', direct: 'Яндекс Директ: черновик кампании, бюджет и отчёты', seo: 'Поиск, каталог, индексация и аудит магазина', vitrina: 'Свой интернет-магазин с нуля: HTML, CSS, JavaScript, заказы', eng: 'Слова, фразы и грамматика с нуля до A1', rus: 'Правила, запятые, грамотное письмо', code: 'HTML, CSS, JavaScript и свой сайт', ai: 'Как работает Claude, запросы, агенты', poem: 'Поэма «Гонец из будущего»: счёт строф', poemlib: 'Разбор классики и собственный стиль', read: 'Книги: страницы и прогресс', music: 'Трек от идеи до релиза', book: 'Книга по сведению: разделы' };
   var PHOTO = { vitrina: 'code', rus: 'rus', eng: 'eng', code: 'code', ai: 'ai', poem: 'poem', poemlib: 'poem', read: 'rus', music: 'music', book: 'book' };
   var QUOTES = ['Рост начинается там, где заканчивается зона комфорта', 'Дисциплина сегодня — свобода завтра', 'Маленькие шаги каждый день приводят к большим результатам', 'Обрастать мясом — по чуть-чуть, но каждый день'];
   function quote(i) { return QUOTES[((i % QUOTES.length) + QUOTES.length) % QUOTES.length]; }
@@ -574,15 +576,15 @@
       node('orbit-code', 'data-learnfilter="code"', CI.code, 'Программи<wbr>рование') +
       node('orbit-ai', 'data-learnfilter="ai"', chip, 'ИИ') +
       node('orbit-music', 'data-course="music"', CI.music, 'Музыка') +
-      node('orbit-art', 'data-learnfilter="art"', palette, 'Творчество') + '</nav></div>';
+      node('orbit-art', 'data-learnfilter="art"', palette, 'Творчество') + '</nav><button class="home-promotion" type="button" data-learnfilter="marketing">' + CI.marketing + '<span><b>Продвижение магазина</b><small>Основы · Яндекс Директ · SEO</small></span>' + I.right + '</button></div>';
   }
   function viewToday() {
     return '<section class="view home-view" aria-label="Главная">' + orbitHome() + '</section>';
   }
 
   // ----- Обучение -----
-  var FILTERS = [['all', 'Все'], ['rus', 'Русский'], ['eng', 'Английский'], ['code', 'Программирование'], ['ai', 'ИИ'], ['art', 'Творчество']];
-  var FILTER_CATS = { lang: ['eng', 'rus'], rus: ['rus'], eng: ['eng'], code: ['code'], ai: ['ai'], art: ['poem', 'read', 'music', 'book'] };
+  var FILTERS = [['all', 'Все'], ['rus', 'Русский'], ['eng', 'Английский'], ['code', 'Программирование'], ['ai', 'ИИ'], ['marketing', 'Продвижение'], ['art', 'Творчество']];
+  var FILTER_CATS = { lang: ['eng', 'rus'], rus: ['rus'], eng: ['eng'], code: ['code'], ai: ['ai'], marketing: ['marketing'], art: ['poem', 'read', 'music', 'book'] };
   var STATUS = [['all', 'Все'], ['going', 'В процессе'], ['fav', 'Избранное']];
   var SORTS = [['order', 'По порядку'], ['progress', 'По прогрессу'], ['name', 'По названию']];
   function viewLearn() {

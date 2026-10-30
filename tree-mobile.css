@@ -88,3 +88,7 @@ body:has(.home-view) nav#tabbar .side-brand svg{color:var(--home-accent)}
  .modal{z-index:60}
 }
 @media(prefers-reduced-motion:reduce){.orbit-home *,nav#tabbar *{transition:none!important;animation:none!important}}
+
+/* Store promotion stays below the approved circular map. */
+.home-promotion{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;flex:none;padding:14px 16px;box-sizing:border-box;border:1px solid var(--home-line);border-radius:16px;background:var(--home-disc);color:var(--home-ink);text-align:left;font:inherit;cursor:pointer}
+.home-promotion>svg{width:24px;height:24px;flex:none}.home-promotion>span{flex:1;min-width:0}.home-promotion b{display:block;font-size:16px;line-height:1.35}.home-promotion small{display:block;margin-top:3px;font-size:13px;line-height:1.4;color:var(--home-mute,var(--home-ink))}.home-promotion:focus-visible{outline:3px solid var(--home-accent);outline-offset:4px}

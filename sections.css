@@ -4,7 +4,7 @@ body.sections-ui{
  --accent:#386a4b;--accent-ink:#fff;--done:#386a4b;--full:#386a4b;--part:#e1eadb;--part-ink:#254730;--bad:#b44c43;
  --chart-soft:#e6ece1;--chart-bar:#a1bb9e;--chart-full:#527f5c;--chip:#eeeee6;--chip-on:#386a4b;--chip-on-ink:#fff;
  --tip:#eaf0e3;--tip-ink:#294d35;--hero:#eaf0e3;--hero-ink:#203d31;--focus-ring:#386a4b38;
- --c-eng:#6f916d;--c-rus:#55785b;--c-code:#49725c;--c-ai:#9b7f4d;--c-poem:#967965;--c-read:#a48752;--c-music:#6a8868;--c-book:#947b57;--c-plan:#667a70;
+ --c-eng:#6f916d;--c-rus:#55785b;--c-code:#49725c;--c-ai:#9b7f4d;--c-poem:#967965;--c-read:#a48752;--c-music:#6a8868;--c-book:#947b57;--c-plan:#667a70;--c-marketing:#6d7950;
  color-scheme:light;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.55;
 }
 body.sections-ui.sections-dark{
@@ -12,7 +12,7 @@ body.sections-ui.sections-dark{
  --accent:#c1d0b6;--accent-ink:#182018;--done:#c1d0b6;--full:#c1d0b6;--part:#303c31;--part-ink:#e0e9da;--bad:#e49d96;
  --chart-soft:#363e3b;--chart-bar:#8fa388;--chart-full:#c1d0b6;--chip:#282d2b;--chip-on:#c1d0b6;--chip-on-ink:#182018;
  --tip:#2b332c;--tip-ink:#e0e9da;--hero:#282d2b;--hero-ink:#ebece7;color-scheme:dark;
- --c-eng:#bbcbb0;--c-rus:#a9c4b1;--c-code:#acc5ca;--c-ai:#d3c6a4;--c-poem:#cbb8c4;--c-read:#d1c3a7;--c-music:#b8c9b2;--c-book:#cbbda9;--c-plan:#b5c0b9;
+ --c-eng:#bbcbb0;--c-rus:#a9c4b1;--c-code:#acc5ca;--c-ai:#d3c6a4;--c-poem:#cbb8c4;--c-read:#d1c3a7;--c-music:#b8c9b2;--c-book:#cbbda9;--c-plan:#b5c0b9;--c-marketing:#c1cba8;
 }
 .sections-ui main#app,.sections-ui main#app.full{max-width:650px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(92px + env(safe-area-inset-bottom,0px))}
 .sections-ui .view{gap:22px;min-width:0}

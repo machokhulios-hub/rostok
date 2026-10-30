@@ -404,3 +404,16 @@ test('Two tabs can append different music tracks without losing either addition'
 test('Stale tabs can update different existing track stages without undoing the other stage',()=>{
  const seed={checks:{},tracks:[{name:'Первый',stage:0},{name:'Второй',stage:0}]},a=boot(seed,null,undefined,routeClock()),b=boot(seed,null,undefined,routeClock());try{for(const app of [a,b]){click(app,'[data-tab="learn"]');click(app,'[data-course="music"]');}click(a,'[data-track="0"][data-stage="2"]');b.w.localStorage.setItem('dnevnik-state',a.w.localStorage.getItem('dnevnik-state'));click(b,'[data-track="1"][data-stage="3"]');assert.deepEqual(b.state().tracks.map(t=>t.stage),[3,4]);}finally{a.close();b.close();}
 });
+
+test('Store promotion opens from home and filters exactly its three courses',()=>{
+ const b=boot();try{click(b,'[data-learnfilter="marketing"]');const cards=[...b.doc.querySelectorAll('.course-grid [data-course]')].map(e=>e.dataset.course);assert.deepEqual(cards,['marketing-basics','direct','seo']);for(const id of cards)assert.ok(b.w.COURSES.find(c=>c.id===id));}finally{b.close();}
+});
+test('Promotion lesson completion persists without replacing old progress',()=>{
+ let b=boot({checks:{},lessons:{c1:'2026-10-26'}});try{click(b,'[data-tab="learn"]');click(b,'[data-course="marketing-basics"]');click(b,'[data-lopen="marketing-basics:0"]');const s=b.w.COURSES.find(c=>c.id==='marketing-basics').steps[0];for(let j=0;j<s.ex.length;j++){click(b,'[data-lv="'+(j+1)+'"]');const q=s.ex[j];const btn=[...b.doc.querySelectorAll('[data-lp]')].find(e=>e.textContent===q.options[0]);assert.ok(btn);btn.click();}click(b,'[data-lv="'+(s.ex.length+1)+'"]');click(b,'[data-act="lessondone"]');const seed=b.state();assert.ok(seed.lessons['mkt-01']);assert.equal(seed.lessons.c1,'2026-10-26');b.close();b=boot(seed);assert.ok(b.state().lessons['mkt-01']);}finally{b.close();}
+});
+test('Promotion exams cover existing lessons and retain explanations',()=>{
+ const b=boot();try{for(const id of ['marketing-basics','direct','seo']){const c=b.w.COURSES.find(c=>c.id===id);assert.ok(c,id);const lessons=c.steps.filter(s=>!s.exam),exams=c.steps.filter(s=>s.exam);assert.equal(exams.length,2);const covered=new Set();for(const e of exams){assert.equal(e.pass,.8);for(const sid of e.covers){assert.ok(lessons.some(s=>s.id===sid));covered.add(sid);}for(const q of e.q){assert.ok(e.covers.includes(q.s));assert.ok(q.explanation);}}assert.equal(covered.size,lessons.length);}}finally{b.close();}
+});
+test('Store promotion route persists its three courses and schedules marketing work',()=>{
+ const b=boot(null,null,undefined,routeClock());try{setRoute(b,'marketing',45);const seed=b.state(),r=seed.journeys[seed.activeJourney];assert.deepEqual(r.courses,['marketing-basics','direct','seo']);assert.equal(r.kind,'marketing');click(b,'[data-tab="plan"]');assert.ok([...b.doc.querySelectorAll('[data-task]')].length);click(b,'[data-tab="goals"]');assert.match(b.doc.querySelector('#work-text').closest('.card').textContent,/План продвижения и аналитика/);assert.equal(b.w.RostokJourney.validate(seed),true);}finally{b.close();}
+});

@@ -13,6 +13,10 @@
       stage('Сайт и страницы', ['Работают главная, меню и контакты','На телефоне нет обрезанного содержимого','Есть резервная копия учебного сайта']),
       stage('Товары и доставка', ['Товар и его варианты добавляются в корзину','Стоимость и способы доставки проверены','Есть тестовые сценарии для отсутствующего товара']),
       stage('Учебный заказ', ['В тестовом режиме создан заказ','Статусы, письма и возврат проверены','Перед боевым запуском записаны вопросы по оплате, документам и данным'])]},
+    marketing: {name:'Продвижение магазина',courses:['marketing-basics','direct','seo'],stages:[
+      stage('План продвижения и аналитика', ['Выбраны категория и покупатель, рассчитан предел стоимости заказа','Проверены учебный заказ, счётчик и выбранные цели','Есть план на четыре недели с измерением и правилами остановки']),
+      stage('Черновик рекламной кампании', ['Проверены группы, объявления, ссылки, регионы и наличие товаров','Выбраны цель, стратегия, период бюджета и предел расходов','Сохранены чек-лист и план теста; запуск не требуется']),
+      stage('SEO-аудит и улучшения', ['Проверены категории, карточки, индексация и мобильный путь','Подготовлены улучшенные страницы и журнал изменений','Записаны исходные показатели и даты повторных проверок'])]},
     video: {name:'Готовый видеоролик',courses:['video'],stages:[
       stage('Бриф и раскадровка', ['Определены зритель и цель ролика','Первый кадр и последовательность сцен описаны','Выбран доступный инструмент и лимит попыток']),
       stage('Черновой монтаж', ['Кадры собраны в последовательность','Звук и титры читаемы и согласованы','Проверены лица, текст, предметы и права на исходники']),
@@ -71,7 +75,7 @@
     var due=dueReviews(s,courses,today).filter(function(d){return r.courses.indexOf(d.cid)>=0;}),next=nextStep(s,courses,r),stageIndex=nextStage(r);
     if(due.length)push({id:'j-'+r.id+'-rev-'+due[0].key,kind:'review',cat:next && next.course.cat || 'plan',cid:due[0].cid,step:due[0].index,t:'Повторить: '+due[0].title},5);
     if(next)push({id:'j-'+r.id+'-'+next.step.id,kind:next.step.exam?'exam':'lesson',cat:next.course.cat,cid:next.course.id,step:next.index,t:next.step.t},stageIndex<0?left:Math.min(25,Math.max(5,left-10)));
-    if(stageIndex>=0)push({id:'j-'+r.id+'-work-'+stageIndex,kind:'work',cat:r.kind==='music'?'music':'plan',stage:stageIndex,t:'Практика: '+presets[r.kind].stages[stageIndex].title},left);
+    if(stageIndex>=0)push({id:'j-'+r.id+'-work-'+stageIndex,kind:'work',cat:r.kind==='music'?'music':r.kind==='marketing'?'marketing':'plan',stage:stageIndex,t:'Практика: '+presets[r.kind].stages[stageIndex].title},left);
     return {routeId:r.id,budget:budget,items:items};
   }
   function saveWork(s,id,index,body,url,today) {
