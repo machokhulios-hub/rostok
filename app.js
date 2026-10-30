@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.38';
+  var APP_VERSION = '4.39';
   var P = window.PLAN, COURSES = window.COURSES, J = window.RostokJourney;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -214,28 +214,29 @@
   var today = rawToday(), sel = clamp(today);
   var V = { tab: 'today', page: null, course: null, step: null, week: Math.floor(clamp(today) / 7) };
   var EX = null, LS = null, CARDS = null, pendingDel = null;
+  var aliveAction = null, aliveReward = null, examReward = null;
+  var lessonClock = {key:'',elapsed:0,since:null};
   var TABS = ['today','learn','plan','habits','notes','goals','growth','library','tools','settings','more'];
   try { var h0 = location.hash.slice(1); if (TABS.indexOf(h0) > 0) V.tab = h0; } catch (e) {}
-  // Empty preference follows device time; existing light/dark choices remain manual.
+  // Alive is the default; keep existing light/dark preference values compatible.
   var THEME_KEY = 'rostok-theme', theme = '';
   try { theme = localStorage.getItem(THEME_KEY) || ''; } catch (e) {}
   if (theme !== 'light' && theme !== 'dark') theme = '';
-  function homeScene() {
-    if (theme) return theme === 'dark' ? 'night' : 'day';
-    var hour = new Date().getHours();
-    return hour >= 7 && hour < 20 ? 'day' : 'night';
-  }
+  function homeScene() { return theme === 'light' ? 'day' : 'night'; }
   function sceneIcon(night) {
     return ic(night ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>' : '<path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14z"/>');
   }
   function applyTheme() {
-    var scene = homeScene(), night = scene === 'night';
+    var scene = homeScene(), night = scene === 'night',wasAlive=document.body.classList.contains('alive-ui');
     document.documentElement.setAttribute('data-theme', night ? 'dark' : 'light');
     document.documentElement.setAttribute('data-scene', scene);
     document.body.classList.toggle('sections-dark', night);
+    document.body.classList.toggle('alive-ui', night);
+    var meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=night?'#0F1220':'#f7f5ef';
+    if(window.RostokAlive && wasAlive!==night)window.RostokAlive.settle(app);
     var button = document.querySelector('[data-act="homescene"]');
     if (button) {
-      var label = night ? 'Включить дневное оформление' : 'Включить ночное оформление';
+      var label = night ? 'Включить дневное оформление' : 'Включить ночное оформление «Живой»';
       button.setAttribute('aria-label', label);
       button.title = label;
       // Keep the button, its focus and the current learning screen intact.
@@ -245,7 +246,7 @@
       }
     }
     var choices = document.querySelectorAll('.theme-switch [data-theme]');
-    for (var j = 0; j < choices.length; j++) choices[j].setAttribute('aria-pressed', choices[j].getAttribute('data-theme') === theme);
+    for (var j = 0; j < choices.length; j++) choices[j].setAttribute('aria-pressed', (choices[j].getAttribute('data-theme') === theme || choices[j].getAttribute('data-theme') === '' && theme === 'dark'));
   }
   function setTheme(value) {
     theme = value === 'light' || value === 'dark' ? value : '';
@@ -311,15 +312,15 @@
   I.trophy = ic('<path d="M7 3h10v6a5 5 0 0 1-10 0zM7 5H3v3a4 4 0 0 0 4 4M17 5h4v3a4 4 0 0 1-4 4M12 14v5M7 21h10M9 19h6"/>');
 
   var NAV = [['today', 'Главная', I.home], ['learn', 'Обучение', I.book], ['plan', 'План дня', I.cal], ['habits', 'Привычки', I.habit], ['notes', 'Заметки', I.note], ['goals', 'Цели', I.goal], ['growth', 'Статистика', I.stats], ['library', 'Библиотека', I.lib], ['tools', 'Инструменты', I.tools], ['more', 'Профиль', I.person]];
-  var MOBILE_NAV = [['today', 'Главная', I.home], ['learn', 'Карта', I.compass], ['growth', 'Прогресс', I.stats], ['notes', 'Заметки', I.note], ['more', 'Профиль', I.person]];
+  var MOBILE_NAV = [['today', 'Главная', I.home], ['learn', 'Карта', I.book], ['growth', 'Прогресс', I.stats], ['notes', 'Заметки', I.note], ['more', 'Профиль', I.person]];
   var MORE_TABS = ['plan', 'habits', 'goals', 'library', 'tools', 'settings', 'more'];
   function renderNav() {
     var nav = document.getElementById('tabbar'); if (!nav) return;
     if (!nav.getAttribute('data-built')) {
       nav.innerHTML = '<div class="side"><div class="side-brand">' + I.leaf + '<b>Росток</b></div><div class="side-list">' +
-        NAV.map(function (x) { return '<button class="tab" data-tab="' + x[0] + '">' + x[2] + '<span>' + x[1] + '</span></button>'; }).join('') +
-        '</div><button class="tab side-settings" data-tab="settings">' + I.gear + '<span>Настройки</span>' + I.arrow + '</button></div>' +
-        '<div class="bottom">' + MOBILE_NAV.map(function (x) { return '<button class="tab" data-tab="' + x[0] + '">' + x[2] + '<span>' + x[1] + '</span></button>'; }).join('') + '</div>';
+        NAV.map(function (x) { return '<button class="tab" data-tab="' + x[0] + '" aria-label="' + x[1] + '">' + x[2] + '<span>' + x[1] + '</span></button>'; }).join('') +
+        '</div><button class="tab side-settings" data-tab="settings" aria-label="Настройки">' + I.gear + '<span>Настройки</span>' + I.arrow + '</button></div>' +
+        '<div class="bottom">' + MOBILE_NAV.map(function (x) { return '<button class="tab" data-tab="' + x[0] + '" aria-label="' + x[1] + '">' + x[2] + '<span>' + x[1] + '</span></button>'; }).join('') + '</div>';
       nav.setAttribute('data-built', '1');
     }
     var tabs = nav.querySelectorAll('.tab');
@@ -407,7 +408,7 @@
   }
   function taskRow(x, time) {
     var on = isDone(sel, x.id), c = course(x.cat), own = x.id.indexOf('u-') === 0, label = esc(taskLabel(x));
-    return '<li class="task' + (on ? ' done' : '') + '">' + (time != null ? '<span class="t-time">' + time + '</span>' : '') +
+    return '<li class="task' + (on ? ' done' : '') + '" data-alive-task="' + esc(x.id) + '">' + (time != null ? '<span class="t-time">' + time + '</span>' : '') +
       '<button class="chk" data-task="' + esc(x.id) + '" aria-pressed="' + on + '" aria-label="' + (on ? 'Снять отметку: ' : 'Отметить: ') + esc(x.t) + '">' + I.check + '</button>' +
       (x.kind && x.kind!=='legacy' ? '<button class="t-label" data-journey-task="' + esc(x.id) + '">' + label + '</button>' : c ? '<button class="t-label" data-course="' + c.id + '" title="' + esc(x.n || x.t) + '">' + label + '</button>' : '<span class="t-label" title="' + esc(x.n || x.t) + '">' + label + '</span>') +
       '<span class="t-min">' + x.min + ' мин</span>' + (own && time != null ? '<button class="icon-btn del-task" data-deltask="' + esc(x.id) + '" aria-label="Удалить дело">' + I.x + '</button>' : '') + '</li>';
@@ -475,9 +476,13 @@
   function photo(c) {
     return '<div class="cc-photo cc-art" aria-hidden="true">' + (CI[c.id] || CI[c.cat] || CI.plan) + '</div>';
   }
+  function aliveRing(p,cls) {
+    var length=2*Math.PI*17;
+    return '<svg class="alive-ring '+(cls || '')+'" viewBox="0 0 44 44" aria-hidden="true"><circle class="alive-ring-track" cx="22" cy="22" r="17"/><circle class="alive-ring-value" cx="22" cy="22" r="17" data-alive-ring="'+Math.max(0,Math.min(1,p))+'" stroke-dasharray="'+length+'" stroke-dashoffset="'+length*(1-p)+'" transform="rotate(-90 22 22)"/></svg>';
+  }
   function courseCard(c) {
     var pct = coursePct(c), col = 'var(--c-' + c.cat + ')', fav = !!st.fav[c.id];
-    return '<article class="ccard" style="--cc:' + col + '"><button class="cc-body" data-course="' + c.id + '"><span class="cc-top"><b class="nm">' + esc(c.name) + '</b><span class="cc-pct">' + pct + '%</span></span>' +
+    return '<article class="ccard" style="--cc:' + col + '"><span class="alive-course-ring">' + aliveRing(pct/100) + '</span><button class="cc-body" data-course="' + c.id + '"><span class="cc-top"><b class="nm">' + esc(c.name) + '</b><span class="cc-pct">' + pct + '%</span></span>' +
       '<span class="cc-desc">' + esc(DESC[c.id] || c.goal || '') + '</span><span class="cc-meta">' + esc(courseMeta(c)) + ' · ' + pct + '%</span>' +
       '<span class="cc-bar">' + bar(pct / 100, 'var(--chart-full)') + '<em>' + pct + '%</em></span><span class="cc-go">' + (c.type === 'path' ? (pct ? 'Продолжить' : 'Начать') : 'Открыть') + ' ' + I.arrow + '</span></button>' +
       photo(c) + '<button class="fav" data-fav="' + c.id + '" aria-pressed="' + fav + '" aria-label="' + (fav ? 'Убрать из избранного' : 'В избранное') + '">' + I.star + '</button></article>';
@@ -560,27 +565,29 @@
   }
 
   // ----- Главная -----
-  // Five existing destinations on the approved circular map.
-  function orbitHome() {
-    function node(cls, attr, icon, name) {
-      return '<button class="orbit-node ' + cls + '" type="button" ' + attr + '><span class="orbit-disc" aria-hidden="true">' + icon + '</span><b>' + name + '</b></button>';
-    }
-    var book = ic('<path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1zM12 5v15"/>');
-    var chip = ic('<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><rect x="9" y="9" width="6" height="6" rx="1"/>');
-    var palette = ic('<path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1-3.7c-1-.6-.4-2.3 1-2.3h2a4 4 0 0 0 4-4c0-4.5-4-8-9-8z"/><circle cx="7" cy="10" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/><circle cx="17" cy="11" r="1"/>');
-    return '<div class="orbit-home">' +
-      '<header class="home-heading"><span class="home-brand">' + I.leaf + '<span>Росток</span></span><button class="home-theme-toggle" data-act="homescene" type="button"></button></header>' +
-      homeFocus() + '<h1 class="home-prompt" id="home-directions">Выберите направление</h1>' +
-      '<nav class="orbit-map" aria-labelledby="home-directions"><span class="orbit-guide" aria-hidden="true"></span>' +
-      node('orbit-lang', 'data-learnfilter="lang"', book, 'Языки') +
-      node('orbit-code', 'data-learnfilter="code"', CI.code, 'Программи<wbr>рование') +
-      node('orbit-ai', 'data-learnfilter="ai"', chip, 'ИИ') +
-      node('orbit-music', 'data-course="music"', CI.music, 'Музыка') +
-      node('orbit-art', 'data-learnfilter="art"', palette, 'Творчество') + '</nav><button class="home-promotion" type="button" data-learnfilter="marketing">' + CI.marketing + '<span><b>Продвижение магазина</b><small>Основы · Яндекс Директ · SEO</small></span>' + I.right + '</button></div>';
+  function aliveHome() {
+    sel=clamp(rawToday());
+    var day=stat(sel),date=dateOf(sel),r=J.current(st),next=r?J.nextStep(st,COURSES,r):null;
+    var pending=r?day.tasks.find(function(t){return t.kind && t.kind!=='legacy' && !isDone(sel,t.id);}):null;
+    var si=r?J.nextStage(r):-1,target=pending?pending.t:next?next.step.t:si>=0?J.presets[r.kind].stages[si].title:'Готовый результат';
+    var due=J.dueReviews(st,COURSES,keyOf(sel)),words=J.selectWords(st,learnedWords(),keyOf(sel),1000);
+    function direction(cls,attr,icon,label,pct){return '<button class="orbit-node '+cls+'" type="button" '+attr+'><span class="orbit-disc">'+aliveRing(pct/100)+'<span class="alive-direction-icon" aria-hidden="true">'+icon+'</span></span><b>'+label+'</b></button>';}
+    var h='<div class="alive-home"><header class="alive-home-heading"><div><h1>Сегодня</h1><p>'+DOWF[(date.getDay()+6)%7].toLowerCase()+' · '+date.getDate()+' '+MON[date.getMonth()]+'</p></div><button class="home-theme-toggle" data-act="homescene" type="button"></button></header>'+
+      '<section class="card alive-today-summary" aria-label="Выполнено '+day.doneMin+' из '+day.totalMin+' минут по плану"><span class="small">Выполнено</span><div class="alive-minutes" aria-live="off"><strong data-alive-count="'+day.doneMin+'" data-alive-key="today:'+keyOf(sel)+'">'+day.doneMin+'</strong><span> / '+day.totalMin+' мин</span></div><div class="bar alive-fill-track" role="progressbar" aria-label="Выполнено по плану" aria-valuemin="0" aria-valuemax="'+Math.max(1,day.totalMin)+'" aria-valuenow="'+day.doneMin+'"><i data-alive-fill="'+(day.totalMin?day.doneMin/day.totalMin:0)+'"></i></div></section>'+
+      '<section class="alive-focus" aria-label="Следующий шаг">'+(r?'<div class="alive-route-title"><span class="small">'+esc(r.title)+'</span><button class="link" data-tab="goals">Работы '+I.right+'</button></div>':'')+(r?'<button class="btn primary block" data-act="journeynext">Продолжить: '+esc(target)+'</button>':'<button class="btn primary block" data-act="journeysetup">Выбрать цель</button>')+
+      ((st.session || st.lastStudy)?'<button class="btn block" data-act="resume">Продолжить '+(st.session?'незаконченный урок':'обучение')+'</button>':'')+
+      '<div class="alive-review-buttons"><button class="btn" data-act="reviewdue"'+(!due.length?' disabled':'')+'>Повторить <b data-review-count>'+due.length+'</b> '+plural(due.length,'тему','темы','тем')+'</button><button class="btn" data-act="cards"'+(!words.length?' disabled':'')+'>Слова: '+words.length+'</button></div>';
+    if(due.length)h+='<details class="review-queue"><summary>Что стоит повторить</summary>'+due.slice(0,20).map(function(d){return '<button class="link" data-review-topic="'+d.cid+':'+d.index+'">'+esc(course(d.cid).name+': '+d.title)+'</button>';}).join('')+'</details>';
+    h+='</section><section class="card alive-day-tasks"><div class="spread"><h2>Дела на сегодня</h2><button class="link" data-tab="plan">Весь план '+I.right+'</button></div><ul class="tasks">'+day.tasks.map(function(t){return taskRow(t,null);}).join('')+'</ul>'+(day.n?'':'<p class="muted">Сегодня дел пока нет. Настрой маршрут или добавь своё дело в плане.</p>')+'</section>'+
+      '<nav class="alive-directions" aria-label="Направления обучения">'+direction('orbit-lang','data-learnfilter="lang"',I.book,'Языки',Math.round((coursePct(course('eng'))+coursePct(course('rus')))/2))+
+      direction('orbit-code','data-learnfilter="code"',CI.code,'Код',dirPct(DIRS.find(function(d){return d.id==='code';})))+
+      direction('orbit-ai','data-learnfilter="ai"',CI.ai,'ИИ',dirPct(DIRS.find(function(d){return d.id==='ai';})))+
+      direction('orbit-music','data-course="music"',CI.music,'Музыка',coursePct(course('music')))+
+      direction('orbit-art','data-learnfilter="art"',CI.poem,'Творчество',dirPct(DIRS.find(function(d){return d.id==='art';})))+'</nav>'+
+      '<button class="home-promotion" type="button" data-learnfilter="marketing">'+CI.marketing+'<span><b>Продвижение магазина</b><small>Основы · Яндекс Директ · SEO</small></span>'+I.right+'</button></div>';
+    return h;
   }
-  function viewToday() {
-    return '<section class="view home-view" aria-label="Главная">' + orbitHome() + '</section>';
-  }
+  function viewToday() { return '<section class="view home-view" aria-label="Главная">'+aliveHome()+'</section>'; }
 
   // ----- Обучение -----
   var FILTERS = [['all', 'Все'], ['rus', 'Русский'], ['eng', 'Английский'], ['code', 'Программирование'], ['ai', 'ИИ'], ['marketing', 'Продвижение'], ['art', 'Творчество']];
@@ -829,11 +836,11 @@
     return '<section class="view tools-view">' + topbar('Инструменты', 'Копия прогресса и синхронизация устройств') + '<div class="tools-grid"><div class="card"><h2 class="h2">Перенести на другое устройство</h2><p>Отправь файл через системное меню, AirDrop или сохрани его. На другом устройстве открой «Росток» → Инструменты → Восстановить из файла.</p><button class="btn primary" data-act="transferprogress">Отправить файл прогресса</button><p class="small">Это разовый перенос. Для постоянного обмена используй синхронизацию ниже. Токен GitHub в файл не входит.</p></div>' + backupCard() + syncCard() + '</div></section>';
   }
   function themeSwitch() {
-    return '<div class="theme-switch" role="group" aria-label="Тема оформления">' + [['', 'Автоматически'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(function (x) { return '<button data-theme="' + x[0] + '" aria-pressed="' + (theme === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>';
+    return '<div class="theme-switch" role="group" aria-label="Тема оформления">' + [['', 'Живой'], ['light', 'Светлая']].map(function (x) { return '<button data-theme="' + x[0] + '" aria-pressed="' + (theme === x[0] || x[0] === '' && theme === 'dark') + '">' + x[1] + '</button>'; }).join('') + '</div>';
   }
   function viewSettings() {
     return '<section class="view settings-view">' + topbar('Настройки') +
-      '<div class="card theme-card"><h2 class="h2">Тема</h2><p class="small">Во всём приложении автоматически: «Бумага» с 07:00 до 20:00, «Графит» — в остальное время, по часам устройства. Кнопка солнца или луны на главной сохраняет ручной выбор; здесь можно вернуть автоматический режим.</p>' + themeSwitch() + '</div>' +
+      '<div class="card theme-card"><h2 class="h2">Тема</h2><p class="small">«Живой» — тёмный интерфейс со стеклянными карточками и откликом на действия. Он не меняется по времени. «Светлая» сохраняет палитру «Бумага». Если на устройстве включено уменьшение движения, анимации отключаются.</p>' + themeSwitch() + '</div>' +
       '<div class="card"><h2 class="h2">О приложении</h2><p class="muted">Росток ' + APP_VERSION + ' · план v' + P.version + ' · старт ' + START.getDate() + ' ' + MON[START.getMonth()] + ' ' + START.getFullYear() + ', ' + N + ' дней.</p><p class="small">Данные хранятся в этом браузере. Копия и синхронизация — в разделе «Инструменты».</p><button class="btn" data-tab="tools">' + I.tools + ' Инструменты</button></div></section>';
   }
   function viewMore() {
@@ -970,13 +977,14 @@
     var q = LS && LS.qs[qi];
     if (!q || lessonAnswered(q) || lessonKind(q) === 'choice') return;
     if (lessonKind(q) === 'input' && !q.typed.trim() || lessonKind(q) === 'order' && !q.built.length) return;
-    q.checked = true; saveLessonAnswer();
+    q.checked = true;if(!lessonCorrect(q))aliveAction={kind:'wrong'};saveLessonAnswer();
   }
   function lessonAnswerText(q) { return lessonKind(q) === 'choice' ? q.options[q.right] : lessonKind(q) === 'input' ? q.a[0] : q.a; }
 
   function startLesson(cid, i) {
     var c = course(cid), s = c.steps[i];
     if (stepState(c,i) === 'locked' || s.exam || !s.ex || !s.theory) return;
+    lessonClock={key:cid+':'+i,elapsed:0,since:null};
     if (validSession(st.session) && st.session.cid === cid && st.session.i === i) {
       LS = JSON.parse(JSON.stringify(st.session)); V.tab = 'learn'; V.course = cid; V.page = 'lesson'; render(); window.scrollTo(0,0); return;
     }
@@ -1149,9 +1157,20 @@
       '<aside class="lesson-notes card" aria-label="Заметки к уроку"><h2 class="h2">Заметки к уроку</h2>' + noteList().filter(function(n){return n.ref === LS.cid + ':' + LS.i;}).map(function(n){return '<article><p class="note-x">' + esc(n.x) + '</p><small>' + esc(n.d.split('-').reverse().join('.')) + '</small></article>';}).join('') + '<button class="btn block" data-act="lessonnote">' + I.plus + ' Добавить заметку</button></aside></div>';
     return h + '</section>';
   }
+  function trackLessonClock() {
+    var key=LS && V.page==='lesson'?LS.cid+':'+LS.i:null,now=Date.now();
+    if(lessonClock.since!=null){lessonClock.elapsed+=Math.max(0,now-lessonClock.since);lessonClock.since=null;}
+    if(key && key!==lessonClock.key)lessonClock={key:key,elapsed:0,since:null};
+    if(key && document.visibilityState!=='hidden')lessonClock.since=now;
+  }
+  function aliveRewardCard(before) {
+    var g=growthRank(),lower=GROWTH_RANKS[g.index][0],from=g.next?Math.max(0,(before-lower)/(g.next[0]-lower)):1;
+    return '<div class="card alive-rank-reward"><span class="small">'+(g.next?'До звания «'+esc(g.next[1])+'»':'Высшая ступень — «'+esc(g.title)+'»')+'</span><div class="bar alive-fill-track" role="progressbar" aria-label="Рост до следующего звания" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(g.into*100)+'"><i data-alive-fill="'+g.into+'" data-alive-from="'+from+'"></i></div><span class="small">'+g.xp+(g.next?' / '+g.next[0]:'')+' XP</span></div>';
+  }
   function finishLesson() {
     if (!LS || LS.qs.some(function(q) { return !lessonAnswered(q); })) return;
-    var c = course(LS.cid), s = c.steps[LS.i], n = LS.qs.length;
+    var c = course(LS.cid), s = c.steps[LS.i], n = LS.qs.length, beforeXP=totals().xp, beforeWords=learnedWords().length;
+    trackLessonClock();
     var okN = LS.firstScore == null ? LS.qs.filter(function (q) { return lessonCorrect(q); }).length : LS.firstScore;
     var wrong = []; LS.qs.forEach(function(q,j) {if(!lessonCorrect(q)) wrong.push(j);});
     var previous = st.practice[s.id] || {};
@@ -1165,18 +1184,26 @@
     if (earned) st.lessons[s.id] = isoOf(new Date());
     J.recordReview(st,'lesson:'+s.id,okN/n>=.8 && !wrong.length,isoOf(new Date()));
     completeJourneyTasks(s.id);
-    V.completed = {cid:c.id,i:LS.i,ok:okN,n:n,earned:earned};
-    delete st.session; save(); LS = null; V.page = 'completed'; V.step = null; render(); window.scrollTo(0, 0);
+    V.completed = {cid:c.id,i:LS.i,ok:okN,n:n,earned:earned,session:JSON.parse(JSON.stringify(LS)),beforeXP:beforeXP,words:Math.max(0,learnedWords().length-beforeWords),seconds:Math.floor(lessonClock.elapsed/1000)};
+    delete st.session; V.completed.xp=Math.max(0,totals().xp-beforeXP);save();aliveReward={key:'lesson:'+s.id,first:earned};LS = null; V.page = 'completed'; V.step = null; render(); window.scrollTo(0, 0);
   }
   function viewCompleted() {
-    var r = V.completed, c = course(r.cid), ni = nextIdx(c), next = ni >= 0 ? c.steps[ni] : null;
-    return '<section class="view completion-view"><div class="completion-mark">✓</div><span class="eyebrow">Ещё один шаг вперёд</span><h1 class="h1">Урок завершён</h1><p class="muted">' + esc(c.steps[r.i].t) + '</p><div class="card"><strong class="completion-score">' + r.ok + '/' + r.n + '</strong><p>в первой попытке' + (r.earned ? ' · +20 очков' : '') + '</p><p>' + (J.mastery(st,c.steps[r.i].id)==='checked'?'Проверено тестом.':'Материал пройден. Для отметки «Проверено тестом» нужна новая самостоятельная попытка от 80%.') + ' Повторение: ' + esc(st.reviews['lesson:'+c.steps[r.i].id].due) + '.</p><button class="btn" data-tab="goals">К практической работе</button></div>' +
-      (next && stepState(c,ni) === 'open' ? '<div class="next-preview"><span class="eyebrow">Дальше по пути</span><h2>' + esc(next.t) + '</h2><button class="btn primary block" data-act="nextlesson">' + (next.exam ? 'Перейти к экзамену' : 'Следующий урок') + ' →</button></div>' : '<p class="muted">Этот блок завершён. Посмотри другие направления.</p>') + '<button class="btn block" data-course="' + c.id + '">К программе курса</button><button class="back" data-tab="today">На сегодня хватит</button></section>';
+    var r=V.completed,c=course(r.cid),ni=nextIdx(c),next=ni>=0?c.steps[ni]:null,minutes=Math.floor(r.seconds/60);
+    return '<section class="view completion-view alive-completion"><div class="alive-completion-intro"><div class="alive-reward-number">+'+r.xp+'<small> XP</small></div><h1 class="h1">Урок '+lessonNo(c,r.i)+' пройден</h1><p class="muted">'+r.ok+' из '+r.n+' верно · '+(minutes?minutes+' мин':'меньше минуты')+' за это занятие</p><p class="small">'+esc(c.steps[r.i].t)+'</p><div class="alive-reward-chips"><span class="chip">Серия: '+streak()+' '+plural(streak(),'день','дня','дней')+'</span>'+(r.words?'<span class="chip">+'+r.words+' '+plural(r.words,'слово','слова','слов')+'</span>':'')+'<span class="chip">'+(r.earned?'Урок: +20 XP':'Повторение: +0 XP')+'</span>'+(r.xp>(r.earned?20:0)?'<span class="chip">Дела по плану: +'+(r.xp-(r.earned?20:0))+' XP</span>':'')+'</div></div>'+aliveRewardCard(r.beforeXP)+
+      (next && stepState(c,ni)==='open'?'<button class="btn primary block" data-act="nextlesson">Дальше: '+esc(next.t)+'</button>':'<p class="muted">Этот блок завершён. Посмотри другие направления.</p>')+
+      '<div class="card alive-mastery"><p>'+(J.mastery(st,c.steps[r.i].id)==='checked'?'Проверено тестом.':'Материал пройден. Для отметки «Проверено тестом» нужна новая самостоятельная попытка от 80%.')+' Повторение: '+esc(st.reviews['lesson:'+c.steps[r.i].id].due)+'.</p><button class="btn block" data-tab="goals">К практической работе</button>'+(st.practice[c.steps[r.i].id].wrong.length?'<button class="btn block" data-act="retrycompleted">Повторить только ошибки</button>':'')+'</div><button class="btn block" data-course="'+c.id+'">К программе курса</button><button class="back" data-tab="today">На сегодня хватит</button></section>';
+  }
+
+  function retryLessonWrong() {
+    if(!LS || !LS.qs.every(lessonAnswered))return;
+    LS.retrySet=[];LS.qs.forEach(function(q,j){if(!lessonCorrect(q)){LS.retrySet.push(j);if(lessonKind(q)==='choice')q.pick=null;else{q.checked=false;if(lessonKind(q)==='input')q.typed='';else q.built=[];}}});
+    LS.retry=true;LS.view=LS.retrySet.length?LS.retrySet[0]+1:LS.qs.length+1;rememberLesson();render();window.scrollTo(0,0);
   }
 
   // ----- Экзамен -----
   function startExam(cid, i, review) {
     var c = course(cid), s = c.steps[i];
+    examReward=null;
     if (!s.exam || !s.q.length || /locked|wait/.test(stepState(c,i))) return;
     var errors = review && st.exams[s.id] ? st.exams[s.id].wrong : null;
     var source = errors ? s.q.filter(function(q) {return errors.some(function(w) {return w.q===q.q && w.s===q.s;});}) : s.q;
@@ -1198,7 +1225,7 @@
     if (q.k === 'choice') { if (EX.pick == null) return; ok = EX.pick === q.right; your = q.options[EX.pick]; }
     if (q.k === 'input') { your = (document.getElementById('ans') || {}).value || EX.typed; if (!your.trim()) return; EX.typed = your; ok = q.a.some(function (a) { return norm(a) === norm(your); }); }
     if (q.k === 'order') { if (!EX.built.length) return; your = EX.built.map(function (j) { return q.words[j]; }).join(' '); ok = norm(your) === norm(q.a); }
-    EX.res[EX.cur] = { ok: ok, your: your }; EX.checked = true; render();
+    EX.res[EX.cur] = { ok: ok, your: your }; EX.checked = true;if(!ok)aliveAction={kind:'wrong'};render();
   }
   function nextQ() {
     if (EX.cur < EX.qs.length - 1) { EX.cur++; EX.pick = null; EX.typed = ''; EX.built = []; EX.checked = false; render(); window.scrollTo(0, 0); return; }
@@ -1207,6 +1234,7 @@
   function finishExam() {
     var c = course(EX.cid), s = c.steps[EX.i], n = EX.qs.length, ok = EX.res.filter(function (r) { return r && r.ok; }).length;
     if (EX.review) { V.result = EX.cid + ':' + EX.i; EX = null; V.page = 'result'; render(); toast('Повторение: ' + ok + ' из ' + n + '. Оценка экзамена не изменена.'); return; }
+    var beforeXP=totals().xp,wasPassed=!!(st.exams[s.id] && st.exams[s.id].passed);
     var e = st.exams[s.id] || { best: 0, n: n, attempts: [] };
     e.n = n; e.last = ok; e.best = Math.max(e.best || 0, ok); e.passed = e.passed || ok / n >= s.pass;
     e.attempts = (e.attempts || []).concat([{ d: isoOf(new Date()), at:Date.now(), ok: ok, n: n }]).slice(-20);
@@ -1224,7 +1252,8 @@
       }
     });
     e.weak = weak;
-    st.exams[s.id] = e; completeJourneyTasks(s.id); Object.keys(by).forEach(function(id){J.recordReview(st,'lesson:'+id,by[id][0]/by[id][1]>=.8,isoOf(new Date()));}); save();
+    st.exams[s.id] = e; completeJourneyTasks(s.id); Object.keys(by).forEach(function(id){J.recordReview(st,'lesson:'+id,by[id][0]/by[id][1]>=.8,isoOf(new Date()));});var awardedXP=Math.max(0,totals().xp-beforeXP);save();
+    examReward={result:c.id+':'+EX_I(s,c),beforeXP:beforeXP,xp:awardedXP};aliveReward={key:'exam:'+s.id,first:!wasPassed && e.passed};
     EX = null; V.page = 'result'; V.result = c.id + ':' + EX_I(s, c); render(); window.scrollTo(0, 0);
   }
   function EX_I(s, c) { return c.steps.indexOf(s); }
@@ -1260,10 +1289,10 @@
     var p = V.result.split(':'), c = course(p[0]), s = c.steps[+p[1]], e = st.exams[s.id];
     if (!e) { V.page = 'course'; return viewCourse(); }
     var pct = Math.round(e.last / e.n * 100), pass = e.last / e.n >= s.pass;
-    var h = '<section class="view"><div class="eyebrow">' + esc(c.name) + ' · ' + esc(s.t) + '</div>' +
+    var h = '<section class="view exam-result-view">'+(examReward && examReward.result===V.result?'<div class="alive-exam-reward"><div class="alive-reward-number">+'+examReward.xp+'<small> XP</small></div>'+aliveRewardCard(examReward.beforeXP)+'</div>':'')+'<div class="eyebrow">' + esc(c.name) + ' · ' + esc(s.t) + '</div>' +
       '<div class="hero"><div class="score"><div style="display:flex;flex-direction:column;align-items:center"><span class="pct">' + pct + '%</span><span class="pl">' + e.last + ' из ' + e.n + '</span></div>' +
       '<div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span class="badge" style="background:' + (pass ? 'var(--done)' : 'var(--bad)') + '">' + (pass ? 'Сдано' : 'Не сдано') + '</span>' +
-      '<span class="pl">' + (pass ? '+' + e.last * 10 + ' очков. Следующий блок открыт.' : 'Нужно ' + Math.ceil(s.pass * e.n) + ' из ' + e.n + '. Повтори слабые темы и пересдай.') + '</span></div></div></div>';
+      '<span class="pl">' + (pass ? 'Экзамен сдан. Лучший результат: ' + e.best + ' из ' + e.n + '. Следующий блок открыт.' : 'Нужно ' + Math.ceil(s.pass * e.n) + ' из ' + e.n + '. Повтори слабые темы и пересдай.') + '</span></div></div></div>';
     h += '<div class="card"><h2 class="h2" style="margin-bottom:6px">По темам</h2>';
     Object.keys(e.by || {}).forEach(function (sid) {
       var b = e.by[sid], stp = c.steps.filter(function (x) { return x.id === sid; })[0], r = b[0] / b[1];
@@ -1330,11 +1359,15 @@
     if(history.length>30)h+='<p class="small">Показаны 30 последних попыток.</p>';
     return h+'</div>';
   }
+  function aliveWeekSummary(wk) {
+    var days=[],max=30,t=totals();for(var i=0;i<7;i++){var index=wk*7+i,value=stat(index).doneMin;days.push({i:index,value:value});max=Math.max(max,value);}
+    return '<section class="alive-week-summary"><div class="card alive-week-card"><div class="spread"><h2>Неделя '+(wk+1)+'</h2><span class="alive-week-controls"><button class="icon-btn" data-week="'+Math.max(0,wk-1)+'" aria-label="Предыдущая неделя"'+(!wk?' disabled':'')+'>'+I.left+'</button><button class="icon-btn" data-week="'+Math.min(P.weeks.length-1,wk+1)+'" aria-label="Следующая неделя"'+(wk===P.weeks.length-1?' disabled':'')+'>'+I.right+'</button></span></div><p class="small">Минуты выполненных дел · '+dateOf(wk*7).getDate()+' '+MON[dateOf(wk*7).getMonth()]+' — '+dateOf(wk*7+6).getDate()+' '+MON[dateOf(wk*7+6).getMonth()]+'</p><div class="alive-week-bars" role="img" aria-label="Минуты за неделю: '+days.map(function(d,i){return DOW[i]+' '+d.value;}).join(', ')+'">'+days.map(function(d,i){return '<div class="alive-week-column" style="--alive-height:'+Math.max(.035,d.value/max)+'"><span class="alive-week-value">'+d.value+'</span><div class="alive-week-bar-space"><i data-alive-bar="'+Math.max(.035,d.value/max)+'"'+(!d.value?' class="empty"':'')+'></i></div><span class="small">'+DOW[i].toLowerCase()+'</span></div>';}).join('')+'</div></div><div class="card alive-week-metrics"><div><b>'+streak()+'</b><span class="small">дней подряд</span></div><div><b>'+t.lessons+'</b><span class="small">уроков всего</span></div><div><b>'+learnedWords().length+'</b><span class="small">слов изучено</span></div></div></section>';
+  }
   var STABS = [['general', 'Общий'], ['courses', 'Курсы'], ['habits', 'Привычки'], ['activity', 'Активность']];
   function viewGrowth() {
     var t = totals(), sk = streak(), aw = awards(t), got = aw.filter(function (a) { return a.ok; }).length, rt = rawToday();
     var into = t.xp % XP_LEVEL, tab = V.stab || 'general', ov = overall(), wk = V.week;
-    var h = '<section class="view growth-view">' + topbar('Статистика', rt < 0 ? 'План ещё не начался' : rt >= N ? 'План пройден целиком' : 'День ' + (rt + 1) + ' из ' + N) +
+    var h = '<section class="view growth-view" data-stat-tab="'+tab+'">' + topbar(theme==='light'?'Статистика':'Неделя', rt < 0 ? 'План ещё не начался' : rt >= N ? 'План пройден целиком' : 'День ' + (rt + 1) + ' из ' + N) + (tab==='general'?aliveWeekSummary(wk):'') +
       '<div class="chips stabs" role="tablist" aria-label="Разделы статистики">' + STABS.map(function (x) { return '<button class="chip" role="tab" data-stab="' + x[0] + '" aria-selected="' + (tab === x[0]) + '" aria-pressed="' + (tab === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>';
     if (tab === 'general') {
       var months = monthsInPlan(), ym = V.month && months.indexOf(V.month) >= 0 ? V.month : (function () { var d = dateOf(clamp(rt)); return d.getFullYear() + '-' + pad(d.getMonth() + 1); })();
@@ -1562,6 +1595,7 @@
 
   // ---------- отрисовка ----------
   function render() {
+    trackLessonClock();
     extendPlan();
     prepareDay(clamp(rawToday()),false);
     if (V.tab==='plan') prepareDay(sel,false);
@@ -1580,6 +1614,8 @@
     if (V.page === 'lesson' && LS) loadPoem();
     renderNav();
     applyTheme();
+    if(window.RostokAlive)window.RostokAlive.render(app,{screen:V.tab+':'+(V.page || '')+':'+(V.course || '')+':'+(V.tab==='growth'?(V.stab || 'general')+':'+V.week:'')+':'+(LS?LS.i+':'+lessonView():''),action:aliveAction,reward:aliveReward});
+    aliveAction=null;aliveReward=null;
   }
   function go(tab, page, extra) {
     V.tab = tab; V.page = page || null; V.step = null; pendingDel = null;
@@ -1636,14 +1672,15 @@
     if ((v = b.getAttribute('data-review-topic'))) { var topic=v.split(':'); V.tab='learn'; V.course=topic[0]; startLesson(topic[0],+topic[1]); return; }
     if ((v = b.getAttribute('data-next-course'))) { nextInCourse(v); return; }
     if ((v = b.getAttribute('data-repeat-exam'))) { var er=v.split(':'); startExam(er[0],+er[1],true); return; }
-    if ((v = b.getAttribute('data-day')) != null) { sel = +v; go('today'); return; }
+    if ((v = b.getAttribute('data-day')) != null) { sel = +v; go('plan'); return; }
     if ((v = b.getAttribute('data-mode'))) { st.modes[keyOf(sel)] = v; prepareDay(sel,true); save(); render(); return; }
     if ((v = b.getAttribute('data-task')) != null) {
       var k = keyOf(sel), linked=tasksFor(sel).find(function(t){return t.id===v;});
       if(linked && linked.kind==='work' && !isDone(sel,v)){var wr=st.journeys[linked.routeId],ww=wr && wr.works[linked.stage];if(!ww || !ww.accepted){openJourneyTask(linked);toast('Сначала сохрани работу и пройди самопроверку');return;}}
       st.checks[k] = st.checks[k] || {};
+      var beforeXP=totals().xp,oldDay=stat(sel);
       if (st.checks[k][v]) delete st.checks[k][v]; else st.checks[k][v] = 1;
-      save(); render();
+      var actionXP=Math.max(0,totals().xp-beforeXP);save();aliveAction={kind:'task',id:v,xp:actionXP,fromFill:oldDay.totalMin?oldDay.doneMin/oldDay.totalMin:0};render();
       var s = stat(sel); if (s.n && s.done === s.n && st.checks[k][v]) toast('День закрыт полностью');
       return;
     }
@@ -1655,13 +1692,13 @@
     }
     if ((v = b.getAttribute('data-lopen'))) { var lp = v.split(':'); startLesson(lp[0], +lp[1]); return; }
     if ((v = b.getAttribute('data-lp'))) { var lq = v.split(':'), lqi = +lq[0], loi = +lq[1], choice = LS && LS.qs[lqi]; if (choice && lessonKind(choice) === 'choice' && !lessonAnswered(choice) && Number.isInteger(loi) && loi>=0 && loi<choice.options.length) {
-      choice.pick = loi; saveLessonAnswer();
+      choice.pick = loi;if(!lessonCorrect(choice))aliveAction={kind:'wrong'};saveLessonAnswer();
     } return; }
     if ((v = b.getAttribute('data-lcheck')) != null) { submitLessonAnswer(+v); return; }
     if ((v = b.getAttribute('data-lbuild')) != null) { var lb=v.split(':'), bq=LS && LS.qs[+lb[0]], wi=+lb[1]; if(bq && lessonKind(bq)==='order' && !lessonAnswered(bq) && Number.isInteger(wi) && wi>=0 && wi<bq.words.length && bq.built.indexOf(wi)<0){bq.built.push(wi);rememberLesson();render();} return; }
     if ((v = b.getAttribute('data-lunbuild')) != null) { var lu=v.split(':'), uq=LS && LS.qs[+lu[0]], up=+lu[1]; if(uq && lessonKind(uq)==='order' && !lessonAnswered(uq) && Number.isInteger(up) && up>=0 && up<uq.built.length){uq.built.splice(up,1);rememberLesson();render();} return; }
     if ((v = b.getAttribute('data-exam'))) { var p = v.split(':'); startExam(p[0], +p[1]); return; }
-    if ((v = b.getAttribute('data-result'))) { V.result = v; V.page = 'result'; render(); window.scrollTo(0, 0); return; }
+    if ((v = b.getAttribute('data-result'))) { examReward=null;V.result = v; V.page = 'result'; render(); window.scrollTo(0, 0); return; }
     if ((v = b.getAttribute('data-pick')) != null) { EX.pick = +v; render(); return; }
     if ((v = b.getAttribute('data-build')) != null) { EX.built.push(+v); render(); return; }
     if ((v = b.getAttribute('data-unbuild')) != null) { EX.built.splice(+v, 1); render(); return; }
@@ -1681,7 +1718,8 @@
       case 'treefav': go('learn', null, {filter:'all',status:'fav'}); break;
       case 'treeawards': go('growth', null, {stab:'general'}); var awardsEl=document.querySelector('.awards'); if(awardsEl) awardsEl.scrollIntoView({block:'center',behavior:'smooth'}); break;
       case 'resume': resumeStudy(); break;
-      case 'retrywrong': if(!LS || !LS.qs.every(lessonAnswered)) break; LS.retrySet=[]; LS.qs.forEach(function(q,j){if(!lessonCorrect(q)) {LS.retrySet.push(j); if(lessonKind(q)==='choice') q.pick=null; else {q.checked=false;if(lessonKind(q)==='input')q.typed='';else q.built=[];}}}); LS.retry=true; LS.view=LS.retrySet.length?LS.retrySet[0]+1:LS.qs.length+1; rememberLesson(); render(); window.scrollTo(0,0); break;
+      case 'retrycompleted': if(V.completed && V.completed.session){LS=JSON.parse(JSON.stringify(V.completed.session));V.tab='learn';V.course=LS.cid;V.page='lesson';retryLessonWrong();}break;
+      case 'retrywrong': retryLessonWrong();break;
       case 'nextlesson': nextInCourse(V.completed.cid); break;
       case 'prev': if (sel > 0) { sel--; render(); } break;
       case 'next': if (sel < N - 1) { sel++; render(); } break;
@@ -1800,6 +1838,7 @@
   }
 
   document.addEventListener('visibilitychange', function () {
+    trackLessonClock();
     if (document.visibilityState !== 'visible') return;
     applyTheme();
     if (SY.cfg && Date.now() - (SY.cfg.at || 0) > 60000) syncNow(false);

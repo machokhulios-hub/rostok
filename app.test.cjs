@@ -11,7 +11,7 @@ function boot(seed, backup, raw, setup, extraCourses) {
   if(raw!==undefined)w.localStorage.setItem('dnevnik-state',raw);
   if(backup)w.localStorage.setItem('dnevnik-state-backup',JSON.stringify(backup));
   if(setup)setup(w);
-  for(const file of ['plan.js','courses.js','journey.js','app.js']){w.eval(fs.readFileSync(path.join(root,file),'utf8'));if(file==='courses.js'&&extraCourses)w.COURSES.push(...JSON.parse(JSON.stringify(extraCourses)));}
+  for(const file of ['plan.js','courses.js','journey.js','alive.js','app.js']){w.eval(fs.readFileSync(path.join(root,file),'utf8'));if(file==='courses.js'&&extraCourses)w.COURSES.push(...JSON.parse(JSON.stringify(extraCourses)));}
   return {w,doc:w.document,close:()=>w.close(),state:()=>JSON.parse(w.localStorage.getItem('dnevnik-state')||'{}')};
 }
 function click(b,sel){const el=b.doc.querySelector(sel);assert.ok(el,'Missing '+sel);el.click();}
@@ -43,7 +43,7 @@ test('Video module exam saves the score and unlocks the next module',()=>{
 });
 test('Inner appearance is scoped away from home across navigation and learning screens',()=>{
  const b=boot();try{
-  const home=b.doc.querySelector('.orbit-map').outerHTML;
+  const home=b.doc.querySelector('.alive-directions').outerHTML;
   assert.equal(b.doc.body.classList.contains('sections-ui'),false);
   for(const tab of ['learn','plan','habits','notes','goals','growth','library','tools','settings','more']){
    click(b,'[data-tab="'+tab+'"]');
@@ -52,7 +52,7 @@ test('Inner appearance is scoped away from home across navigation and learning s
   openLesson(b);assert.ok(b.doc.body.classList.contains('sections-ui'));
   click(b,'[data-tab="today"]');
   assert.equal(b.doc.body.classList.contains('sections-ui'),false);
-  assert.equal(b.doc.querySelector('.orbit-map').outerHTML,home);
+  assert.equal(b.doc.querySelector('.alive-directions').outerHTML,home);
  }finally{b.close();}
 });
 test('Catalog search finds course names and goals and keeps favourite controls usable',()=>{
@@ -100,8 +100,8 @@ function sceneSetup(clock, preference) {
     };
   };
 }
-test('Automatic scene follows device-hour boundaries without saving a manual theme', () => {
-  for (const [hour, expected] of [[6,'night'],[7,'day'],[19,'day'],[20,'night']]) {
+test('Alive is the stable default at every hour without saving a manual preference', () => {
+  for (const [hour, expected] of [[6,'night'],[7,'night'],[19,'night'],[20,'night']]) {
     const b = boot(null,null,undefined,sceneSetup({hour}));
     try {
       assert.equal(b.doc.documentElement.dataset.scene, expected, 'hour '+hour);
@@ -111,19 +111,19 @@ test('Automatic scene follows device-hour boundaries without saving a manual the
     } finally { b.close(); }
   }
 });
-test('Home theme toggle persists manual choice without changing progress and can return to automatic', () => {
+test('Home theme toggle preserves progress and can return to default Alive', () => {
   let b = boot({checks:{},lessons:{e1:'2026-10-26'}},null,undefined,sceneSetup({hour:12}));
   try {
     const before = b.w.localStorage.getItem('dnevnik-state');
     const toggle = b.doc.querySelector('[data-act="homescene"]');
     assert.ok(toggle); toggle.focus(); toggle.click();
-    assert.equal(b.doc.documentElement.dataset.scene, 'night');
-    assert.equal(b.w.localStorage.getItem('rostok-theme'), 'dark');
+    assert.equal(b.doc.documentElement.dataset.scene, 'day');
+    assert.equal(b.w.localStorage.getItem('rostok-theme'), 'light');
     assert.equal(b.doc.activeElement, toggle);
     assert.equal(b.w.localStorage.getItem('dnevnik-state'), before);
     toggle.click();
-    assert.equal(b.doc.documentElement.dataset.scene, 'day');
-    assert.equal(b.w.localStorage.getItem('rostok-theme'), 'light');
+    assert.equal(b.doc.documentElement.dataset.scene, 'night');
+    assert.equal(b.w.localStorage.getItem('rostok-theme'), 'dark');
   } finally { b.close(); }
   b = boot(null,null,undefined,sceneSetup({hour:23},'light'));
   try {
@@ -135,7 +135,7 @@ test('Home theme toggle persists manual choice without changing progress and can
     assert.equal(b.doc.querySelector('.theme-card [data-theme=""]').getAttribute('aria-pressed'), 'true');
   } finally { b.close(); }
 });
-test('Automatic refresh crosses evening boundary without replacing a lesson or changing answers', () => {
+test('Clock refresh keeps Alive and never replaces a lesson or its answers', () => {
   const clock={hour:19}, b=boot(null,null,undefined,sceneSetup(clock));
   try {
     openLesson(b); answer(b,0,false);
@@ -150,8 +150,8 @@ test('Automatic refresh crosses evening boundary without replacing a lesson or c
     assert.equal(b.w.localStorage.getItem('dnevnik-state'),before);
     clock.hour=8;
     b.doc.dispatchEvent(new b.w.Event('visibilitychange'));
-    assert.equal(b.doc.documentElement.dataset.scene,'day');
-    assert.equal(b.doc.body.classList.contains('sections-dark'),false);
+    assert.equal(b.doc.documentElement.dataset.scene,'night');
+    assert.equal(b.doc.body.classList.contains('sections-dark'),true);
     assert.equal(b.doc.querySelector('.lesson-view'),lesson);
   } finally { b.close(); }
 });
@@ -167,7 +167,7 @@ test('Manual scene survives clock changes and invalid stored preference falls ba
     assert.equal(b.doc.documentElement.dataset.scene,'day');
   } finally { b.close(); }
   const a=boot(null,null,undefined,sceneSetup({hour:12},'invalid'));
-  try { assert.equal(a.doc.documentElement.dataset.scene,'day'); }
+  try { assert.equal(a.doc.documentElement.dataset.scene,'night'); }
   finally { a.close(); }
 });
 test('Theme storage failure keeps the home switch usable without altering saved learning', () => {
@@ -180,9 +180,9 @@ test('Theme storage failure keeps the home switch usable without altering saved 
   try {
     const before=b.w.localStorage.getItem('dnevnik-state');
     click(b,'[data-act="homescene"]');
-    assert.equal(b.doc.documentElement.dataset.scene,'night');
-    click(b,'[data-act="homescene"]');
     assert.equal(b.doc.documentElement.dataset.scene,'day');
+    click(b,'[data-act="homescene"]');
+    assert.equal(b.doc.documentElement.dataset.scene,'night');
     assert.equal(b.w.localStorage.getItem('dnevnik-state'),before);
   } finally { b.close(); }
 });
@@ -194,7 +194,7 @@ function answerExam(b,q,correct=true){
  if(q.k==='order'){for(const word of q.a.split(' ')){const el=[...b.doc.querySelectorAll('[data-build]')].find(e=>e.textContent===word);assert.ok(el,'word '+word);el.click();}}
  click(b,'[data-act="check"]');click(b,'[data-act="nextq"]');
 }
-test('Home contains only the shared circular course map and keeps saved plan checks accessible from Profile',()=>{let b=boot({checks:{},lessons:{e1:'2026-10-26'}});try{const home=b.doc.querySelector('.home-view');assert.ok(home);assert.ok(home.querySelector('.orbit-map'));assert.equal(home.querySelector('.tree-landscape,.tree-day,.tree-night'),null);assert.equal(home.querySelectorAll('.orbit-node').length,5);assert.equal(home.querySelector('.orbit-home').classList.contains('only-m'),false);assert.equal(home.querySelector('.dirs,.hero,.rank-card,.tree-profile,.tree-metrics,.tree-resume,.tree-quick,.today-panel,.tree-top,[data-sel]'),null);assert.ok(b.doc.querySelector('#tabbar .bottom [data-tab="today"]'));click(b,'[data-tab="more"]');click(b,'.more-view [data-tab="plan"]');const rows=b.doc.querySelectorAll('.plan-view .task');assert.ok(rows.length>=4);assert.match(rows[0].querySelector('.t-label').textContent,/ — /);assert.match(rows[0].querySelector('.t-min').textContent,/мин/);const id=rows[0].querySelector('[data-task]').getAttribute('data-task');rows[0].querySelector('[data-task]').click();const seed=b.state();assert.ok(Object.values(seed.checks).some(x=>x[id]));assert.equal(seed.lessons.e1,'2026-10-26');click(b,'[data-tab="today"]');assert.equal(b.doc.querySelector('.today-panel'),null);b.close();b=boot(seed);assert.ok(Object.values(b.state().checks).some(x=>x[id]));assert.ok(b.doc.querySelector('.orbit-map'));}finally{b.close();}});
+test('Alive home uses actual day tasks and compact directions while keeping existing plan progress',()=>{let b=boot({checks:{},lessons:{e1:'2026-10-26'}});try{const home=b.doc.querySelector('.home-view');assert.ok(home.querySelector('.alive-home'));assert.ok(home.querySelector('.alive-today-summary'));assert.equal(home.querySelectorAll('.orbit-node').length,5);assert.ok(home.querySelector('[data-learnfilter="marketing"]'));assert.equal(home.querySelector('[data-alive-count]').dataset.aliveCount,'0');assert.ok(home.querySelector('[data-task]'));click(b,'[data-task]');const seed=b.state();assert.ok(Object.values(seed.checks).some(x=>Object.keys(x).length));assert.equal(seed.lessons.e1,'2026-10-26');b.close();b=boot(seed);assert.ok(Number(b.doc.querySelector('[data-alive-count]').dataset.aliveCount)>0);}finally{b.close();}});
 test('Desktop navigation reaches Profile and resume and keeps one active side tab',()=>{const b=boot();try{click(b,'#tabbar .side [data-tab="more"]');assert.ok(b.doc.querySelector('.more-view .rank-card'));click(b,'.more-view [data-act="resume"]');assert.ok(b.doc.querySelector('.lesson-view'));click(b,'#tabbar .side [data-tab="plan"]');assert.equal(b.doc.querySelectorAll('#tabbar .side [aria-current="page"]').length,1);assert.equal(b.doc.querySelector('#tabbar .side [aria-current="page"]').getAttribute('data-tab'),'plan');click(b,'#tabbar .side [data-tab="settings"]');assert.equal(b.doc.querySelectorAll('#tabbar .side [aria-current="page"]').length,1);}finally{b.close();}});
 test('An unfinished lesson resumes with answered questions after reload',()=>{let b=boot();openLesson(b,'eng');answer(b,0,false);const saved=b.state();b.close();b=boot(saved);try{click(b,'[data-tab="more"]');click(b,'[data-act="resume"]');assert.match(b.doc.body.textContent,/I am/);assert.ok(b.doc.querySelector('[data-lp^="0:"].right'));assert.ok(b.doc.querySelector('[data-lp^="0:"][disabled]'));}finally{b.close();}});
 test('Wrong answers show an explanation from the lesson rule',()=>{const b=boot();try{openLesson(b);answer(b,0,false);assert.match(b.doc.querySelector('.feedback.no').textContent,/Почему так/);assert.match(b.doc.querySelector('.feedback.no').textContent,/am/);}finally{b.close();}});
@@ -221,7 +221,7 @@ test('A retry session must not hide an unanswered question',()=>{let b=boot();op
 test('A newer exam weakness is not erased by an older successful lesson attempt',()=>{const temp=boot(),exam=temp.w.COURSES[0].steps.find(s=>s.exam);temp.close();const b=boot({checks:{},practice:{e1:{last:5,n:5,wrong:[],attempts:[{d:'2026-10-26',ok:5,n:5}]}},exams:{[exam.id]:{n:1,best:0,last:0,wrong:[],attempts:[{d:'2026-10-27',ok:0,n:1}],by:{e1:[0,1]}}}});try{click(b,'[data-tab="growth"]');click(b,'[data-stab="courses"]');assert.match(b.doc.querySelector('.weak-topics').textContent,/Глагол to be/);}finally{b.close();}});
 test('Imported state cannot contain keys that alter object prototypes during sync',async()=>{const b=boot({checks:{},lessons:{e1:'2026-10-26'}});try{click(b,'[data-tab="tools"]');const input=b.doc.querySelector('#importFile');const json='{"app":"dnevnik","state":{"checks":{},"reflect":{"__proto__":{"a":"injected"}}}}';Object.defineProperty(input,'files',{value:[new b.w.File([json],'unsafe.json')]});input.dispatchEvent(new b.w.Event('change',{bubbles:true}));await new Promise(r=>setTimeout(r,35));assert.equal(b.state().lessons.e1,'2026-10-26');assert.match(b.doc.querySelector('#toast').textContent,/не файл/i);}finally{b.close();}});
 test('Day plan adds a custom task with minutes and removes it again',()=>{const b=boot();try{click(b,'[data-tab="plan"]');b.doc.querySelector('#new-task').value='Проверить тормоза';b.doc.querySelector('#new-task-min').value='20';click(b,'[data-act="addtask"]');const key=Object.keys(b.state().extraTasks)[0];assert.equal(b.state().extraTasks[key][0].t,'Проверить тормоза');assert.equal(b.state().extraTasks[key][0].min,20);assert.match(b.doc.querySelector('.timeline').textContent,/Проверить тормоза/);click(b,'[data-deltask]');assert.equal(b.state().extraTasks[key].length,0);}finally{b.close();}});
-test('Theme choice is stored and applied after reload',()=>{let b=boot();try{click(b,'[data-tab="settings"]');click(b,'.theme-card [data-theme="dark"]');assert.equal(b.doc.documentElement.getAttribute('data-theme'),'dark');assert.equal(b.w.localStorage.getItem('rostok-theme'),'dark');}finally{b.close();}b=boot(null,null,undefined,w=>w.localStorage.setItem('rostok-theme','light'));try{assert.equal(b.doc.documentElement.getAttribute('data-theme'),'light');}finally{b.close();}});
+test('Paper choice is stored and default Alive can be restored without losing legacy dark support',()=>{let b=boot();try{click(b,'[data-tab="settings"]');click(b,'.theme-card [data-theme="light"]');assert.equal(b.doc.documentElement.getAttribute('data-theme'),'light');assert.equal(b.w.localStorage.getItem('rostok-theme'),'light');click(b,'.theme-card [data-theme=""]');assert.equal(b.doc.documentElement.getAttribute('data-theme'),'dark');assert.equal(b.w.localStorage.getItem('rostok-theme'),null);}finally{b.close();}b=boot(null,null,undefined,w=>w.localStorage.setItem('rostok-theme','dark'));try{assert.ok(b.doc.body.classList.contains('alive-ui'));click(b,'[data-tab="settings"]');assert.equal(b.doc.querySelector('.theme-card [data-theme=""]').getAttribute('aria-pressed'),'true');}finally{b.close();}});
 test('Lesson search and plan date navigation remain accessible away from home',()=>{const b=boot();try{click(b,'[data-tab="learn"]');const input=b.doc.querySelector('#search-input');input.value='глагол';input.dispatchEvent(new b.w.Event('input',{bubbles:true}));assert.ok(b.doc.querySelector('.search-item'));click(b,'.search-item');assert.match(b.doc.querySelector('h1').textContent,/Глагол/);click(b,'[data-act="endlesson"]');click(b,'[data-tab="more"]');click(b,'.more-view [data-tab="plan"]');const date=b.doc.querySelector('.pd-date').textContent;const move=b.doc.querySelector('[data-act="prev"]:not([disabled])')||b.doc.querySelector('[data-act="next"]:not([disabled])');assert.ok(move);move.click();assert.notEqual(b.doc.querySelector('.pd-date').textContent,date);}finally{b.close();}});
 test('Notes can be added, found by search and deleted after confirmation',()=>{const b=boot();try{click(b,'[data-tab="notes"]');b.doc.querySelector('#note-title').value='Идея';b.doc.querySelector('#note-text').value='Раздел про тормоза';click(b,'[data-act="addnote"]');const ids=Object.keys(b.state().notes);assert.equal(ids.length,1);assert.equal(b.state().notes[ids[0]].x,'Раздел про тормоза');const input=b.doc.querySelector('#search-input');input.value='тормоз';input.dispatchEvent(new b.w.Event('input',{bubbles:true}));assert.ok(b.doc.querySelector('[data-gonote]'));click(b,'[data-delnote]');assert.equal(Object.keys(b.state().notes).length,1);click(b,'[data-delnote]');assert.equal(Object.keys(b.state().notes).length,0);}finally{b.close();}});
 test('Lesson moves step by step with Next and Back and keeps answers',()=>{const b=boot();try{openLesson(b);assert.ok(!b.doc.querySelector('.lsec').hidden);click(b,'[data-act="lnext"]');assert.match(b.doc.querySelector('.lsec.exercise-card:not([hidden])').textContent,/Вопрос 1/);answer(b,0,true);click(b,'[data-act="lnext"]');assert.match(b.doc.querySelector('.lsec.exercise-card:not([hidden])').textContent,/Вопрос 2/);click(b,'[data-act="lprev"]');assert.ok(b.doc.querySelector('.lsec.exercise-card:not([hidden]) [data-lp^="0:"].right'));}finally{b.close();}});
@@ -288,7 +288,7 @@ function routeClock(day='2026-10-30',extra){return w=>{const Real=w.Date;w.Date=
 function setRoute(b,kind='shop-wp',budget=45){click(b,'[data-tab="goals"]');if(!b.doc.querySelector('#journey-kind'))click(b,'[data-act="journeysetup"]');b.doc.querySelector('#journey-kind').value=kind;b.doc.querySelector('#journey-title').value='Мой результат';b.doc.querySelector('#journey-deadline').value='2026-12-01';b.doc.querySelector('#journey-budget').value=String(budget);click(b,'[data-act="savejourney"]');}
 test('Personal route creates a bounded today plan and survives reload with legacy progress',()=>{
  let b=boot({checks:{'2026-10-26':{eng:1}},lessons:{e1:'2026-10-26'}},null,undefined,routeClock());try{
-  setRoute(b);const saved=b.state();assert.ok(saved.activeJourney);assert.equal(saved.journeys[saved.activeJourney].budget,45);click(b,'[data-tab="plan"]');assert.ok(b.doc.querySelector('.journey-day'));assert.ok([...b.doc.querySelectorAll('.task .t-min')].reduce((n,e)=>n+parseInt(e.textContent),0)<=45);assert.equal(b.state().checks['2026-10-26'].eng,1);assert.equal(b.state().lessons.e1,'2026-10-26');b.close();b=boot(saved,null,undefined,routeClock());assert.match(b.doc.querySelector('.home-focus').textContent,/Мой результат/);click(b,'[data-act="journeynext"]');assert.ok(b.doc.querySelector('.lesson-view'));assert.match(b.doc.querySelector('h1').textContent,/WordPress/);
+  setRoute(b);const saved=b.state();assert.ok(saved.activeJourney);assert.equal(saved.journeys[saved.activeJourney].budget,45);click(b,'[data-tab="plan"]');assert.ok(b.doc.querySelector('.journey-day'));assert.ok([...b.doc.querySelectorAll('.task .t-min')].reduce((n,e)=>n+parseInt(e.textContent),0)<=45);assert.equal(b.state().checks['2026-10-26'].eng,1);assert.equal(b.state().lessons.e1,'2026-10-26');b.close();b=boot(saved,null,undefined,routeClock());assert.match(b.doc.querySelector('.alive-focus').textContent,/Мой результат/);click(b,'[data-act="journeynext"]');assert.ok(b.doc.querySelector('.lesson-view'));assert.match(b.doc.querySelector('h1').textContent,/WordPress/);
  }finally{b.close();}
 });
 test('Practice self-check requires saved evidence and resets after a changed version',()=>{
@@ -330,7 +330,7 @@ test('A carried manual task retains its identity across calendar days',()=>{
  const b=boot({checks:{},extraTasks:{'2026-10-29':[{id:'u-old',cat:'plan',t:'Монтаж',min:10}]}},null,undefined,routeClock());try{setRoute(b);click(b,'[data-tab="plan"]');click(b,'[data-act="carrytasks"]');assert.equal(b.state().extraTasks['2026-10-30'][0].id,'u-old');}finally{b.close();}
 });
 test('An English card answer survives reload and is not immediately offered again',()=>{
- let b=boot({checks:{},lessons:{e1:'2026-10-27'}},null,undefined,routeClock());try{click(b,'.home-focus [data-act="cards"]');const word=b.doc.querySelector('.flash .w').textContent;click(b,'[data-act="show"]');click(b,'[data-card="0"]');const saved=b.state();assert.equal(saved.reviews['word:'+word.toLowerCase()].due,'2026-10-31');b.close();b=boot(saved,null,undefined,routeClock());click(b,'.home-focus [data-act="cards"]');assert.notEqual(b.doc.querySelector('.flash .w').textContent,word);}finally{b.close();}
+ let b=boot({checks:{},lessons:{e1:'2026-10-27'}},null,undefined,routeClock());try{click(b,'.alive-focus [data-act="cards"]');const word=b.doc.querySelector('.flash .w').textContent;click(b,'[data-act="show"]');click(b,'[data-card="0"]');const saved=b.state();assert.equal(saved.reviews['word:'+word.toLowerCase()].due,'2026-10-31');b.close();b=boot(saved,null,undefined,routeClock());click(b,'.alive-focus [data-act="cards"]');assert.notEqual(b.doc.querySelector('.flash .w').textContent,word);}finally{b.close();}
 });
 test('A route and accepted evidence survive importing a backup into a legacy profile',async()=>{
  const source=boot(null,null,undefined,routeClock());setRoute(source,'music',30);source.doc.querySelector('#work-text').value='Экспорт idea-v1.wav';click(source,'[data-act="savework"]');for(const c of source.doc.querySelectorAll('.work-criterion'))c.checked=true;click(source,'[data-act="acceptwork"]');const backup=source.state();source.close();
@@ -416,4 +416,26 @@ test('Promotion exams cover existing lessons and retain explanations',()=>{
 });
 test('Store promotion route persists its three courses and schedules marketing work',()=>{
  const b=boot(null,null,undefined,routeClock());try{setRoute(b,'marketing',45);const seed=b.state(),r=seed.journeys[seed.activeJourney];assert.deepEqual(r.courses,['marketing-basics','direct','seo']);assert.equal(r.kind,'marketing');click(b,'[data-tab="plan"]');assert.ok([...b.doc.querySelectorAll('[data-task]')].length);click(b,'[data-tab="goals"]');assert.match(b.doc.querySelector('#work-text').closest('.card').textContent,/План продвижения и аналитика/);assert.equal(b.w.RostokJourney.validate(seed),true);}finally{b.close();}
+});
+
+test('Alive completion awards real XP once and repeats do not celebrate',()=>{
+ let b=boot(null,null,undefined,w=>{w.matchMedia=()=>({matches:false,addEventListener(){}});});try{openLesson(b);for(let i=0;i<5;i++)answer(b,i,true);click(b,'[data-act="lessondone"]');assert.match(b.doc.querySelector('.alive-reward-number').textContent,/\+20/);assert.ok(b.doc.querySelector('.alive-confetti'));const seed=b.state();click(b,'[data-tab="more"]');click(b,'[data-tab="learn"]');click(b,'[data-course="eng"]');click(b,'[data-step="0"]');click(b,'[data-lopen="eng:0"]');for(let i=0;i<5;i++)answer(b,i,true);click(b,'[data-act="lessondone"]');assert.match(b.doc.querySelector('.alive-reward-number').textContent,/\+0/);assert.equal(b.doc.querySelector('.alive-confetti'),null);assert.equal(Object.keys(b.state().lessons).length,Object.keys(seed.lessons).length);}finally{b.close();}
+});
+test('Alive navigation labels remain accessible when the mobile captions are hidden',()=>{const b=boot();try{const tabs=[...b.doc.querySelectorAll('#tabbar button')];assert.ok(tabs.length>=5);for(const t of tabs)assert.ok(t.getAttribute('aria-label'));}finally{b.close();}});
+test('Alive weekly bars show saved minutes, not values from the mockup',()=>{const b=boot(null,null,undefined,routeClock());try{click(b,'[data-tab="plan"]');click(b,'[data-task]');const minutes=b.doc.querySelector('.task.done .t-min').textContent;click(b,'[data-tab="growth"]');const values=[...b.doc.querySelectorAll('.alive-week-value')].map(e=>Number(e.textContent));assert.equal(values.length,7);assert.ok(values.includes(Number.parseInt(minutes)));}finally{b.close();}});
+
+test('Alive task count animates on a click and storage updates settle it without replay',()=>{
+ const b=boot(null,null,undefined,routeClock('2026-10-30',w=>{w.matchMedia=()=>({matches:false,addEventListener(){}});}));try{click(b,'.alive-day-tasks [data-task]');const count=b.doc.querySelector('[data-alive-count]');assert.equal(count.dataset.aliveMotion,'count');assert.ok(Number(count.dataset.aliveCount)>0);const next=b.state();next.notes.remote={x:'Из другой вкладки'};const raw=JSON.stringify(next);b.w.localStorage.setItem('dnevnik-state',raw);b.w.dispatchEvent(new b.w.StorageEvent('storage',{key:'dnevnik-state',newValue:raw}));const after=b.doc.querySelector('[data-alive-count]');assert.equal(after.textContent,after.dataset.aliveCount);assert.equal(b.doc.querySelector('[data-alive-motion]'),null);}finally{b.close();}
+});
+test('Alive lesson reward includes exactly the earned lesson and linked plan XP',()=>{
+ const b=boot(null,null,undefined,routeClock());try{setRoute(b,'course',45);click(b,'[data-tab="today"]');click(b,'[data-act="journeynext"]');for(let i=0;i<5;i++)answer(b,i,true);click(b,'[data-act="lessondone"]');assert.match(b.doc.querySelector('.alive-reward-number').textContent,/\+45/);assert.match(b.doc.querySelector('.alive-reward-chips').textContent,/Урок: \+20 XP/);assert.match(b.doc.querySelector('.alive-reward-chips').textContent,/плану: \+25 XP/);}finally{b.close();}
+});
+test('Alive celebrates only the first passed exam and shows no new XP for the same best score',()=>{
+ const first=boot(),exam=first.w.COURSES.find(c=>c.id==='eng').steps.find(s=>s.exam),seed={checks:{},lessons:{}};for(const id of exam.covers)seed.lessons[id]='2026-10-30';first.close();const b=boot(seed);try{const c=b.w.COURSES.find(c=>c.id==='eng'),i=c.steps.findIndex(s=>s.id===exam.id);function run(){click(b,'[data-tab="learn"]');click(b,'[data-course="eng"]');click(b,'[data-step="'+i+'"]');click(b,'[data-exam="eng:'+i+'"]');for(const q of exam.q)answerExam(b,q);}run();assert.ok(b.doc.querySelector('.alive-confetti'));assert.match(b.doc.querySelector('.alive-reward-number').textContent,new RegExp('\\+'+exam.q.length*10));run();assert.equal(b.doc.querySelector('.alive-confetti'),null);assert.match(b.doc.querySelector('.alive-reward-number').textContent,/\+0/);click(b,'[data-tab="growth"]');click(b,'[data-stab="courses"]');click(b,'[data-result="eng:'+i+'"]');assert.equal(b.doc.querySelector('.alive-confetti,.alive-exam-reward'),null);}finally{b.close();}
+});
+test('A calendar day opens its dated plan while Alive home stays on today',()=>{
+ const b=boot(null,null,undefined,routeClock());try{click(b,'[data-tab="growth"]');click(b,'[data-stab="habits"]');click(b,'[data-day="0"]');assert.ok(b.doc.querySelector('.plan-view'));assert.match(b.doc.querySelector('.pd-date b').textContent,/26 октября/);click(b,'[data-tab="today"]');assert.match(b.doc.querySelector('.alive-home-heading p').textContent,/30 октября/);}finally{b.close();}
+});
+test('Alive completion can reopen only missed questions without increasing the original score or XP',()=>{
+ const b=boot();try{openLesson(b);answer(b,0,false);for(let i=1;i<5;i++)answer(b,i,true);click(b,'[data-act="lessondone"]');click(b,'[data-act="retrycompleted"]');assert.equal(b.doc.querySelectorAll('.exercise-card').length,1);answer(b,0,true);click(b,'[data-act="lessondone"]');assert.equal(b.state().practice.e1.last,4);assert.equal(b.state().practice.e1.wrong.length,0);assert.match(b.doc.querySelector('.alive-reward-number').textContent,/\+0/);assert.equal(b.doc.querySelector('.alive-confetti'),null);}finally{b.close();}
 });

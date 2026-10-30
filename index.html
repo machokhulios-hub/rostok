@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Росток</title>
-<meta name="theme-color" content="#0A0F0D">
+<meta name="theme-color" content="#0F1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Росток">
@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="fonts/rubik.css?v=4.39">
 <style>
 :root{
   --bg:#EEF0EB; --card:#FFFFFF; --ink:#18262B; --mute:#5E6E73; --line:#D8DDD6; --soft:#E3E7E0; --box:#B9C1B8;
@@ -836,19 +836,21 @@ main#app.full{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px)}
 @media(prefers-reduced-motion:reduce){.cc-photo img{transition:none}}
 
 </style>
-<link rel="stylesheet" href="tree-mobile.css?v=4.38">
-<link rel="stylesheet" href="sections.css?v=4.38">
-<link rel="stylesheet" href="journey.css?v=4.38">
+<link rel="stylesheet" href="tree-mobile.css?v=4.39">
+<link rel="stylesheet" href="sections.css?v=4.39">
+<link rel="stylesheet" href="journey.css?v=4.39">
+<link rel="stylesheet" href="alive.css?v=4.39">
 </head>
 <body>
 <main id="app" aria-live="polite"></main>
 <nav class="tabbar" id="tabbar" aria-label="Разделы"></nav>
 <div class="toast" id="toast" hidden></div>
 <div class="modal" id="modal" hidden></div>
-<script src="plan.js?v=4.38"></script>
-<script src="courses.js?v=4.38"></script>
-<script src="journey.js?v=4.38"></script>
-<script src="app.js?v=4.38"></script>
+<script src="plan.js?v=4.39"></script>
+<script src="courses.js?v=4.39"></script>
+<script src="journey.js?v=4.39"></script>
+<script src="alive.js?v=4.39"></script>
+<script src="app.js?v=4.39"></script>
 <script>
 if ('serviceWorker' in navigator) {
   var hadController = !!navigator.serviceWorker.controller;

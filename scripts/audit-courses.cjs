@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..'), {JSDOM,VirtualConsole}=require('jsdom');
-const files=['plan.js','courses.js','journey.js','app.js'].map(f=>fs.readFileSync(path.join(root,f),'utf8'));
+const files=['plan.js','courses.js','journey.js','alive.js','app.js'].map(f=>fs.readFileSync(path.join(root,f),'utf8'));
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),errors=[];let lessons=0,exams=0,questions=0;
 function boot(){const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));const d=new JSDOM(html,{url:'https://example.test/rostok/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc}),w=d.window;w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};w.confirm=()=>true;files.slice(0,2).forEach(s=>w.eval(s));const seed={checks:{},lessons:{},exams:{}};for(const c of w.COURSES)for(const s of c.steps||[]){if(s.exam)seed.exams[s.id]={n:s.q.length,best:s.q.length,last:s.q.length,passed:true,wrong:[],attempts:[]};else seed.lessons[s.id]='2026-10-29';}w.localStorage.setItem('dnevnik-state',JSON.stringify(seed));files.slice(2).forEach(s=>w.eval(s));return d;}
 function click(d,sel){const e=d.window.document.querySelector(sel);assert.ok(e,'Missing '+sel);e.click();}
