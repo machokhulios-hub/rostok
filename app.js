@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.39';
+  var APP_VERSION = '4.40';
   var P = window.PLAN, COURSES = window.COURSES, J = window.RostokJourney;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -1209,7 +1209,7 @@
     var source = errors ? s.q.filter(function(q) {return errors.some(function(w) {return w.q===q.q && w.s===q.s;});}) : s.q;
     if (!source.length) return;
     var qs = source.map(function (q) {
-      var o = { k: q.k, s: q.s, q: q.q };
+      var o = { k: q.k, s: q.s, q: q.q, why: q.explanation || q.why || '' };
       if (q.k === 'choice') { var idx = shuffle(q.options.map(function (x, j) { return j; })); o.options = idx.map(function (j) { return q.options[j]; }); o.right = idx.indexOf(0); }
       if (q.k === 'input') o.a = q.a;
       if (q.k === 'order') { o.words = shuffle(q.words); o.a = q.a; }
