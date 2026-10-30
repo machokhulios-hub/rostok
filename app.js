@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.40';
+  var APP_VERSION = '4.41';
   var P = window.PLAN, COURSES = window.COURSES, J = window.RostokJourney;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -565,26 +565,24 @@
   }
 
   // ----- Главная -----
+  function homePromotionTarget() {
+    var ids=['marketing-basics','direct','seo'],session=validSession(st.session) && ids.indexOf(st.session.cid)>=0?st.session:null,last=session || st.lastStudy;
+    if(last && ids.indexOf(last.cid)>=0){var c=course(last.cid),i=session?session.i:c.steps.findIndex(function(q){return q.id===last.sid;});if(i>=0 && (session || !stepDone(c.steps[i])) && !/locked|wait/.test(stepState(c,i)))return {c:c,i:i};i=nextIdx(c);if(i>=0 && stepState(c,i)==='open')return {c:c,i:i};}
+    for(var j=0;j<ids.length;j++){var c=course(ids[j]),i=nextIdx(c);if(i>=0 && stepState(c,i)==='open')return {c:c,i:i};}
+    return null;
+  }
   function aliveHome() {
     sel=clamp(rawToday());
-    var day=stat(sel),date=dateOf(sel),r=J.current(st),next=r?J.nextStep(st,COURSES,r):null;
-    var pending=r?day.tasks.find(function(t){return t.kind && t.kind!=='legacy' && !isDone(sel,t.id);}):null;
-    var si=r?J.nextStage(r):-1,target=pending?pending.t:next?next.step.t:si>=0?J.presets[r.kind].stages[si].title:'Готовый результат';
-    var due=J.dueReviews(st,COURSES,keyOf(sel)),words=J.selectWords(st,learnedWords(),keyOf(sel),1000);
-    function direction(cls,attr,icon,label,pct){return '<button class="orbit-node '+cls+'" type="button" '+attr+'><span class="orbit-disc">'+aliveRing(pct/100)+'<span class="alive-direction-icon" aria-hidden="true">'+icon+'</span></span><b>'+label+'</b></button>';}
-    var h='<div class="alive-home"><header class="alive-home-heading"><div><h1>Сегодня</h1><p>'+DOWF[(date.getDay()+6)%7].toLowerCase()+' · '+date.getDate()+' '+MON[date.getMonth()]+'</p></div><button class="home-theme-toggle" data-act="homescene" type="button"></button></header>'+
-      '<section class="card alive-today-summary" aria-label="Выполнено '+day.doneMin+' из '+day.totalMin+' минут по плану"><span class="small">Выполнено</span><div class="alive-minutes" aria-live="off"><strong data-alive-count="'+day.doneMin+'" data-alive-key="today:'+keyOf(sel)+'">'+day.doneMin+'</strong><span> / '+day.totalMin+' мин</span></div><div class="bar alive-fill-track" role="progressbar" aria-label="Выполнено по плану" aria-valuemin="0" aria-valuemax="'+Math.max(1,day.totalMin)+'" aria-valuenow="'+day.doneMin+'"><i data-alive-fill="'+(day.totalMin?day.doneMin/day.totalMin:0)+'"></i></div></section>'+
-      '<section class="alive-focus" aria-label="Следующий шаг">'+(r?'<div class="alive-route-title"><span class="small">'+esc(r.title)+'</span><button class="link" data-tab="goals">Работы '+I.right+'</button></div>':'')+(r?'<button class="btn primary block" data-act="journeynext">Продолжить: '+esc(target)+'</button>':'<button class="btn primary block" data-act="journeysetup">Выбрать цель</button>')+
-      ((st.session || st.lastStudy)?'<button class="btn block" data-act="resume">Продолжить '+(st.session?'незаконченный урок':'обучение')+'</button>':'')+
-      '<div class="alive-review-buttons"><button class="btn" data-act="reviewdue"'+(!due.length?' disabled':'')+'>Повторить <b data-review-count>'+due.length+'</b> '+plural(due.length,'тему','темы','тем')+'</button><button class="btn" data-act="cards"'+(!words.length?' disabled':'')+'>Слова: '+words.length+'</button></div>';
-    if(due.length)h+='<details class="review-queue"><summary>Что стоит повторить</summary>'+due.slice(0,20).map(function(d){return '<button class="link" data-review-topic="'+d.cid+':'+d.index+'">'+esc(course(d.cid).name+': '+d.title)+'</button>';}).join('')+'</details>';
-    h+='</section><section class="card alive-day-tasks"><div class="spread"><h2>Дела на сегодня</h2><button class="link" data-tab="plan">Весь план '+I.right+'</button></div><ul class="tasks">'+day.tasks.map(function(t){return taskRow(t,null);}).join('')+'</ul>'+(day.n?'':'<p class="muted">Сегодня дел пока нет. Настрой маршрут или добавь своё дело в плане.</p>')+'</section>'+
-      '<nav class="alive-directions" aria-label="Направления обучения">'+direction('orbit-lang','data-learnfilter="lang"',I.book,'Языки',Math.round((coursePct(course('eng'))+coursePct(course('rus')))/2))+
-      direction('orbit-code','data-learnfilter="code"',CI.code,'Код',dirPct(DIRS.find(function(d){return d.id==='code';})))+
-      direction('orbit-ai','data-learnfilter="ai"',CI.ai,'ИИ',dirPct(DIRS.find(function(d){return d.id==='ai';})))+
-      direction('orbit-music','data-course="music"',CI.music,'Музыка',coursePct(course('music')))+
-      direction('orbit-art','data-learnfilter="art"',CI.poem,'Творчество',dirPct(DIRS.find(function(d){return d.id==='art';})))+'</nav>'+
-      '<button class="home-promotion" type="button" data-learnfilter="marketing">'+CI.marketing+'<span><b>Продвижение магазина</b><small>Основы · Яндекс Директ · SEO</small></span>'+I.right+'</button></div>';
+    var day=stat(sel),date=dateOf(sel),pct=day.totalMin?Math.round(day.doneMin/day.totalMin*100):0,due=J.dueReviews(st,COURSES,keyOf(sel));
+    var promotion=homePromotionTarget(),done=0,total=0;COURSES.filter(function(c){return c.cat==='marketing' && c.type==='path';}).forEach(function(c){var p=pathStats(c);done+=p.lesDone+p.exDone;total+=p.les+p.ex;});
+    var store=ic('<path d="M3 9h18l-2-6H5zM5 10v11h14V10M9 21v-7h6v7"/>'),spark=ic('<path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>'),headphones=ic('<path d="M4 15v-5a8 8 0 0 1 16 0v5"/><rect x="2" y="12" width="5" height="9" rx="2"/><rect x="17" y="12" width="5" height="9" rx="2"/>');
+    function tile(filter,icon,title,sub){return '<button class="home-direction orbit-node" type="button" data-learnfilter="'+filter+'"><span class="home-tile-icon" aria-hidden="true">'+icon+'</span><strong>'+title+'</strong><small>'+sub+'</small></button>';}
+    var h='<div class="alive-home directions-home"><header class="home-brand-row"><span class="home-wordmark">'+I.leaf+'<b>Росток</b></span><button class="home-profile" data-tab="more" aria-label="Открыть профиль">А</button></header><div class="home-heading-copy"><h1>Куда растём?</h1><p>Выбери, чем займёшься сегодня</p></div>'+
+      '<button class="home-day-card alive-today-summary" type="button" data-tab="plan" aria-label="План на '+date.getDate()+' '+MON[date.getMonth()]+': выполнено '+day.doneMin+' из '+day.totalMin+' минут"><span class="home-day-copy"><small>Твой день</small><span class="home-day-minutes" aria-live="off"><b data-alive-count="'+day.doneMin+'" data-alive-key="today:'+keyOf(sel)+'">'+day.doneMin+'</b> из '+day.totalMin+' минут</span></span><span class="home-day-ring" aria-hidden="true">'+aliveRing(pct/100)+'<span class="home-day-percent">'+pct+'%</span></span></button>'+
+      '<button class="home-promotion-main" type="button" data-act="promotionresume" aria-label="Продвижение магазина: '+(promotion?'продолжить '+esc(promotion.c.name+': '+promotion.c.steps[promotion.i].t):'открыть курсы')+'"><span class="home-promotion-title">'+store+'<strong>Продвижение магазина</strong></span><small>'+(promotion?'Продолжить: '+esc(promotion.c.steps[promotion.i].t):'Все уроки пройдены · открыть курсы')+'</small><span class="home-promotion-track" role="progressbar" aria-label="Прогресс курсов продвижения" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(total?done/total*100:0)+'"><i data-alive-fill="'+(total?done/total:0)+'"></i></span></button>'+
+      '<nav class="alive-directions home-directions" aria-label="Направления обучения">'+tile('lang',I.book,'Языки','Английский · Русский')+tile('code',CI.code,'Создание сайтов','Код · WordPress')+tile('ai',spark,'ИИ и видео','Агенты · Ролики')+tile('art',headphones,'Творчество','Музыка · Стихи · Книги')+'</nav>'+
+      '<button class="home-repeat" data-act="reviewdue"'+(!due.length?' disabled':'')+'>'+ic('<path d="M3 11a9 9 0 1 1 2 6M3 4v7h7"/>')+'<span>'+(due.length?due.length+' '+plural(due.length,'тема ждёт','темы ждут','тем ждут')+' повторения':'Нет тем к повторению')+'</span></button>'+
+      '<details class="home-secondary"'+(V.homeToolsOpen?' open':'')+'><summary>План и быстрые действия</summary><button class="btn block" data-learnfilter="marketing">Все курсы продвижения</button>'+homeFocus().replace('class="home-focus"','class="alive-focus"')+'<section class="card alive-day-tasks"><h2>Дела на сегодня</h2><ul class="tasks">'+day.tasks.map(function(t){return taskRow(t,null);}).join('')+'</ul></section><div class="home-theme-row"><span>Тема оформления</span><button class="home-theme-toggle" data-act="homescene" type="button"></button></div></details></div>';
     return h;
   }
   function viewToday() { return '<section class="view home-view" aria-label="Главная">'+aliveHome()+'</section>'; }
@@ -1652,6 +1650,8 @@
     if((v=b.getAttribute('data-work-stage'))!=null){go('goals',null,{workStage:+v,workRoute:b.getAttribute('data-work-route'),journeySetup:false});return;}
     if((v=b.getAttribute('data-activate-journey')) && st.journeys[v]){st.activeJourney=v;V.workRoute=null;V.workStage=null;prepareDay(clamp(rawToday()),true);save();render();return;}
     if((v=b.getAttribute('data-journey-task'))){var jt=tasksFor(sel).find(function(t){return t.id===v;});if(jt)openJourneyTask(jt);return;}
+    if(b.closest('.home-secondary'))V.homeToolsOpen=true;
+    if(act==='promotionresume'){var next=homePromotionTarget();if(!next){go('learn',null,{filter:'marketing',status:'all'});return;}V.tab='learn';V.course=next.c.id;if(next.c.steps[next.i].exam)startExam(next.c.id,next.i);else startLesson(next.c.id,next.i);return;}
     if (act === 'homescene') { setTheme(homeScene() === 'day' ? 'dark' : 'light'); return; }
     if ((v = b.getAttribute('data-tab'))) { go(v); return; }
     if ((v = b.getAttribute('data-week')) != null) { V.week = Math.max(0,Math.min(P.weeks.length-1,+v)); render(); return; }
@@ -1837,6 +1837,7 @@
     if(c.steps[i].exam)startExam(cid,i);else if(c.steps[i].ex&&c.steps[i].theory)startLesson(cid,i);else go('learn','course',{course:cid,step:i});
   }
 
+  document.addEventListener('toggle',function(e){if(e.target.matches && e.target.matches('.home-secondary'))V.homeToolsOpen=e.target.open;},true);
   document.addEventListener('visibilitychange', function () {
     trackLessonClock();
     if (document.visibilityState !== 'visible') return;
