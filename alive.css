@@ -343,3 +343,69 @@ body.alive-ui:has(.home-view) main#app:not(.full){padding-top:0}
 @media(max-width:359px){.alive-home.directions-home .home-directions{gap:10px}.alive-home.directions-home .home-direction{padding:14px;min-height:132px}.home-direction strong{font-size:13px}.home-direction small{font-size:10px}.home-promotion-title strong{font-size:14px}.home-day-minutes{font-size:17px}}
 
 .alive-home.directions-home button:focus-visible{outline:3px solid var(--home-accent);outline-offset:4px}
+
+/* Approved illustrated home. Atlas: sprout/shop/languages; websites/AI/creativity. */
+.directions-home .home-art{display:block;background-image:url('img/home-illustrations-v1.webp');background-repeat:no-repeat;background-size:300% 200%;pointer-events:none;flex:none}
+.directions-home .home-art-sprout{background-position:0 0}
+.directions-home .home-art-shop{background-position:50% 0}
+.directions-home .home-art-lang{background-position:100% 0}
+.directions-home .home-art-code{background-position:0 100%}
+.directions-home .home-art-ai{background-position:50% 100%}
+.directions-home .home-art-art{background-position:100% 100%}
+.directions-home .home-brand-row{margin-bottom:0}
+.directions-home .home-heading-copy{position:relative;min-height:110px;padding:12px 112px 8px 0;isolation:isolate}
+.directions-home .home-heading-copy h1{font-size:clamp(25px,7vw,32px);line-height:1.16;letter-spacing:-.045em;margin-bottom:10px}
+.directions-home .home-heading-copy p{font-size:12px;line-height:1.55;max-width:250px}
+.directions-home .home-heading-art{position:absolute;right:-6px;bottom:0;width:122px;aspect-ratio:1;z-index:-1}
+.directions-home .home-day-card{border-radius:24px;min-height:92px;padding:16px 20px}
+.directions-home .home-day-minutes{font-size:21px;letter-spacing:-.025em}
+.directions-home .home-day-minutes b{font-size:29px;font-weight:600}
+.directions-home .home-promotion-main{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:46% minmax(0,1fr);align-content:center;gap:14px;min-height:176px;padding:20px;border-radius:26px;background:linear-gradient(125deg,#eee8ff,#e6f5f5);border-color:#b9b0d84d}
+.directions-home .home-promotion-art{position:absolute;right:0;bottom:6px;width:50%;aspect-ratio:1;z-index:0}
+.directions-home .home-promotion-title,.directions-home .home-promotion-main>small,.directions-home .home-promotion-track{position:relative;grid-column:1;z-index:1}
+.directions-home .home-promotion-title strong{font-size:18px;line-height:1.2;font-weight:600;letter-spacing:-.035em;overflow-wrap:normal}
+.directions-home .home-promotion-main>small{font-size:11px;line-height:1.55;color:var(--home-muted)}
+.directions-home .home-promotion-track{height:7px;margin-top:2px}
+.alive-home.directions-home .home-directions{align-items:stretch;gap:12px}
+.alive-home.directions-home .home-direction{display:flex;align-items:stretch;justify-content:flex-start;gap:0;padding:12px 14px 17px;min-height:0;border-radius:25px;overflow:hidden;background:linear-gradient(155deg,#f5f0ff,#f7faff);border-color:#b9b0d84d}
+.alive-home.directions-home .home-direction .home-tile-icon{width:100%;max-width:240px;aspect-ratio:1;margin:0 auto 4px;line-height:0}
+.directions-home .home-direction strong{font-size:15px;line-height:1.3;font-weight:600;letter-spacing:-.035em;margin-top:auto;overflow-wrap:normal}
+.directions-home .home-direction small{font-size:10px;line-height:1.5;margin-top:6px;white-space:normal}
+.directions-home .home-direction:active,.directions-home .home-promotion-main:active{transform:scale(.985)}
+.alive-ui .directions-home .home-day-card{background:linear-gradient(125deg,#1f2541,#171e35);border-color:#a79be92e}
+.alive-ui .directions-home .home-promotion-main{background:linear-gradient(125deg,#282355,#18283e);border-color:#b3a1ff42}
+.alive-ui .directions-home .home-promotion-main>small{color:#b7c2df}
+.alive-ui .alive-home.directions-home .home-direction{background:linear-gradient(150deg,#242541,#171d32);border-color:#a79be92e;box-shadow:inset 0 1px 0 #ffffff06}
+.alive-ui .directions-home .home-direction small,.alive-ui .directions-home .home-heading-copy p{color:#adb7d2}
+@media(min-width:768px){
+ .alive-home.directions-home,.alive-ui .alive-home.directions-home{gap:18px}
+ .directions-home .home-heading-copy{min-height:150px;padding:26px 192px 20px 0}
+ .directions-home .home-heading-copy h1{font-size:40px}
+ .directions-home .home-heading-copy p{font-size:15px;max-width:none}
+ .directions-home .home-heading-art{width:180px;right:0}
+ .directions-home .home-day-card{padding:22px 26px}
+ .directions-home .home-day-minutes{font-size:26px}
+ .directions-home .home-day-minutes b{font-size:36px}
+ .directions-home .home-day-ring,.directions-home .home-day-ring>.alive-ring{width:72px;height:72px}
+ .directions-home .home-day-percent{font-size:15px}
+ .directions-home .home-promotion-main{min-height:245px;padding:30px;gap:20px}
+ .directions-home .home-promotion-art{width:270px;max-width:50%;bottom:0;right:18px}
+ .directions-home .home-promotion-title strong{font-size:28px;max-width:280px}
+ .directions-home .home-promotion-main>small{font-size:14px}
+ .alive-home.directions-home .home-directions{gap:18px}
+ .alive-home.directions-home .home-direction{padding:12px 24px 24px}
+ .directions-home .home-direction strong{font-size:22px}
+ .directions-home .home-direction small{font-size:13px}
+}
+@media(max-width:359px){
+ .directions-home .home-heading-copy{padding-right:100px}
+ .directions-home .home-heading-art{width:108px}
+ .directions-home .home-day-card{padding:14px 16px}
+ .directions-home .home-day-minutes{font-size:18px}
+ .directions-home .home-day-minutes b{font-size:25px}
+ .directions-home .home-promotion-main{padding:16px;gap:12px;min-height:170px}
+ .directions-home .home-promotion-title strong{font-size:16px}
+ .alive-home.directions-home .home-direction{padding:10px 12px 15px;border-radius:22px}
+ .directions-home .home-direction strong{font-size:14px}
+ .directions-home .home-direction small{font-size:10px}
+}
