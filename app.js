@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var APP_VERSION = '4.43';
+  var APP_VERSION = '4.44';
   var P = window.PLAN, COURSES = window.COURSES, J = window.RostokJourney;
   var DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var DOWF = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
@@ -161,12 +161,14 @@
       return w[k] || '';
     });
   }
+  // Шаблоны дня по периодам: старые дни считаются по старым шаблонам, чтобы минуты и уровень не менялись задним числом.
+  function tplFor(k) { var t = P.templates; (P.periods || []).forEach(function (p) { if (k >= p.from) t = p.templates; }); return t; }
   function tasksFor(i) {
     var w = P.weeks[Math.floor(i / 7)] || {}, k = keyOf(i);
     if (st.dayPlans[k]) return st.dayPlans[k].items.concat(st.extraTasks[k] || []);
     var route = J.current(st);
     if (route && k >= route.start) return st.extraTasks[k] || [];
-    var list = (P.templates[modeOf(i)] || []).map(function (t) { return { id: t.id, cat: t.cat, t: t.t, min: t.min, n: fill(t.n, w) }; });
+    var list = (tplFor(k)[modeOf(i)] || []).map(function (t) { return { id: t.id, cat: t.cat, t: t.t, min: t.min, n: fill(t.n, w) }; });
     return list.concat(P.extra[k] || [], st.extraTasks[k] || []);
   }
   function isDone(i, id) { var c = st.checks[keyOf(i)]; return !!(c && c[id]); }
@@ -629,7 +631,7 @@
   // ----- Привычки: ежедневные дела плана -----
   function habitList() {
     var seen = {}, out = [];
-    ['free', 'shift', 'light'].forEach(function (m) { (P.templates[m] || []).forEach(function (t) { if (!seen[t.id]) { seen[t.id] = 1; out.push({ id: t.id, cat: t.cat, t: t.t }); } }); });
+    ['free', 'shift', 'light'].forEach(function (m) { (tplFor(keyOf(clamp(rawToday())))[m] || []).forEach(function (t) { if (!seen[t.id]) { seen[t.id] = 1; out.push({ id: t.id, cat: t.cat, t: t.t }); } }); });
     return out;
   }
   function habitStats(hb) {
